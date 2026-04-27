@@ -2924,9 +2924,14 @@
     const innerH = active.length * rowH;
 
     const today = new Date();
-    const startDate = projektStartDate || today;
+    const projStart = projektStartDate || today;
     const dayMs = 1000 * 60 * 60 * 24;
-    const totalDays = Math.max(1, (deadline - startDate) / dayMs);
+    // Om projektstart är i framtiden — utöka x-axeln tillbaka till idag så glappet syns
+    const xAxisStart = (projStart > today) ? today : projStart;
+    const projektStartOffsetDays = Math.max(0, (projStart - xAxisStart) / dayMs);
+    const totalDays = Math.max(1, (deadline - xAxisStart) / dayMs);
+    // Behåll startDate som "anchor för pipeline-beräkning" — bemanningens t=0 är fortfarande projektstart
+    const startDate = projStart;
 
     // === PIPELINE-BERÄKNING ===
     // För varje roll: effektiv takt = min(egen, alla uppströms)
@@ -3019,7 +3024,38 @@
     dLbl.textContent = 'DEADLINE';
     svg.appendChild(dLbl);
 
+    // === PRE-PROJEKT-ZON (om projektstart är i framtiden) ===
+    if (projektStartOffsetDays > 0) {
+      // Streckad lila linje vid projektstart över alla rader
+      const psX = xScale(projektStartOffsetDays);
+      // Bakgrundsruta för "väntar"-zonen (idag → projektstart)
+      const waitZone = document.createElementNS(ns, 'rect');
+      waitZone.setAttribute('x', M.left); waitZone.setAttribute('y', M.top);
+      waitZone.setAttribute('width', psX - M.left); waitZone.setAttribute('height', innerH);
+      waitZone.setAttribute('fill', '#5C0E92');
+      waitZone.setAttribute('opacity', '0.05');
+      svg.appendChild(waitZone);
+
+      // Vertikal streckad linje vid projektstart
+      const psLine = document.createElementNS(ns, 'line');
+      psLine.setAttribute('x1', psX); psLine.setAttribute('x2', psX);
+      psLine.setAttribute('y1', M.top - 4); psLine.setAttribute('y2', M.top + innerH + 4);
+      psLine.setAttribute('stroke', '#5C0E92'); psLine.setAttribute('stroke-width', '1.5');
+      psLine.setAttribute('stroke-dasharray', '4 4');
+      psLine.setAttribute('opacity', '0.7');
+      svg.appendChild(psLine);
+      const psLbl = document.createElementNS(ns, 'text');
+      psLbl.setAttribute('x', psX); psLbl.setAttribute('y', M.top - 22);
+      psLbl.setAttribute('text-anchor', 'middle'); psLbl.setAttribute('font-size', '9');
+      psLbl.setAttribute('fill', '#5C0E92'); psLbl.setAttribute('font-weight', '600');
+      psLbl.setAttribute('font-family', 'inherit'); psLbl.setAttribute('letter-spacing', '0.04em');
+      psLbl.textContent = 'PROJEKTSTART';
+      svg.appendChild(psLbl);
+    }
+
     // === RAD PER ROLL ===
+    // Skifta alla rolltider med projektStart-offset så de hamnar rätt i x-axeln
+    const xShift = projektStartOffsetDays;
     roleData.forEach((d, i) => {
       const rowY = M.top + i * rowH;
       const barY = rowY + 8;
@@ -3045,9 +3081,9 @@
       trackBg.setAttribute('fill', '#f4f2eb');
       svg.appendChild(trackBg);
 
-      // Bar — med start-offset enligt pipeline
-      const barStart = xScale(d.startDays);
-      const barEnd = xScale(Math.min(d.endDays, xMaxDays));
+      // Bar — med start-offset enligt pipeline (skiftat med projektstart-offset)
+      const barStart = xScale(d.startDays + xShift);
+      const barEnd = xScale(Math.min(d.endDays + xShift, xMaxDays));
       const barColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#a070cc');
       const barOpacity = d.overshoots ? '0.85' : (d.isBottleneck ? '0.95' : (d.isLimitedByUpstream ? '0.65' : '0.85'));
 
@@ -3060,9 +3096,9 @@
       svg.appendChild(bar);
 
       // Overflow (om passerar deadline)
-      if (d.endDays > totalDays) {
+      if (d.endDays + xShift > totalDays) {
         const overX = Math.max(barStart, xScale(totalDays));
-        const visEnd = Math.min(d.endDays, xMaxDays);
+        const visEnd = Math.min(d.endDays + xShift, xMaxDays);
         const overW = xScale(visEnd) - overX;
         if (overW > 0) {
           const overflow = document.createElementNS(ns, 'rect');
@@ -3104,7 +3140,7 @@
         svg.appendChild(txt);
       }
 
-      // Klart-datum till höger om bar
+      // Klart-datum till höger om bar (skiftad position)
       const klarTxt = document.createElementNS(ns, 'text');
       const klarStr = d.overshoots
         ? 'klar ' + d.endDate.toLocaleDateString('sv-SE') + ' (för sent)'
@@ -3114,12 +3150,12 @@
       klarTxt.setAttribute('fill', d.overshoots ? '#9a2424' : '#4a4a45');
       klarTxt.setAttribute('font-weight', d.overshoots ? '600' : '500');
       klarTxt.setAttribute('font-family', 'inherit');
-      // Försök placera till höger om bar; om ingen plats, inuti bar (höger-justerad)
-      if (xScale(Math.min(d.endDays, xMaxDays)) + klarStr.length * 6 + 8 <= M.left + innerW) {
-        klarTxt.setAttribute('x', xScale(Math.min(d.endDays, xMaxDays)) + 6);
+      const klarShifted = xScale(Math.min(d.endDays + xShift, xMaxDays));
+      if (klarShifted + klarStr.length * 6 + 8 <= M.left + innerW) {
+        klarTxt.setAttribute('x', klarShifted + 6);
         klarTxt.textContent = klarStr;
       } else {
-        klarTxt.setAttribute('x', xScale(Math.min(d.endDays, xMaxDays)) - 6);
+        klarTxt.setAttribute('x', klarShifted - 6);
         klarTxt.setAttribute('text-anchor', 'end');
         klarTxt.setAttribute('fill', '#ffffff');
         klarTxt.textContent = klarStr;
@@ -3398,16 +3434,44 @@
     fillPath.setAttribute('fill', 'url(#volume-gradient)');
     svg.appendChild(fillPath);
 
-    // === HUVUDLINJEN ===
-    const path = document.createElementNS(ns, 'path');
-    let lineD = `M ${points[0].x} ${points[0].y} `;
-    for (let i = 1; i < points.length; i++) {
-      lineD += `L ${points[i].x} ${points[i].y} `;
+    // === HUVUDLINJEN — splittra vid projektstart om det finns ett glapp från idag ===
+    const splitT = startDelayMonths > 0 && startDelayMonths < monthsLeft ? startDelayMonths : 0;
+    if (splitT > 0) {
+      // Pre-projekt: streckad linje från idag till projektstart (kurvan är 0 där)
+      const preD = `M ${xScale(0)} ${yScale(0)} L ${xScale(splitT)} ${yScale(0)}`;
+      const prePath = document.createElementNS(ns, 'path');
+      prePath.setAttribute('d', preD);
+      prePath.setAttribute('fill', 'none');
+      prePath.setAttribute('stroke', '#a8a6a0');
+      prePath.setAttribute('stroke-width', '1.5');
+      prePath.setAttribute('stroke-dasharray', '5 4');
+      prePath.setAttribute('opacity', '0.7');
+      svg.appendChild(prePath);
+
+      // Post-projekt: solid bold från projektstart och framåt
+      const postPoints = points.filter(p => p.m >= splitT);
+      // Säkerställ att vi börjar exakt vid splitT
+      let postD = `M ${xScale(splitT)} ${yScale(cumAt(splitT))} `;
+      postPoints.forEach(p => { postD += `L ${p.x} ${p.y} `; });
+      const postPath = document.createElementNS(ns, 'path');
+      postPath.setAttribute('d', postD);
+      postPath.setAttribute('fill', 'none');
+      postPath.setAttribute('stroke', '#1a1a1a');
+      postPath.setAttribute('stroke-width', '2.5');
+      postPath.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(postPath);
+    } else {
+      // Ingen pre-projekt-period — rita som tidigare
+      const path = document.createElementNS(ns, 'path');
+      let lineD = `M ${points[0].x} ${points[0].y} `;
+      for (let i = 1; i < points.length; i++) {
+        lineD += `L ${points[i].x} ${points[i].y} `;
+      }
+      path.setAttribute('d', lineD);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#1a1a1a');
+      path.setAttribute('stroke-width', '2.5'); path.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(path);
     }
-    path.setAttribute('d', lineD);
-    path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#1a1a1a');
-    path.setAttribute('stroke-width', '2.5'); path.setAttribute('stroke-linejoin', 'round');
-    svg.appendChild(path);
 
     // === FÖRLÄNGNING (PROGNOS) ===
     if (showForecast) {
