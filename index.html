@@ -813,6 +813,91 @@
     font-weight: 400;
     margin-left: 8px;
   }
+  .planning-matrix {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .planning-matrix th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    color: #8a8a85;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 8px 6px;
+    border-bottom: 0.5px solid #e5e3dc;
+    vertical-align: bottom;
+    white-space: nowrap;
+  }
+  .planning-matrix th.num, .planning-matrix td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .planning-matrix td {
+    padding: 10px 8px;
+    border-bottom: 0.5px solid #f0eee7;
+    vertical-align: middle;
+    color: #1a1a1a;
+  }
+  .planning-matrix .role-cell {
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+  .planning-matrix .takt-detail {
+    font-size: 10px;
+    color: #8a8a85;
+    font-weight: 400;
+  }
+  .planning-matrix tr.bottleneck .role-cell {
+    color: #5C0E92;
+    font-weight: 600;
+  }
+  .planning-matrix tr.overshoots td {
+    color: #9a2424;
+  }
+  .planning-matrix tr.overshoots .role-cell {
+    font-weight: 600;
+  }
+  .planning-matrix .timebar-cell {
+    width: 30%;
+    min-width: 160px;
+    padding-left: 12px;
+  }
+  .planning-matrix .timebar-track {
+    background: #f4f2eb;
+    height: 14px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .planning-matrix .timebar-fill {
+    background: #a070cc;
+    height: 100%;
+    border-radius: 4px;
+    position: absolute;
+    right: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .planning-matrix tr.bottleneck .timebar-fill { background: #5C0E92; }
+  .planning-matrix tr.overshoots .timebar-fill { background: #9a2424; }
+  .planning-matrix tr.overshoots .timebar-track {
+    box-shadow: 0 0 0 1px #9a2424 inset;
+  }
+  .matrix-summary {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 0.5px solid #e5e3dc;
+    font-size: 11px;
+    color: #6b6b66;
+    line-height: 1.5;
+  }
+  .matrix-summary .matrix-warning {
+    color: #9a2424;
+    font-weight: 600;
+  }
   .chart-card .chart-title {
     font-size: 13px;
     color: #6b6b66;
@@ -1566,9 +1651,8 @@
   </div>
 
   <div class="chart-card">
-    <div class="chart-title">Detaljerad planering — per roll <span class="chart-subtitle">hur många items varje roll löser, från när till när</span></div>
-    <svg id="roles-chart" viewBox="0 0 800 320" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="legend" id="roles-chart-legend"></div>
+    <div class="chart-title">Detaljerad planering — per roll <span class="chart-subtitle">backward-schemalagt: när varje roll måste börja och vara klar för att hinna med deadline</span></div>
+    <div id="roles-matrix"></div>
   </div>
 
   <div class="section">Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
@@ -2684,7 +2768,7 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
-      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline);
+      drawRolesMatrix(potentialVolym, projektStartDate, deadline);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2692,7 +2776,7 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
-      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline);
+      drawRolesMatrix(potentialVolym, projektStartDate, deadline);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2750,7 +2834,7 @@
     let comparisonRoles = state.snapshot ? state.snapshot.roles : state.roles;
 
     updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp);
-    drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline);
+    drawRolesMatrix(potentialVolym, projektStartDate, deadline);
     updateActivityLabels();
   }
 
@@ -2890,294 +2974,131 @@
     return ROLE_COLORS[idx % ROLE_COLORS.length];
   }
 
-  function drawRolesChart(monthsLeft, leadtimeMonths, rampMonths, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline) {
-    const svg = document.getElementById('roles-chart');
-    const legendEl = document.getElementById('roles-chart-legend');
-    if (!svg || !legendEl) return;
-    svg.innerHTML = '';
-    legendEl.innerHTML = '';
-    const ns = 'http://www.w3.org/2000/svg';
+  function drawRolesMatrix(potentialVolym, projektStartDate, deadline) {
+    const container = document.getElementById('roles-matrix');
+    if (!container) return;
+    container.innerHTML = '';
 
     const hitrate = state.hitrate / 100;
     const active = activeRoles();
-    // Använd målvolymen som "totalen man valt" — fall tillbaka till potentialVolym om mål saknas
+    // Mål-volymen är "totalen man valt"; fall tillbaka till potentialVolym om mål saknas
     const V = (state.onskadVolym && state.onskadVolym > 0) ? state.onskadVolym : potentialVolym;
 
     if (active.length === 0 || !V || V <= 0) {
-      const W = 800, H = 100;
-      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      const txt = document.createElementNS(ns, 'text');
-      txt.setAttribute('x', W/2); txt.setAttribute('y', H/2);
-      txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('font-size', '13');
-      txt.setAttribute('fill', '#a8a8a3'); txt.setAttribute('font-family', 'inherit');
-      txt.textContent = 'Sätt mål-volym och bemanning för att se planeringen.';
-      svg.appendChild(txt);
+      container.innerHTML = '<div style="color:#a8a8a3;text-align:center;padding:20px;font-size:12px;">Sätt mål-volym och bemanning för att se planeringen.</div>';
       return;
     }
 
-    const rowH = 42;
-    const W = 800;
-    const H = active.length * rowH + 90;
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    const M = { top: 36, right: 40, bottom: 40, left: 160 };
-    const innerW = W - M.left - M.right;
-    const innerH = active.length * rowH;
-
-    const today = new Date();
-    const projStart = projektStartDate || today;
     const dayMs = 1000 * 60 * 60 * 24;
-    // Om projektstart är i framtiden — utöka x-axeln tillbaka till idag så glappet syns
-    const xAxisStart = (projStart > today) ? today : projStart;
-    const projektStartOffsetDays = Math.max(0, (projStart - xAxisStart) / dayMs);
-    const totalDays = Math.max(1, (deadline - xAxisStart) / dayMs);
-    // Behåll startDate som "anchor för pipeline-beräkning" — bemanningens t=0 är fortfarande projektstart
-    const startDate = projStart;
+    const projStart = projektStartDate || new Date();
 
-    // === PIPELINE-BERÄKNING ===
-    // För varje roll: effektiv takt = min(egen, alla uppströms)
-    // Starttid = när första item lämnar förra rollen
+    // === FORWARD: per roll, beräkna effektiv takt ===
+    // Effektiv takt = min(egen takt, alla uppströms takter) × hitrate
     const minCap = Math.min(...active.map(r => roleCapPerDay(r)));
     let cumulativeMin = Infinity;
-    let pipelineStartDays = 0;
-    const roleData = active.map((role, idx) => {
-      const dailyCap = roleCapPerDay(role) * hitrate;
-      cumulativeMin = Math.min(cumulativeMin, dailyCap);
-      const effectiveRate = cumulativeMin;
-      const isBottleneck = Math.abs(roleCapPerDay(role) - minCap) < 1e-9;
-      const isLimitedByUpstream = dailyCap > effectiveRate + 1e-3;
-      const startDays = pipelineStartDays;
-      const durationDays = effectiveRate > 0 ? V / effectiveRate : Infinity;
-      const endDays = startDays + durationDays;
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + Math.ceil(endDays));
-      const overshoots = endDate > deadline;
-      // Nästa roll startar när första item lämnar denna roll
-      if (dailyCap > 0) {
-        pipelineStartDays = startDays + 1 / dailyCap;
-      }
-      return { role, idx, dailyCap, effectiveRate, isBottleneck, isLimitedByUpstream,
-               startDays, durationDays, endDays, endDate, overshoots };
+    const data = active.map((role, idx) => {
+      const ownRate = roleCapPerDay(role) * hitrate;
+      cumulativeMin = Math.min(cumulativeMin, ownRate);
+      return {
+        role, idx,
+        ownRate,
+        effectiveRate: cumulativeMin,
+        isBottleneck: Math.abs(roleCapPerDay(role) - minCap) < 1e-9,
+        isLimitedByUpstream: ownRate > cumulativeMin + 1e-3,
+      };
     });
 
-    // X-axel: utöka om någon roll går förbi deadline
-    const maxEnd = Math.max(...roleData.map(d => d.endDays));
-    let xMaxDays = totalDays;
-    if (maxEnd > totalDays) {
-      xMaxDays = Math.min(maxEnd * 1.05, totalDays * 1.5);
-    }
-    const xScale = days => M.left + (days / xMaxDays) * innerW;
-
-    // Tidsetiketter (månader)
-    const monthNames = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
-    const monthsTotal = Math.max(1, xMaxDays / 30);
-    const tickStep = monthsTotal <= 6 ? 1 : monthsTotal <= 18 ? 2 : monthsTotal <= 36 ? 3 : 6;
-    for (let m = 0; m <= monthsTotal + 0.001; m += tickStep) {
-      const tickDate = new Date(startDate);
-      tickDate.setMonth(tickDate.getMonth() + Math.round(m));
-      const days = (tickDate - startDate) / dayMs;
-      if (days > xMaxDays) break;
-      const x = xScale(days);
-      const line = document.createElementNS(ns, 'line');
-      line.setAttribute('x1', x); line.setAttribute('x2', x);
-      line.setAttribute('y1', M.top - 4); line.setAttribute('y2', M.top + innerH);
-      line.setAttribute('stroke', '#ebe9e2'); line.setAttribute('stroke-width', '1');
-      svg.appendChild(line);
-      const lbl = document.createElementNS(ns, 'text');
-      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top - 12);
-      lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '10');
-      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
-      lbl.textContent = monthNames[tickDate.getMonth()] + ' ' + (tickDate.getFullYear() % 100);
-      svg.appendChild(lbl);
-    }
-
-    // IDAG-markör
-    if (today >= startDate && (today - startDate) / dayMs <= xMaxDays) {
-      const tx = xScale((today - startDate) / dayMs);
-      const tLine = document.createElementNS(ns, 'line');
-      tLine.setAttribute('x1', tx); tLine.setAttribute('x2', tx);
-      tLine.setAttribute('y1', M.top - 4); tLine.setAttribute('y2', M.top + innerH + 4);
-      tLine.setAttribute('stroke', '#1a1a1a'); tLine.setAttribute('stroke-width', '1');
-      tLine.setAttribute('stroke-dasharray', '2 3'); tLine.setAttribute('opacity', '0.4');
-      svg.appendChild(tLine);
-      const tLbl = document.createElementNS(ns, 'text');
-      tLbl.setAttribute('x', tx); tLbl.setAttribute('y', M.top - 22);
-      tLbl.setAttribute('text-anchor', 'middle'); tLbl.setAttribute('font-size', '9');
-      tLbl.setAttribute('fill', '#1a1a1a'); tLbl.setAttribute('font-family', 'inherit');
-      tLbl.setAttribute('letter-spacing', '0.04em');
-      tLbl.textContent = 'IDAG';
-      svg.appendChild(tLbl);
-    }
-
-    // DEADLINE-markör
-    const dx = xScale(totalDays);
-    const dLine = document.createElementNS(ns, 'line');
-    dLine.setAttribute('x1', dx); dLine.setAttribute('x2', dx);
-    dLine.setAttribute('y1', M.top - 4); dLine.setAttribute('y2', M.top + innerH + 4);
-    dLine.setAttribute('stroke', '#9a2424'); dLine.setAttribute('stroke-width', '1.5');
-    dLine.setAttribute('stroke-dasharray', '3 4');
-    svg.appendChild(dLine);
-    const dLbl = document.createElementNS(ns, 'text');
-    dLbl.setAttribute('x', dx); dLbl.setAttribute('y', M.top - 22);
-    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '9');
-    dLbl.setAttribute('fill', '#9a2424'); dLbl.setAttribute('font-weight', '600');
-    dLbl.setAttribute('font-family', 'inherit'); dLbl.setAttribute('letter-spacing', '0.04em');
-    dLbl.textContent = 'DEADLINE';
-    svg.appendChild(dLbl);
-
-    // === PRE-PROJEKT-ZON (om projektstart är i framtiden) ===
-    if (projektStartOffsetDays > 0) {
-      // Streckad lila linje vid projektstart över alla rader
-      const psX = xScale(projektStartOffsetDays);
-      // Bakgrundsruta för "väntar"-zonen (idag → projektstart)
-      const waitZone = document.createElementNS(ns, 'rect');
-      waitZone.setAttribute('x', M.left); waitZone.setAttribute('y', M.top);
-      waitZone.setAttribute('width', psX - M.left); waitZone.setAttribute('height', innerH);
-      waitZone.setAttribute('fill', '#5C0E92');
-      waitZone.setAttribute('opacity', '0.05');
-      svg.appendChild(waitZone);
-
-      // Vertikal streckad linje vid projektstart
-      const psLine = document.createElementNS(ns, 'line');
-      psLine.setAttribute('x1', psX); psLine.setAttribute('x2', psX);
-      psLine.setAttribute('y1', M.top - 4); psLine.setAttribute('y2', M.top + innerH + 4);
-      psLine.setAttribute('stroke', '#5C0E92'); psLine.setAttribute('stroke-width', '1.5');
-      psLine.setAttribute('stroke-dasharray', '4 4');
-      psLine.setAttribute('opacity', '0.7');
-      svg.appendChild(psLine);
-      const psLbl = document.createElementNS(ns, 'text');
-      psLbl.setAttribute('x', psX); psLbl.setAttribute('y', M.top - 22);
-      psLbl.setAttribute('text-anchor', 'middle'); psLbl.setAttribute('font-size', '9');
-      psLbl.setAttribute('fill', '#5C0E92'); psLbl.setAttribute('font-weight', '600');
-      psLbl.setAttribute('font-family', 'inherit'); psLbl.setAttribute('letter-spacing', '0.04em');
-      psLbl.textContent = 'PROJEKTSTART';
-      svg.appendChild(psLbl);
-    }
-
-    // === RAD PER ROLL ===
-    // Skifta alla rolltider med projektStart-offset så de hamnar rätt i x-axeln
-    const xShift = projektStartOffsetDays;
-    roleData.forEach((d, i) => {
-      const rowY = M.top + i * rowH;
-      const barY = rowY + 8;
-      const barH = rowH - 18;
-
-      // Roll-namn
-      const nameLbl = document.createElementNS(ns, 'text');
-      nameLbl.setAttribute('x', M.left - 12);
-      nameLbl.setAttribute('y', barY + barH / 2 + 4);
-      nameLbl.setAttribute('text-anchor', 'end');
-      nameLbl.setAttribute('font-size', '12');
-      nameLbl.setAttribute('font-weight', d.isBottleneck ? '600' : '500');
-      nameLbl.setAttribute('fill', d.isBottleneck ? '#9a2424' : '#1a1a1a');
-      nameLbl.setAttribute('font-family', 'inherit');
-      nameLbl.textContent = (i+1) + '. ' + d.role.name + (d.isBottleneck ? '  ⚑' : '');
-      svg.appendChild(nameLbl);
-
-      // Spår (bakgrund)
-      const trackBg = document.createElementNS(ns, 'rect');
-      trackBg.setAttribute('x', M.left); trackBg.setAttribute('y', barY);
-      trackBg.setAttribute('width', innerW); trackBg.setAttribute('height', barH);
-      trackBg.setAttribute('rx', 4); trackBg.setAttribute('ry', 4);
-      trackBg.setAttribute('fill', '#f4f2eb');
-      svg.appendChild(trackBg);
-
-      // Bar — med start-offset enligt pipeline (skiftat med projektstart-offset)
-      const barStart = xScale(d.startDays + xShift);
-      const barEnd = xScale(Math.min(d.endDays + xShift, xMaxDays));
-      const barColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#a070cc');
-      const barOpacity = d.overshoots ? '0.85' : (d.isBottleneck ? '0.95' : (d.isLimitedByUpstream ? '0.65' : '0.85'));
-
-      const bar = document.createElementNS(ns, 'rect');
-      bar.setAttribute('x', barStart); bar.setAttribute('y', barY);
-      bar.setAttribute('width', Math.max(0, barEnd - barStart)); bar.setAttribute('height', barH);
-      bar.setAttribute('rx', 4); bar.setAttribute('ry', 4);
-      bar.setAttribute('fill', barColor);
-      bar.setAttribute('opacity', barOpacity);
-      svg.appendChild(bar);
-
-      // Overflow (om passerar deadline)
-      if (d.endDays + xShift > totalDays) {
-        const overX = Math.max(barStart, xScale(totalDays));
-        const visEnd = Math.min(d.endDays + xShift, xMaxDays);
-        const overW = xScale(visEnd) - overX;
-        if (overW > 0) {
-          const overflow = document.createElementNS(ns, 'rect');
-          overflow.setAttribute('x', overX); overflow.setAttribute('y', barY);
-          overflow.setAttribute('width', overW); overflow.setAttribute('height', barH);
-          overflow.setAttribute('fill', '#9a2424');
-          overflow.setAttribute('opacity', '0.5');
-          overflow.setAttribute('stroke', '#9a2424');
-          overflow.setAttribute('stroke-dasharray', '3 2');
-          overflow.setAttribute('stroke-width', '1');
-          svg.appendChild(overflow);
-        }
-      }
-
-      // Inner text: volym + effektiv takt
-      const innerText = Math.round(V) + ' st • ' + d.effectiveRate.toFixed(1) + '/dag' +
-        (d.isLimitedByUpstream ? ' (begränsad av flaskhals)' : '');
-      const barW = Math.max(0, barEnd - barStart);
-      if (barW > innerText.length * 6 + 12) {
-        const txt = document.createElementNS(ns, 'text');
-        txt.setAttribute('x', barStart + 8);
-        txt.setAttribute('y', barY + barH / 2 + 4);
-        txt.setAttribute('font-size', '11');
-        txt.setAttribute('fill', '#ffffff');
-        txt.setAttribute('font-weight', '500');
-        txt.setAttribute('font-family', 'inherit');
-        txt.textContent = innerText;
-        svg.appendChild(txt);
-      } else if (barW > 60) {
-        // Kortare bar — visa bara volym
-        const txt = document.createElementNS(ns, 'text');
-        txt.setAttribute('x', barStart + 8);
-        txt.setAttribute('y', barY + barH / 2 + 4);
-        txt.setAttribute('font-size', '11');
-        txt.setAttribute('fill', '#ffffff');
-        txt.setAttribute('font-weight', '500');
-        txt.setAttribute('font-family', 'inherit');
-        txt.textContent = Math.round(V) + ' st';
-        svg.appendChild(txt);
-      }
-
-      // Klart-datum till höger om bar (skiftad position)
-      const klarTxt = document.createElementNS(ns, 'text');
-      const klarStr = d.overshoots
-        ? 'klar ' + d.endDate.toLocaleDateString('sv-SE') + ' (för sent)'
-        : 'klar ' + d.endDate.toLocaleDateString('sv-SE');
-      klarTxt.setAttribute('y', barY + barH / 2 + 4);
-      klarTxt.setAttribute('font-size', '11');
-      klarTxt.setAttribute('fill', d.overshoots ? '#9a2424' : '#4a4a45');
-      klarTxt.setAttribute('font-weight', d.overshoots ? '600' : '500');
-      klarTxt.setAttribute('font-family', 'inherit');
-      const klarShifted = xScale(Math.min(d.endDays + xShift, xMaxDays));
-      if (klarShifted + klarStr.length * 6 + 8 <= M.left + innerW) {
-        klarTxt.setAttribute('x', klarShifted + 6);
-        klarTxt.textContent = klarStr;
+    // === BACKWARD: per roll, räkna "klar senast" och "måste börja senast" ===
+    // klar_N = deadline. klar_i = klar_(i+1) - 1 / own_takt_(i+1) (en items processtid nedströms)
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (i === data.length - 1) {
+        data[i].klarSenast = new Date(deadline);
       } else {
-        klarTxt.setAttribute('x', klarShifted - 6);
-        klarTxt.setAttribute('text-anchor', 'end');
-        klarTxt.setAttribute('fill', '#ffffff');
-        klarTxt.textContent = klarStr;
+        const downstream = data[i+1];
+        const offsetDays = downstream.ownRate > 0 ? 1 / downstream.ownRate : 0;
+        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - offsetDays * dayMs);
       }
-      svg.appendChild(klarTxt);
+      const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
+      data[i].daysNeeded = daysNeeded;
+      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * dayMs);
+      // Hinns med endast om "måste börja senast" är ≥ projektstart
+      data[i].overshoots = data[i].mastBorjaSenast < projStart;
+    }
+
+    // Längsta tidsspannet styr bar-skalningen
+    const maxDays = Math.max(...data.map(d => isFinite(d.daysNeeded) ? d.daysNeeded : 0), 1);
+
+    // Bygg tabell
+    const tbl = document.createElement('table');
+    tbl.className = 'planning-matrix';
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th class="num">#</th>
+        <th>Roll</th>
+        <th class="num">Antal</th>
+        <th>Egen takt</th>
+        <th>Effektiv takt</th>
+        <th>Måste börja senast</th>
+        <th>Klar senast</th>
+        <th class="timebar-cell">Tidsspann ↔ deadline</th>
+      </tr>
+    `;
+    tbl.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const fmt = d => d.toLocaleDateString('sv-SE');
+
+    data.forEach((d, i) => {
+      const tr = document.createElement('tr');
+      if (d.isBottleneck) tr.classList.add('bottleneck');
+      if (d.overshoots) tr.classList.add('overshoots');
+
+      const effLabel = d.isLimitedByUpstream
+        ? d.effectiveRate.toFixed(1) + '/dag <span class="takt-detail">(begr. uppströms)</span>'
+        : d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' <span class="takt-detail">(flaskhals)</span>' : '');
+      const barPct = isFinite(d.daysNeeded) ? Math.min(100, (d.daysNeeded / maxDays) * 100) : 0;
+
+      tr.innerHTML = `
+        <td class="num">${i + 1}</td>
+        <td class="role-cell">${escapeHtml(d.role.name)}${d.isBottleneck ? ' ⚑' : ''}</td>
+        <td class="num">${Math.round(V)} st</td>
+        <td>${d.ownRate.toFixed(1)}/dag</td>
+        <td>${effLabel}</td>
+        <td>${fmt(d.mastBorjaSenast)}</td>
+        <td>${fmt(d.klarSenast)}</td>
+        <td class="timebar-cell">
+          <div class="timebar-track" title="${Math.round(d.daysNeeded)} dagar">
+            <div class="timebar-fill" style="width: ${barPct.toFixed(1)}%;"></div>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
+    tbl.appendChild(tbody);
+    container.appendChild(tbl);
 
     // Sammanfattning
-    const sumLbl = document.createElementNS(ns, 'text');
-    sumLbl.setAttribute('x', M.left);
-    sumLbl.setAttribute('y', M.top + innerH + 26);
-    sumLbl.setAttribute('font-size', '11');
-    sumLbl.setAttribute('fill', '#6b6b66');
-    sumLbl.setAttribute('font-family', 'inherit');
-    const bottleneck = roleData.find(d => d.isBottleneck);
-    sumLbl.textContent = 'Pipeline-flöde: ordningen rangordnar uppströms → nedströms. Effektiv takt = min(egen, alla uppströms). ' +
-      'Flaskhals (⚑): ' + (bottleneck ? bottleneck.role.name : '—') + ' — den taktar ut hela kedjan på ' +
-      bottleneck.effectiveRate.toFixed(1) + '/dag. Mål: ' + Math.round(V) + ' st.';
-    svg.appendChild(sumLbl);
+    const summary = document.createElement('div');
+    summary.className = 'matrix-summary';
+    const bottleneck = data.find(d => d.isBottleneck);
+    const overshooters = data.filter(d => d.overshoots);
+    let summaryHtml = 'Backward-schemalagt mot deadline <strong>' + fmt(deadline) + '</strong>. ';
+    if (bottleneck) {
+      summaryHtml += 'Flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> taktar ut hela kedjan på ' +
+        bottleneck.effectiveRate.toFixed(1) + '/dag och måste börja senast <strong>' +
+        fmt(bottleneck.mastBorjaSenast) + '</strong> för att hinna med ' + Math.round(V) + ' st.';
+    }
+    if (overshooters.length > 0) {
+      summaryHtml += ' <span class="matrix-warning">⚠ ' + overshooters.length + ' roll' +
+        (overshooters.length === 1 ? '' : 'er') + ' kan inte hinnas med givet projektstart ' +
+        fmt(projStart) + ' — höj kapaciteten, sänk målet eller flytta deadline.</span>';
+    }
+    summary.innerHTML = summaryHtml;
+    container.appendChild(summary);
   }
 
-  function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
+    function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
     startDelayMonths = startDelayMonths || 0;
     const svg = document.getElementById('chart');
     svg.innerHTML = '';
