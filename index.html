@@ -813,6 +813,34 @@
     font-weight: 400;
     margin-left: 8px;
   }
+  .pipeline-flow-line {
+    font-size: 12px;
+    color: #4a4a45;
+    margin: 4px 0 8px;
+    padding: 8px 12px;
+    background: #f4f2eb;
+    border-radius: 8px;
+    line-height: 1.5;
+  }
+  .pipeline-flow-line .pipeline-step {
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+  .pipeline-flow-line .pipeline-bottleneck {
+    color: #5C0E92;
+    font-weight: 600;
+  }
+  .pipeline-flow-line .pipeline-arrow {
+    color: #a8a8a3;
+    margin: 0 4px;
+    font-weight: 400;
+  }
+  .pipeline-flow-line .pipeline-hint {
+    font-size: 11px;
+    color: #8a8a85;
+    font-style: italic;
+    margin-left: 8px;
+  }
   .planning-matrix {
     width: 100%;
     font-size: 12px;
@@ -3027,6 +3055,21 @@
 
     // Längsta tidsspannet styr bar-skalningen
     const maxDays = Math.max(...data.map(d => isFinite(d.daysNeeded) ? d.daysNeeded : 0), 1);
+
+    // === Pipeline-flow-rad ovanför tabellen ===
+    const flow = document.createElement('div');
+    flow.className = 'pipeline-flow-line';
+    let flowHtml = '<strong>Pipeline:</strong> ';
+    data.forEach((d, i) => {
+      const cls = d.isBottleneck ? 'pipeline-bottleneck' : 'pipeline-step';
+      flowHtml += '<span class="' + cls + '">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
+      if (i < data.length - 1) {
+        flowHtml += '<span class="pipeline-arrow">→</span>';
+      }
+    });
+    flowHtml += '<span class="pipeline-hint">drag för att sortera om</span>';
+    flow.innerHTML = flowHtml;
+    container.appendChild(flow);
 
     // Bygg tabell
     const tbl = document.createElement('table');
