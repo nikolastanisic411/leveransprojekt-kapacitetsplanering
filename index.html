@@ -830,6 +830,12 @@
     height: 0;
     width: 18px;
   }
+  .legend-line.forecast {
+    background: transparent;
+    border-top: 2px dashed #9a2424;
+    height: 0;
+    width: 18px;
+  }
   .legend-dot {
     width: 8px;
     height: 8px;
@@ -1291,9 +1297,7 @@
     <button id="snapshot-btn" onclick="markSnapshot()" title="Spara nuvarande inställningar som referens">📌 Markera som nuläge</button>
     <button id="revert-btn" onclick="revertToSnapshot()" title="Gå tillbaka till markerat nuläge" style="display: none;">↩ Återgå till nuläge</button>
     <button id="clear-snapshot-btn" onclick="clearSnapshot()" title="Ta bort markerat nuläge" style="display: none;">✕ Ta bort nuläge</button>
-    <button onclick="exportJson()" title="Spara alla värden som JSON-fil för senare återanvändning">💾 Exportera JSON</button>
-    <button onclick="document.getElementById('json-import-input').click()" title="Ladda värden från en sparad JSON-fil">📂 Importera JSON</button>
-    <input type="file" id="json-import-input" accept=".json,application/json" style="display: none;" onchange="importJson(event)">
+
     <span class="snapshot-info" id="snapshot-info">inget nuläge markerat</span>
   </div>
 
@@ -2455,14 +2459,14 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, state.rampMonths, leadtimeMonths);
-      updateChartLegend(snapshotMonth !== null, false);
+      updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
     if (effectiveStartMonths <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, state.rampMonths, leadtimeMonths);
-      updateChartLegend(snapshotMonth !== null, false);
+      updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
     // Räkna baklänges med hänsyn till ramp OCH ledtid:
@@ -2483,8 +2487,8 @@
     let forecastTooFar = false;
     if (state.onskadVolym > 0 && potentialVolym < state.onskadVolym && effMonth > 0) {
       forecastMonths = timeToReach(state.onskadVolym, effMonth, state.rampMonths, leadtimeMonths);
-      // Begränsa förlängning till max 3x deadline-tiden för läsbarhet
-      if (forecastMonths > monthsLeft * 3) {
+      // Begränsa förlängning till max 6x deadline-tiden för läsbarhet
+      if (forecastMonths > monthsLeft * 6) {
         forecastTooFar = true;
       } else {
         forecastDate = new Date(today);
@@ -2493,7 +2497,7 @@
     }
 
     drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, state.rampMonths, leadtimeMonths, forecastMonths, forecastTooFar);
-    updateChartLegend(snapshotMonth !== null, targetMonthly > 0);
+    updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft));
 
     // Uppdatera prognostext under grafen
     const forecastEl = document.getElementById('forecast-text');
@@ -2524,7 +2528,7 @@
     updateActivityLabels();
   }
 
-  function updateChartLegend(hasSnapshot, hasTarget) {
+  function updateChartLegend(hasSnapshot, hasTarget, hasForecast) {
     const legend = document.getElementById('chart-legend');
     let html = `
       <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
@@ -2536,6 +2540,9 @@
     }
     if (hasSnapshot) {
       html += `<div class="legend-item"><span class="legend-line snapshot"></span> Nuläge (snapshot)</div>`;
+    }
+    if (hasForecast) {
+      html += `<div class="legend-item"><span class="legend-line forecast"></span> Prognos (klar efter deadline)</div>`;
     }
     legend.innerHTML = html;
   }
@@ -2898,13 +2905,26 @@
     if (showForecast) {
       // Generera förlängningspunkter från monthsLeft till forecastMonths
       const extPoints = [];
-      const extSteps = 40;
+      const extSteps = 60;
       for (let i = 0; i <= extSteps; i++) {
         const m = monthsLeft + ((forecastMonths - monthsLeft) * i / extSteps);
         const v = cumAt(m);
         extPoints.push({ x: xScale(m), y: yScale(v) });
       }
 
+      // Subtil gradient-fyllnad under prognos-linjen
+      const extFillPath = document.createElementNS(ns, 'path');
+      let extFillD = `M ${extPoints[0].x} ${extPoints[0].y} `;
+      for (let i = 1; i < extPoints.length; i++) {
+        extFillD += `L ${extPoints[i].x} ${extPoints[i].y} `;
+      }
+      extFillD += `L ${xScale(forecastMonths)} ${yScale(0)} L ${xScale(monthsLeft)} ${yScale(0)} Z`;
+      extFillPath.setAttribute('d', extFillD);
+      extFillPath.setAttribute('fill', '#9a2424');
+      extFillPath.setAttribute('opacity', '0.06');
+      svg.appendChild(extFillPath);
+
+      // Prognos-linje — röd streckad, tydlig
       const extPath = document.createElementNS(ns, 'path');
       let extD = `M ${extPoints[0].x} ${extPoints[0].y} `;
       for (let i = 1; i < extPoints.length; i++) {
@@ -2912,47 +2932,86 @@
       }
       extPath.setAttribute('d', extD);
       extPath.setAttribute('fill', 'none');
-      extPath.setAttribute('stroke', '#1a1a1a');
-      extPath.setAttribute('stroke-width', '2');
-      extPath.setAttribute('stroke-dasharray', '4 4');
-      extPath.setAttribute('opacity', '0.5');
+      extPath.setAttribute('stroke', '#9a2424');
+      extPath.setAttribute('stroke-width', '2.5');
+      extPath.setAttribute('stroke-dasharray', '6 4');
       svg.appendChild(extPath);
 
       // Markör vid klar-punkten
       const fcX = xScale(forecastMonths);
       const fcY = yScale(state.onskadVolym);
 
+      // Vertikal droplinje ned till x-axeln
+      const fcDropLine = document.createElementNS(ns, 'line');
+      fcDropLine.setAttribute('x1', fcX); fcDropLine.setAttribute('x2', fcX);
+      fcDropLine.setAttribute('y1', fcY); fcDropLine.setAttribute('y2', M.top + innerH);
+      fcDropLine.setAttribute('stroke', '#9a2424');
+      fcDropLine.setAttribute('stroke-width', '1');
+      fcDropLine.setAttribute('stroke-dasharray', '2 3');
+      fcDropLine.setAttribute('opacity', '0.5');
+      svg.appendChild(fcDropLine);
+
       // Halo
       const fcRing = document.createElementNS(ns, 'circle');
       fcRing.setAttribute('cx', fcX); fcRing.setAttribute('cy', fcY);
-      fcRing.setAttribute('r', 9);
-      fcRing.setAttribute('fill', '#1a1a1a');
+      fcRing.setAttribute('r', 12);
+      fcRing.setAttribute('fill', '#9a2424');
       fcRing.setAttribute('opacity', '0.15');
       svg.appendChild(fcRing);
 
       // Punkt
       const fcDot = document.createElementNS(ns, 'circle');
       fcDot.setAttribute('cx', fcX); fcDot.setAttribute('cy', fcY);
-      fcDot.setAttribute('r', 4);
-      fcDot.setAttribute('fill', '#1a1a1a');
+      fcDot.setAttribute('r', 5);
+      fcDot.setAttribute('fill', '#9a2424');
       fcDot.setAttribute('stroke', '#fff');
-      fcDot.setAttribute('stroke-width', '2');
+      fcDot.setAttribute('stroke-width', '2.5');
       svg.appendChild(fcDot);
 
-      // Datum-etikett vid klar-punkten
+      // Datum-chip vid klar-punkten
       const fcDate = new Date();
       fcDate.setMonth(fcDate.getMonth() + Math.round(forecastMonths));
       const dateStr = fcDate.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short' });
+      const chipText = 'klar ' + dateStr;
+      const chipW = chipText.length * 7 + 20;
+      const chipH = 22;
+      let chipX = fcX - chipW - 10;
+      if (chipX < M.left) chipX = fcX + 10;
+      const chipY = fcY - chipH - 8;
+      const finalChipY = chipY < M.top ? M.top + 4 : chipY;
+
+      const fcChip = document.createElementNS(ns, 'rect');
+      fcChip.setAttribute('x', chipX); fcChip.setAttribute('y', finalChipY);
+      fcChip.setAttribute('width', chipW); fcChip.setAttribute('height', chipH);
+      fcChip.setAttribute('rx', 6); fcChip.setAttribute('ry', 6);
+      fcChip.setAttribute('fill', '#9a2424');
+      svg.appendChild(fcChip);
 
       const fcLbl = document.createElementNS(ns, 'text');
-      fcLbl.setAttribute('x', fcX); fcLbl.setAttribute('y', fcY - 12);
+      fcLbl.setAttribute('x', chipX + chipW / 2);
+      fcLbl.setAttribute('y', finalChipY + 15);
       fcLbl.setAttribute('text-anchor', 'middle');
-      fcLbl.setAttribute('font-size', '10');
-      fcLbl.setAttribute('fill', '#1a1a1a');
+      fcLbl.setAttribute('font-size', '11');
+      fcLbl.setAttribute('fill', '#ffffff');
       fcLbl.setAttribute('font-weight', '600');
       fcLbl.setAttribute('font-family', 'inherit');
-      fcLbl.textContent = 'klar ' + dateStr;
+      fcLbl.textContent = chipText;
       svg.appendChild(fcLbl);
+
+      // "PROGNOS"-etikett mitt på linjen
+      const midM = monthsLeft + (forecastMonths - monthsLeft) * 0.45;
+      const midV = cumAt(midM);
+      const progLbl = document.createElementNS(ns, 'text');
+      progLbl.setAttribute('x', xScale(midM));
+      progLbl.setAttribute('y', yScale(midV) - 10);
+      progLbl.setAttribute('text-anchor', 'middle');
+      progLbl.setAttribute('font-size', '9');
+      progLbl.setAttribute('fill', '#9a2424');
+      progLbl.setAttribute('font-weight', '600');
+      progLbl.setAttribute('font-family', 'inherit');
+      progLbl.setAttribute('letter-spacing', '0.06em');
+      progLbl.textContent = 'PROGNOS';
+      svg.appendChild(progLbl);
     }
 
     // === RAMP- OCH LEDTID-MARKERINGAR ===
