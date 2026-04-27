@@ -1478,7 +1478,7 @@
 
   <div class="target-cell">
     <label>Projektstart
-      <span class="hint">när rampen börjar räknas — tomt = idag</span>
+      <span class="hint">datum då projektet kickar igång — lämna tomt om det inte är bestämt</span>
     </label>
     <input type="date" id="projektStart">
   </div>
@@ -2590,11 +2590,14 @@
     }
     document.getElementById('banner-headline').innerHTML = bannerHeadline;
     document.getElementById('banner-date').textContent = 'Genererad: ' + new Date().toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'});
-    const startStr = (state.projektStart && state.projektStart.length >= 8)
-      ? new Date(state.projektStart).toLocaleDateString('sv-SE')
-      : new Date().toLocaleDateString('sv-SE') + ' (idag)';
+    const hasProjektStart = state.projektStart && state.projektStart.length >= 8;
     const periodLen = monthsLeft > 0 ? '   ·   ' + monthsLeft.toFixed(1) + ' mån' : '';
-    document.getElementById('banner-deadline').textContent = 'Start ' + startStr + '   →   Deadline ' + deadline.toLocaleDateString('sv-SE') + periodLen;
+    if (hasProjektStart) {
+      const startStr = new Date(state.projektStart).toLocaleDateString('sv-SE');
+      document.getElementById('banner-deadline').textContent = 'Start ' + startStr + '   →   Deadline ' + deadline.toLocaleDateString('sv-SE') + periodLen;
+    } else {
+      document.getElementById('banner-deadline').textContent = 'Deadline ' + deadline.toLocaleDateString('sv-SE') + periodLen;
+    }
 
     recalcScenarios();
     renderProcessFlow();
