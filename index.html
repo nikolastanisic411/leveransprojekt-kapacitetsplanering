@@ -807,6 +807,12 @@
     padding: 18px 22px;
     margin-top: 12px;
   }
+  .chart-card .chart-title .chart-subtitle {
+    font-size: 11px;
+    color: #a8a8a3;
+    font-weight: 400;
+    margin-left: 8px;
+  }
   .chart-card .chart-title {
     font-size: 13px;
     color: #6b6b66;
@@ -1557,6 +1563,12 @@
       <div class="legend-item"><span class="legend-dot"></span> Volym vid deadline</div>
     </div>
     <div class="forecast-text" id="forecast-text" style="display: none;">—</div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Detaljerad planering — kapacitet per roll <span class="chart-subtitle">flaskhalsen är den lägsta linjen, övriga roller har överkapacitet</span></div>
+    <svg id="roles-chart" viewBox="0 0 800 320" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend" id="roles-chart-legend"></div>
   </div>
 
   <div class="section">Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
@@ -2672,6 +2684,7 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
+      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2679,6 +2692,7 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
+      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2736,6 +2750,7 @@
     let comparisonRoles = state.snapshot ? state.snapshot.roles : state.roles;
 
     updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp);
+    drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart);
     updateActivityLabels();
   }
 
@@ -2866,6 +2881,182 @@
     const removed = existingIds.filter(id => !currentIds.includes(id));
     const added = currentIds.filter(id => !existingIds.includes(id));
     if (removed.length || added.length) renderActivities();
+  }
+
+  // === ROLE COLORS ===
+  // Distinkta färger som funkar i print, plus röd reserverad för flaskhals.
+  const ROLE_COLORS = ['#1a1a1a', '#5C0E92', '#1d6e35', '#c2570d', '#0e6dab', '#7a3d99', '#4a4a45'];
+  function colorForRole(idx) {
+    return ROLE_COLORS[idx % ROLE_COLORS.length];
+  }
+
+  function drawRolesChart(monthsLeft, leadtimeMonths, rampMonths, startDelayMonths, elapsedFromStart) {
+    const svg = document.getElementById('roles-chart');
+    const legendEl = document.getElementById('roles-chart-legend');
+    if (!svg || !legendEl) return;
+    svg.innerHTML = '';
+    legendEl.innerHTML = '';
+    const W = 800, H = 320;
+    const M = { top: 26, right: 40, bottom: 50, left: 60 };
+    const innerW = W - M.left - M.right;
+    const innerH = H - M.top - M.bottom;
+    const ns = 'http://www.w3.org/2000/svg';
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    startDelayMonths = startDelayMonths || 0;
+    elapsedFromStart = elapsedFromStart || 0;
+
+    if (monthsLeft <= 0) {
+      const txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', W/2); txt.setAttribute('y', H/2);
+      txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('font-size', '13');
+      txt.setAttribute('fill', '#a8a8a3'); txt.setAttribute('font-family', 'inherit');
+      txt.textContent = 'Inga data att visa.';
+      svg.appendChild(txt); return;
+    }
+
+    const hitrate = state.hitrate / 100;
+    const active = activeRoles();
+    if (active.length === 0) return;
+
+    // Per-roll månadstakt (full kapacitet, vid full ramp, efter hitrate)
+    const roleMonthly = active.map(r => roleCapPerDay(r) * hitrate * 21);
+    const minMonthly = Math.min(...roleMonthly);
+    // Hitta flaskhalsen (lägst kap/dag bland aktiva)
+    const minCap = Math.min(...active.map(r => roleCapPerDay(r)));
+
+    const lt = leadtimeMonths || 0;
+    const cumAtRole = (t, mRate) => {
+      const tFromStart = t + elapsedFromStart - startDelayMonths;
+      const startT = tFromStart - lt;
+      if (startT <= 0 || mRate <= 0) return 0;
+      if (!rampMonths || rampMonths <= 0) return mRate * startT;
+      if (startT <= rampMonths) return 0.5 * mRate * startT * startT / rampMonths;
+      return 0.5 * mRate * rampMonths + (startT - rampMonths) * mRate;
+    };
+
+    const xMax = monthsLeft * 1.05;
+    const yMax = Math.max(...active.map((_, i) => cumAtRole(monthsLeft, roleMonthly[i]))) * 1.15 || 100;
+
+    const xScale = m => M.left + (m / xMax) * innerW;
+    const yScale = v => M.top + innerH - (v / yMax) * innerH;
+
+    // === Y-axel ===
+    const yTicks = niceTicks(0, yMax, 5);
+    yTicks.forEach(t => {
+      const y = yScale(t);
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', M.left); line.setAttribute('x2', M.left + innerW);
+      line.setAttribute('y1', y); line.setAttribute('y2', y);
+      line.setAttribute('stroke', '#ebe9e2'); line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+      const lbl = document.createElementNS(ns, 'text');
+      lbl.setAttribute('x', M.left - 10); lbl.setAttribute('y', y + 4);
+      lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('font-size', '10');
+      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('font-variant-numeric', 'tabular-nums');
+      lbl.textContent = Math.round(t);
+      svg.appendChild(lbl);
+    });
+
+    // === X-axel: månader ===
+    const today = new Date();
+    const monthNames = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+    const xTickStep = niceMonthStep(xMax);
+    for (let m = 0; m <= xMax + 0.001; m += xTickStep) {
+      const x = xScale(m);
+      const tickDate = new Date(today);
+      tickDate.setMonth(tickDate.getMonth() + Math.round(m));
+      const lbl = document.createElementNS(ns, 'text');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top + innerH + 16);
+      lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '10');
+      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
+      lbl.textContent = monthNames[tickDate.getMonth()];
+      svg.appendChild(lbl);
+    }
+
+    // X-axel-linje
+    const xAxis = document.createElementNS(ns, 'line');
+    xAxis.setAttribute('x1', M.left); xAxis.setAttribute('x2', M.left + innerW);
+    xAxis.setAttribute('y1', M.top + innerH); xAxis.setAttribute('y2', M.top + innerH);
+    xAxis.setAttribute('stroke', '#d8d6cf'); xAxis.setAttribute('stroke-width', '1');
+    svg.appendChild(xAxis);
+
+    // === Deadline-linje ===
+    const dx = xScale(monthsLeft);
+    const dLine = document.createElementNS(ns, 'line');
+    dLine.setAttribute('x1', dx); dLine.setAttribute('x2', dx);
+    dLine.setAttribute('y1', M.top - 4); dLine.setAttribute('y2', M.top + innerH);
+    dLine.setAttribute('stroke', '#9a2424'); dLine.setAttribute('stroke-width', '1.5');
+    dLine.setAttribute('stroke-dasharray', '3 4');
+    svg.appendChild(dLine);
+    const dLbl = document.createElementNS(ns, 'text');
+    dLbl.setAttribute('x', dx); dLbl.setAttribute('y', M.top - 8);
+    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '10');
+    dLbl.setAttribute('fill', '#9a2424'); dLbl.setAttribute('font-weight', '600');
+    dLbl.setAttribute('font-family', 'inherit');
+    dLbl.textContent = 'DEADLINE';
+    svg.appendChild(dLbl);
+
+    // === Projektstart-markör (om i framtiden) ===
+    if (startDelayMonths > 0 && startDelayMonths < monthsLeft) {
+      const psX = xScale(startDelayMonths);
+      const psLine = document.createElementNS(ns, 'line');
+      psLine.setAttribute('x1', psX); psLine.setAttribute('x2', psX);
+      psLine.setAttribute('y1', M.top - 4); psLine.setAttribute('y2', M.top + innerH);
+      psLine.setAttribute('stroke', '#5C0E92'); psLine.setAttribute('stroke-width', '1.5');
+      psLine.setAttribute('stroke-dasharray', '4 4'); psLine.setAttribute('opacity', '0.7');
+      svg.appendChild(psLine);
+    }
+
+    // === Per-roll-linjer ===
+    const numPoints = 80;
+    active.forEach((role, idx) => {
+      const isBottleneck = roleCapPerDay(role) === minCap;
+      const color = isBottleneck ? '#9a2424' : colorForRole(idx);
+      const pts = [];
+      for (let i = 0; i <= numPoints; i++) {
+        const m = (monthsLeft * i) / numPoints;
+        const v = cumAtRole(m, roleMonthly[idx]);
+        pts.push({ x: xScale(m), y: yScale(v) });
+      }
+      const path = document.createElementNS(ns, 'path');
+      let d = `M ${pts[0].x} ${pts[0].y} `;
+      for (let i = 1; i < pts.length; i++) d += `L ${pts[i].x} ${pts[i].y} `;
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', isBottleneck ? '3' : '1.8');
+      path.setAttribute('stroke-linejoin', 'round');
+      if (!isBottleneck) path.setAttribute('opacity', '0.85');
+      svg.appendChild(path);
+
+      // Slutpunkts-etikett vid deadline
+      const endV = cumAtRole(monthsLeft, roleMonthly[idx]);
+      const endX = xScale(monthsLeft);
+      const endY = yScale(endV);
+      const endLbl = document.createElementNS(ns, 'text');
+      endLbl.setAttribute('x', endX + 6);
+      endLbl.setAttribute('y', endY + 4);
+      endLbl.setAttribute('font-size', '10');
+      endLbl.setAttribute('fill', color);
+      endLbl.setAttribute('font-weight', isBottleneck ? '600' : '500');
+      endLbl.setAttribute('font-family', 'inherit');
+      endLbl.setAttribute('font-variant-numeric', 'tabular-nums');
+      endLbl.textContent = Math.round(endV);
+      svg.appendChild(endLbl);
+
+      // Legend
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      const sw = document.createElement('span');
+      sw.className = 'legend-line';
+      sw.style.background = color;
+      if (isBottleneck) sw.style.height = '3px';
+      item.appendChild(sw);
+      const txt = document.createTextNode(role.name + ' — ' + roleMonthly[idx].toFixed(1) + '/mån' + (isBottleneck ? ' (flaskhals)' : ''));
+      item.appendChild(txt);
+      legendEl.appendChild(item);
+    });
   }
 
   function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
