@@ -1,0 +1,3250 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leveransprojekt — Kapacitetsplanering</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #FAFAF7;
+    color: #1a1a1a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 500;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #6b6b66;
+    margin: 0 0 32px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid #d8d6cf;
+  }
+  .toolbar button {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toolbar button:hover { background: #f4f2eb; border-color: #a8a6a0; }
+  .toolbar button.primary {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-color: #1a1a1a;
+  }
+  .toolbar button.primary:hover { background: #333; }
+  .toolbar .snapshot-info {
+    margin-left: auto;
+    font-size: 11px;
+    color: #8a8a85;
+    align-self: center;
+    font-style: italic;
+  }
+  .toolbar .snapshot-info.has-snapshot { color: #1d6e35; font-style: normal; }
+
+  .section {
+    font-size: 13px;
+    color: #8a8a85;
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 0.5px solid #d8d6cf;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .section .saved-indicator {
+    font-size: 11px;
+    color: #c8c6bf;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .section .section-hint {
+    font-size: 11px;
+    color: #a8a8a3;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .summary-banner {
+    display: none;
+    background: linear-gradient(135deg, #29004F 0%, #3D0080 100%);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .summary-banner .banner-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .summary-banner .banner-cell .lbl {
+    font-size: 11px;
+    color: #c8c6bf;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .summary-banner .banner-cell .big {
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .summary-banner .banner-cell .small {
+    font-size: 13px;
+    color: #d8d6cf;
+    line-height: 1.5;
+  }
+  .summary-banner .banner-headline {
+    font-size: 16px;
+    color: #ffffff;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .summary-banner .banner-headline strong {
+    color: #D8C5F0;
+    font-weight: 500;
+  }
+  .summary-banner .banner-meta {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 0.5px solid #5C0E92;
+    font-size: 11px;
+    color: #a8a6a0;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .process-flow {
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-top: 14px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .process-flow .pf-title {
+    font-size: 13px;
+    color: #6b6b66;
+    margin-bottom: 16px;
+  }
+  .process-flow .pf-row {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    overflow-x: visible;
+    padding-top: 18px;
+  }
+  .process-flow .pf-step {
+    background: #F4F2EB;
+    border: 0.5px solid #d8d6cf;
+    border-radius: 10px;
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .process-flow .pf-step.bottleneck {
+    background: #FBE8E8;
+    border-color: #9a2424;
+  }
+  .process-flow .pf-step .pf-num {
+    font-size: 10px;
+    color: #8a8a85;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .process-flow .pf-step .pf-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .process-flow .pf-step .pf-cap {
+    font-size: 18px;
+    font-weight: 500;
+    color: #1a1a1a;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .process-flow .pf-step .pf-suffix {
+    font-size: 10px;
+    color: #6b6b66;
+  }
+  .process-flow .pf-step.bottleneck .pf-cap {
+    color: #9a2424;
+  }
+  .process-flow .pf-step.bottleneck .pf-flag {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #9a2424;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    z-index: 2;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .process-flow .pf-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c8c6bf;
+    font-size: 18px;
+    flex: 0 0 18px;
+  }
+
+  .tt {
+    cursor: help;
+    border-bottom: 0.5px dotted #c8c6bf;
+    position: relative;
+  }
+  .tt:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    white-space: normal;
+    width: max-content;
+    max-width: 260px;
+    text-align: left;
+    line-height: 1.4;
+    z-index: 10;
+    pointer-events: none;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .tt:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0px);
+    border: 4px solid transparent;
+    border-top-color: #1a1a1a;
+    z-index: 11;
+    pointer-events: none;
+  }
+
+  .role-header {
+    display: grid;
+    grid-template-columns: 24px 22px 28px 1fr 50px 70px 60px 80px 28px;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 11px;
+    color: #a8a8a3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 0.5px solid #e5e3dc;
+    margin-bottom: 4px;
+  }
+  .role-header .col-takt { text-align: center; }
+  .role-header .col-cap { text-align: right; }
+
+  .role-row {
+    display: grid;
+    grid-template-columns: 24px 22px 28px 1fr 50px 70px 60px 80px 28px;
+    gap: 6px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 0.5px solid #f0eee7;
+    background: transparent;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .role-row.disabled {
+    opacity: 0.45;
+  }
+  .role-row.disabled .role-name-input,
+  .role-row.disabled .cap {
+    text-decoration: line-through;
+  }
+  .role-row.dragging { opacity: 0.4; }
+  .role-row.drag-over {
+    background: #F8F0FE;
+    border-bottom-color: #990AE3;
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: #c8c6bf;
+    font-size: 16px;
+    text-align: center;
+    user-select: none;
+    line-height: 1;
+    padding: 4px 0;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .drag-handle:hover { color: #6b6b66; background: #f4f2eb; }
+  .drag-handle:active { cursor: grabbing; }
+
+  .role-num {
+    font-size: 13px;
+    color: #8a8a85;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  .role-row .role-name-input {
+    font-size: 14px;
+    color: #1a1a1a;
+    font-weight: 500;
+    background: transparent;
+    border: 0.5px solid transparent;
+    border-radius: 6px;
+    padding: 6px 8px;
+    width: 100%;
+    font-family: inherit;
+  }
+  .role-row .role-name-input:hover { border-color: #e5e3dc; }
+  .role-row .role-name-input:focus {
+    outline: none;
+    border-color: #1a1a1a;
+    background: #ffffff;
+  }
+  .role-row .count {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .role-row input[type=number] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+  }
+  .role-row input[type=number]:focus { outline: none; border-color: #1a1a1a; }
+  .role-row .cap {
+    text-align: right;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: #4a4a45;
+  }
+  .role-row.bottleneck .cap { color: #9a2424; }
+  .role-row.bottleneck .role-name-input { color: #9a2424; }
+  .role-row .remove-btn {
+    background: transparent;
+    border: none;
+    color: #c8c6bf;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .role-row .remove-btn:hover { color: #9a2424; background: #FBE8E8; }
+
+  .role-row .role-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #1a1a1a;
+    margin: 0;
+    justify-self: center;
+  }
+
+  .role-row .unit-select {
+    width: 100%;
+    padding: 6px 4px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #ffffff;
+    color: #4a4a45;
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  .role-row .unit-select:focus { outline: none; border-color: #1a1a1a; }
+  .role-row .unit-select:hover { border-color: #a8a6a0; }
+
+  .add-role-row {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  button.add-row {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 0.5px dashed #a8a6a0;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  button.add-row:hover {
+    background: #f4f2eb;
+    border-style: solid;
+    border-color: #1a1a1a;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: #d8d6cf;
+    border-radius: 4px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%; background: #1a1a1a;
+    cursor: pointer; border: none;
+  }
+
+  .global-row {
+    display: grid;
+    grid-template-columns: 150px 1fr 60px;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0 4px;
+  }
+  .global-row .role-name { font-size: 14px; color: #1a1a1a; font-weight: 500; }
+  .global-row .role-name .hint {
+    display: block;
+    font-size: 11px;
+    color: #9a9a95;
+    font-weight: 400;
+    margin-top: 1px;
+  }
+  .global-row .count {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .target-cell {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0 4px;
+  }
+  .target-cell label { font-size: 14px; color: #1a1a1a; font-weight: 500; }
+  .target-cell label .hint {
+    display: block;
+    font-size: 11px;
+    color: #9a9a95;
+    font-weight: 400;
+    margin-top: 1px;
+  }
+  .target-cell input {
+    padding: 6px 10px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    max-width: 200px;
+  }
+  .target-cell input:focus { outline: none; border-color: #1a1a1a; }
+
+  .typfall-toggle {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tf-btn {
+    background: #ffffff;
+    color: #6b6b66;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    line-height: 1.2;
+  }
+  .tf-btn span {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9a9a95;
+  }
+  .tf-btn:hover { background: #f4f2eb; border-color: #a8a6a0; }
+  .tf-btn.active {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-color: #1a1a1a;
+  }
+  .tf-btn.active span {
+    color: #c8c6bf;
+  }
+
+  .mix-row { align-items: start; }
+  .mix-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .mix-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 8px;
+  }
+  .mix-field .mix-lbl {
+    font-size: 11px;
+    color: #6b6b66;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+  .mix-field .mix-lbl small {
+    font-size: 10px;
+    color: #a8a8a3;
+    font-weight: 400;
+  }
+  .mix-field input[type=number] {
+    padding: 6px 10px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mix-field input[type=number]:focus { outline: none; border-color: #1a1a1a; }
+  .mix-summary {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: #6b6b66;
+    text-align: right;
+    padding: 4px 4px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .mix-summary.warning {
+    color: #9a2424;
+    font-weight: 500;
+  }
+
+  .suggest-card {
+    background: #F8F0FE;
+    border: 0.5px solid #D8C5F0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    display: none;
+  }
+  .suggest-card.show { display: block; }
+  .suggest-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .suggest-card .title { font-size: 13px; font-weight: 500; color: #5C0E92; }
+  .suggest-card .body {
+    font-size: 13px;
+    color: #4a4a45;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .suggest-card .margin-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 60px;
+    gap: 12px;
+    align-items: center;
+    margin: 8px 0 12px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border-radius: 6px;
+  }
+  .suggest-card .margin-row label {
+    font-size: 12px;
+    color: #5C0E92;
+    font-weight: 500;
+  }
+  .suggest-card .margin-row label .hint {
+    display: block;
+    font-size: 11px;
+    color: #9a9a95;
+    font-weight: 400;
+    margin-top: 1px;
+  }
+  .suggest-card .margin-row .val {
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: #5C0E92;
+  }
+  .suggest-card .roles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .suggest-card .role-suggest {
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .suggest-card .role-suggest .nm {
+    color: #6b6b66;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .suggest-card .role-suggest .vl {
+    font-weight: 500;
+    font-size: 13px;
+    color: #1a1a1a;
+    font-variant-numeric: tabular-nums;
+  }
+  .suggest-card .role-suggest .delta {
+    font-size: 11px;
+    color: #6b6b66;
+  }
+  .suggest-card .role-suggest .delta.up { color: #1d6e35; }
+  .suggest-card .outcome {
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #4a4a45;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .suggest-card .outcome strong { color: #1a1a1a; font-weight: 500; }
+
+  .summary {
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+  .stat .lbl { font-size: 12px; color: #6b6b66; }
+  .stat .val {
+    font-size: 28px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    margin: 4px 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .stat .sub { font-size: 12px; color: #8a8a85; }
+
+  .goal-warning {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: #FBE8E8;
+    border: 0.5px solid #9a2424;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .goal-warning .gw-icon {
+    font-size: 22px;
+    color: #9a2424;
+    flex: 0 0 22px;
+    line-height: 1;
+  }
+  .goal-warning .gw-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  .goal-warning .gw-text strong {
+    font-size: 14px;
+    color: #9a2424;
+    font-weight: 600;
+  }
+  .goal-warning .gw-text span {
+    font-size: 13px;
+    color: #6b1a1a;
+    line-height: 1.5;
+  }
+
+  .chart-card {
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-top: 12px;
+  }
+  .chart-card .chart-title {
+    font-size: 13px;
+    color: #6b6b66;
+    margin-bottom: 14px;
+  }
+  .chart-card svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+  }
+  .chart-card .legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #6b6b66;
+    flex-wrap: wrap;
+  }
+  .chart-card .legend-item { display: flex; align-items: center; gap: 6px; }
+  .chart-card .forecast-text {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #FBE8E8;
+    border: 0.5px solid #E8C8C8;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #6b1a1a;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .chart-card .forecast-text strong { color: #9a2424; font-weight: 600; }
+  .legend-line { width: 18px; height: 2px; background: #1a1a1a; }
+  .legend-line.deadline {
+    background: transparent;
+    border-left: 1.5px dashed #9a2424;
+    width: 0;
+    height: 14px;
+  }
+  .legend-line.snapshot {
+    background: #a8a6a0;
+    border-top: 1.5px dashed #a8a6a0;
+    height: 0;
+  }
+  .legend-line.target {
+    background: transparent;
+    border-top: 1.5px dashed #990AE3;
+    height: 0;
+    width: 18px;
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #990AE3;
+  }
+
+  .scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .scen {
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 12px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .scen .scen-name-input {
+    font-size: 12px;
+    color: #8a8a85;
+    background: transparent;
+    border: 0.5px solid transparent;
+    border-radius: 6px;
+    padding: 4px 6px;
+    width: calc(100% - 28px);
+    font-family: inherit;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .scen .scen-name-input:hover { border-color: #e5e3dc; }
+  .scen .scen-name-input:focus {
+    outline: none;
+    border-color: #1a1a1a;
+    background: #f4f2eb;
+    color: #1a1a1a;
+  }
+  .scen .scen-target-input {
+    font-size: 22px;
+    font-weight: 500;
+    text-align: center;
+    background: transparent;
+    border: 0.5px solid transparent;
+    border-radius: 6px;
+    padding: 4px 6px;
+    width: 100%;
+    font-family: inherit;
+    color: #1a1a1a;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    margin: 4px 0 6px;
+  }
+  .scen .scen-target-input:hover { border-color: #e5e3dc; }
+  .scen .scen-target-input:focus {
+    outline: none;
+    border-color: #1a1a1a;
+    background: #f4f2eb;
+  }
+  .scen .target-suffix {
+    font-size: 12px;
+    color: #8a8a85;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .scen .verdict-row { text-align: center; }
+  .verdict {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 8px;
+    display: inline-block;
+    letter-spacing: 0.02em;
+  }
+  .v-ok { background: #DDF0E0; color: #1d6e35; }
+  .v-fail { background: #F7DBDB; color: #9a2424; }
+  .gap { font-size: 12px; color: #6b6b66; margin-top: 8px; text-align: center; }
+  .scen .scen-remove-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: transparent;
+    border: none;
+    color: #c8c6bf;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .scen .scen-remove-btn:hover { color: #9a2424; background: #FBE8E8; }
+  .scen.add-scenario {
+    border-style: dashed;
+    border-color: #a8a6a0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #6b6b66;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    min-height: 100px;
+  }
+  .scen.add-scenario:hover {
+    background: #f4f2eb;
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+  }
+
+  .actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  button {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  button:hover { background: #f4f2eb; border-color: #a8a6a0; }
+  button:active { transform: scale(0.98); }
+  button.danger { color: #9a2424; border-color: #E8C8C8; }
+  button.danger:hover { background: #FBE8E8; border-color: #9a2424; }
+  button.suggest {
+    background: #990AE3;
+    color: #ffffff;
+    border-color: #990AE3;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  button.suggest:hover { background: #7B0BB7; border-color: #7B0BB7; }
+
+  .timeline {
+    background: #F4F2EB;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #4a4a45;
+    line-height: 1.6;
+  }
+  .timeline strong { color: #1a1a1a; font-weight: 500; }
+
+  .analysis-block {
+    margin-top: 16px;
+    padding: 24px;
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 12px;
+  }
+  .analysis-block h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .analysis-block .desc {
+    font-size: 13px;
+    color: #6b6b66;
+    margin-bottom: 14px;
+  }
+
+  .activity-row {
+    display: grid;
+    grid-template-columns: 28px 30px 160px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 14px 0;
+    border-bottom: 0.5px solid #f0eee7;
+    transition: background 0.15s;
+  }
+  .activity-row:last-child { border-bottom: none; }
+  .activity-row.dragging { opacity: 0.4; }
+  .activity-row.drag-over { background: #F8F0FE; }
+  .activity-row.disabled { opacity: 0.45; }
+  .activity-row.disabled .role-label { text-decoration: line-through; }
+  .activity-row .activity-handle {
+    cursor: grab;
+    color: #c8c6bf;
+    font-size: 16px;
+    text-align: center;
+    user-select: none;
+    line-height: 1;
+    padding: 8px 0 0;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .activity-row .activity-handle:hover { color: #6b6b66; background: #f4f2eb; }
+  .activity-row .activity-handle:active { cursor: grabbing; }
+  .activity-row .activity-num {
+    font-size: 16px;
+    color: #1a1a1a;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    padding-top: 6px;
+  }
+  .activity-row .role-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    padding-top: 8px;
+  }
+  .activity-row .role-label .small {
+    display: block;
+    font-size: 11px;
+    color: #9a9a95;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .activity-row textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    line-height: 1.5;
+    min-height: 60px;
+    resize: vertical;
+  }
+  .activity-row textarea:focus { outline: none; border-color: #1a1a1a; }
+
+  /* CHECKLIST */
+  .checklist {
+    margin-top: 4px;
+  }
+  .checklist-item {
+    display: grid;
+    grid-template-columns: 22px 1fr 28px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 0.5px solid #f0eee7;
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item input[type=checkbox] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #1a1a1a;
+    margin: 0;
+  }
+  .checklist-item input[type=text] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 0.5px solid transparent;
+    border-radius: 6px;
+    font-size: 13px;
+    background: transparent;
+    color: #1a1a1a;
+    font-family: inherit;
+  }
+  .checklist-item input[type=text]:hover { border-color: #e5e3dc; }
+  .checklist-item input[type=text]:focus {
+    outline: none;
+    border-color: #1a1a1a;
+    background: #ffffff;
+  }
+  .checklist-item.checked input[type=text] {
+    color: #a8a8a3;
+    text-decoration: line-through;
+  }
+  .checklist-item .cl-remove {
+    background: transparent;
+    border: none;
+    color: #c8c6bf;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .checklist-item .cl-remove:hover {
+    color: #9a2424;
+    background: #FBE8E8;
+  }
+  .add-checklist-item {
+    margin-top: 10px;
+    background: transparent;
+    color: #6b6b66;
+    border: 0.5px dashed #c8c6bf;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .add-checklist-item:hover {
+    background: #f4f2eb;
+    border-style: solid;
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+  }
+
+  .constraints-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 8px;
+    font-size: 13px;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    line-height: 1.5;
+    min-height: 90px;
+    resize: vertical;
+  }
+  .constraints-textarea:focus { outline: none; border-color: #1a1a1a; }
+
+  .footer-note {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 0.5px solid #d8d6cf;
+    font-size: 12px;
+    color: #8a8a85;
+    line-height: 1.6;
+  }
+
+  @media print {
+    @page {
+      margin: 18mm 14mm;
+    }
+    body { background: #ffffff; }
+    .page { padding: 0; max-width: none; }
+    .toolbar, .add-role-row, .scen.add-scenario, .actions, .remove-btn,
+    .scen-remove-btn, .drag-handle, .activity-handle, .cl-remove,
+    .add-checklist-item,
+    input[type=range] { display: none !important; }
+    .summary-banner { display: block !important; }
+    .role-row, .activity-row, .checklist-item { page-break-inside: avoid; }
+    .role-row { border-bottom: 0.5px solid #d8d6cf; }
+    .activity-row { border-bottom: 0.5px solid #d8d6cf; }
+    .analysis-block, .chart-card, .summary, .process-flow, .suggest-card,
+    .timeline, .summary-banner { page-break-inside: avoid; }
+    .scenarios-grid { page-break-inside: avoid; }
+    .footer-note { display: none !important; }
+    .subtitle { display: none !important; }
+    .section .section-hint { display: none !important; }
+    .section .saved-indicator { display: none !important; }
+    .analysis-block .desc { display: none !important; }
+    .global-row .role-name .hint { display: none !important; }
+    .target-cell label .hint { display: none !important; }
+    .suggest-card .margin-row label .hint { display: none !important; }
+    .role-row {
+      grid-template-columns: 30px 1fr 50px 80px 80px;
+    }
+    .role-header {
+      grid-template-columns: 30px 1fr 50px 80px 80px;
+    }
+    .activity-row {
+      grid-template-columns: 30px 160px 1fr;
+    }
+    .checklist-item {
+      grid-template-columns: 22px 1fr;
+    }
+    .role-row .role-name-input, .scen-name-input, .scen-target-input,
+    .checklist-item input[type=text] {
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    .role-row input[type=number] {
+      border: none !important;
+      padding: 0 !important;
+      background: transparent !important;
+    }
+    /* Dölj tomma textareas i print så det inte blir tomma rutor */
+    .activity-row textarea:placeholder-shown,
+    .constraints-textarea:placeholder-shown {
+      display: none !important;
+    }
+    /* Dölj rader med tom aktivitetsbeskrivning helt */
+    .activity-row:has(textarea:placeholder-shown) {
+      display: none !important;
+    }
+    /* Dölj checklist-items med tom text */
+    .checklist-item:has(input[type=text]:placeholder-shown) {
+      display: none !important;
+    }
+    /* Dölj begränsningar-blocket helt om alla items är tomma */
+    /* Dölj anteckningar-blocket om textarea är tom */
+    .analysis-block:has(.constraints-textarea:placeholder-shown:only-of-type),
+    .analysis-block:has(.checklist:empty) {
+      /* Detta är svårt att göra reliable - hoppar över */
+    }
+    button { display: none !important; }
+    .suggest-card { background: #f4f2eb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .v-ok, .v-fail { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tt { border-bottom: none; }
+    .tt::after, .tt::before { display: none !important; }
+    .summary-banner, .process-flow, .pf-step { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* Snyggare textarea-utskrift */
+    textarea {
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+      resize: none !important;
+      min-height: auto !important;
+      overflow: visible !important;
+      height: auto !important;
+    }
+    /* Section headers blir tydligare i print */
+    .section {
+      page-break-after: avoid;
+      margin-top: 20px !important;
+    }
+    .analysis-block h3 {
+      page-break-after: avoid;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .role-header, .role-row {
+      grid-template-columns: 24px 24px 1fr 36px;
+      gap: 6px;
+    }
+    .role-header { display: none; }
+    .role-row { padding: 12px 0; border-bottom: 1px solid #e5e3dc; }
+    .role-row > input[type=range],
+    .role-row > input[type=number],
+    .role-row > .cap {
+      grid-column: span 4;
+    }
+    .global-row, .target-cell { grid-template-columns: 1fr 80px; gap: 8px; }
+    .activity-row { grid-template-columns: 24px 24px 1fr; gap: 8px; }
+    .activity-row textarea { grid-column: span 3; }
+    .activity-row .role-label { grid-column: span 1; }
+    .summary { grid-template-columns: 1fr; }
+    .scenarios-grid { grid-template-columns: 1fr; }
+    .suggest-card .margin-row { grid-template-columns: 1fr 60px; }
+    .summary-banner .banner-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Leveransprojekt — Kapacitetsplanering</h1>
+  <p class="subtitle">Dra i staplarna för antal personer. Klicka i fälten för att ändra. Allt sparas automatiskt.</p>
+
+  <div class="toolbar">
+    <button onclick="window.print()" title="Skriv ut eller spara som PDF">🖨 Skriv ut / PDF</button>
+    <button id="snapshot-btn" onclick="markSnapshot()" title="Spara nuvarande inställningar som referens">📌 Markera som nuläge</button>
+    <button id="revert-btn" onclick="revertToSnapshot()" title="Gå tillbaka till markerat nuläge" style="display: none;">↩ Återgå till nuläge</button>
+    <button id="clear-snapshot-btn" onclick="clearSnapshot()" title="Ta bort markerat nuläge" style="display: none;">✕ Ta bort nuläge</button>
+    <button onclick="exportJson()" title="Spara alla värden som JSON-fil för senare återanvändning">💾 Exportera JSON</button>
+    <button onclick="document.getElementById('json-import-input').click()" title="Ladda värden från en sparad JSON-fil">📂 Importera JSON</button>
+    <input type="file" id="json-import-input" accept=".json,application/json" style="display: none;" onchange="importJson(event)">
+    <span class="snapshot-info" id="snapshot-info">inget nuläge markerat</span>
+  </div>
+
+  <div class="summary-banner" id="summary-banner">
+    <div class="banner-headline" id="banner-headline">—</div>
+    <div class="banner-grid">
+      <div class="banner-cell">
+        <div class="lbl">Aktuell takt</div>
+        <div class="big" id="banner-takt">—</div>
+        <div class="small" id="banner-takt-sub">—</div>
+      </div>
+      <div class="banner-cell">
+        <div class="lbl">Flaskhals</div>
+        <div class="big" id="banner-bottleneck" style="font-size: 22px;">—</div>
+        <div class="small" id="banner-bottleneck-sub">—</div>
+      </div>
+      <div class="banner-cell">
+        <div class="lbl">Volym till deadline</div>
+        <div class="big" id="banner-volym">—</div>
+        <div class="small" id="banner-volym-sub">—</div>
+      </div>
+    </div>
+    <div class="banner-meta">
+      <span id="banner-date">—</span>
+      <span id="banner-deadline">—</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <span>Bemanning &amp; kapacitet <span class="section-hint">— dra ⋮⋮ för att sortera om</span></span>
+    <span class="saved-indicator" id="saved-indicator">sparat</span>
+  </div>
+
+  <div class="role-header">
+    <div></div>
+    <div></div>
+    <div>#</div>
+    <div>Roll</div>
+    <div></div>
+    <div class="col-takt"><span class="tt" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
+    <div class="col-takt">Enhet</div>
+    <div class="col-cap"><span class="tt" data-tip="Antal personer × takt (omräknat till per dag). Den lägsta kapaciteten i kedjan blir flaskhalsen.">Kap/dag</span></div>
+    <div></div>
+  </div>
+
+  <div id="roles-container"></div>
+
+  <div class="add-role-row">
+    <button class="add-row" onclick="addRole()">+ Lägg till roll</button>
+  </div>
+
+  <div class="process-flow">
+    <div class="pf-title"><span class="tt" data-tip="Leveranskedjan i den ordning aktiviteterna sker. Flaskhalsen är markerad med rött.">Leveransflöde — kapacitet per steg</span></div>
+    <div class="pf-row" id="pf-row"></div>
+  </div>
+
+  <div class="section">Räkna baklänges — vad krävs?</div>
+
+  <div class="target-cell">
+    <label>Mål — total volym
+      <span class="hint">antal som ska vara klara till deadline</span>
+    </label>
+    <input type="number" id="onskad-volym" value="390" min="1" step="1">
+  </div>
+
+  <div class="target-cell">
+    <label><span class="tt" data-tip="Hur lång tid varje enskild leverans tar från start till klar. Påverkar när första leveranserna är färdiga och senaste möjliga startdatum för att hinna till deadline. Välj Blandat om volymen består av en mix av typfall.">Typfall (ledtid)</span>
+      <span class="hint">tid per leverans från start till klar</span>
+    </label>
+    <div class="typfall-toggle">
+      <button id="tf-1" class="tf-btn active" onclick="setTypfall(10)">Typfall 1<span>10 dagar</span></button>
+      <button id="tf-2" class="tf-btn" onclick="setTypfall(60)">Typfall 2<span>60 dagar</span></button>
+      <button id="tf-3" class="tf-btn" onclick="setTypfall(100)">Typfall 3<span>100 dagar</span></button>
+      <button id="tf-mix" class="tf-btn" onclick="setTypfall('mix')">Blandat<span>viktad ledtid</span></button>
+    </div>
+  </div>
+
+  <div class="target-cell mix-row" id="mix-row" style="display: none;">
+    <label>Antal per typfall
+      <span class="hint">summan ska matcha total volym</span>
+    </label>
+    <div class="mix-fields">
+      <div class="mix-field">
+        <span class="mix-lbl">Typfall 1<small>10 dagar</small></span>
+        <input type="number" id="mix-tf1" min="0" step="1" value="0">
+      </div>
+      <div class="mix-field">
+        <span class="mix-lbl">Typfall 2<small>60 dagar</small></span>
+        <input type="number" id="mix-tf2" min="0" step="1" value="0">
+      </div>
+      <div class="mix-field">
+        <span class="mix-lbl">Typfall 3<small>100 dagar</small></span>
+        <input type="number" id="mix-tf3" min="0" step="1" value="390">
+      </div>
+      <div class="mix-summary" id="mix-summary">summa: 390 / 390 · viktad ledtid: 100 dagar</div>
+    </div>
+  </div>
+
+  <div class="suggest-card" id="suggest-card">
+    <div class="head">
+      <div class="title" id="suggest-title">Förslag på bemanning</div>
+      <button class="suggest" onclick="applySuggestion()">Använd förslaget</button>
+    </div>
+    <div class="body" id="suggest-body">—</div>
+
+    <div class="margin-row">
+      <label><span class="tt" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
+        <span class="hint">buffert utöver minimum</span>
+      </label>
+      <input type="range" id="margin" min="0" max="50" value="10" step="5">
+      <div class="val" id="margin-v">10%</div>
+    </div>
+
+    <div class="roles" id="suggest-roles"></div>
+
+    <div class="outcome" id="suggest-outcome">—</div>
+  </div>
+
+  <div class="section">Hitrate, deadline &amp; rampperiod</div>
+
+  <div class="global-row">
+    <div class="role-name"><span class="tt" data-tip="Andel leveranser som lyckas på första försöket.">Hitrate</span>
+      <span class="hint">% leveranser som lyckas på första försöket</span>
+    </div>
+    <input type="range" id="hitrate" min="50" max="100" value="90" step="1">
+    <div class="count" id="hitrate-v">90%</div>
+  </div>
+
+  <div class="global-row">
+    <div class="role-name"><span class="tt" data-tip="Antal månader det tar innan leveranstakten är uppe i full kapacitet. Användbart vid uppstart av nya projekt — det tar tid innan team, processer och flöde stabiliseras. Sätt 0 för pågående projekt i full drift.">Rampperiod</span>
+      <span class="hint">månader till full takt vid uppstart</span>
+    </div>
+    <input type="range" id="rampMonths" min="0" max="12" value="0" step="1">
+    <div class="count" id="rampMonths-v">0 mån</div>
+  </div>
+
+  <div class="target-cell">
+    <label>Deadline</label>
+    <input type="date" id="deadline" value="2027-12-31">
+  </div>
+
+  <div class="section">Aktuell takt <span class="section-hint">— resultatet av nuvarande bemanning</span></div>
+
+  <div class="summary">
+    <div class="stat">
+      <div class="lbl"><span class="tt" data-tip="MIN(alla rollers kapaciteter) × hitrate. Den lägsta kapaciteten i kedjan sätter taket.">Per arbetsdag</span></div>
+      <div class="val" id="day-out">—</div>
+      <div class="sub">flaskhals: <span id="bottleneck">—</span></div>
+    </div>
+    <div class="stat">
+      <div class="lbl"><span class="tt" data-tip="Vad ni levererar per månad vid full takt — alltså efter ev. rampperiod är klar.">Per månad vid full takt</span></div>
+      <div class="val" id="month-out">—</div>
+      <div class="sub" id="month-sub">—</div>
+    </div>
+    <div class="stat">
+      <div class="lbl"><span class="tt" data-tip="Total volym ni hinner leverera fram till deadline med nuvarande bemanning. Tar hänsyn till ramp om den är aktiv.">Volym till deadline</span></div>
+      <div class="val" id="vol-out">—</div>
+      <div class="sub" id="vol-sub">—</div>
+    </div>
+  </div>
+
+  <div class="timeline" id="timeline">—</div>
+
+  <div class="goal-warning" id="goal-warning" style="display: none;">
+    <div class="gw-icon">⚠</div>
+    <div class="gw-text">
+      <strong id="gw-title">Målet nås inte</strong>
+      <span id="gw-detail">—</span>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Kumulativ volym över tid — vad takten ger fram till deadline</div>
+    <svg id="chart" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend" id="chart-legend">
+      <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
+      <div class="legend-item"><span class="legend-line deadline"></span> Deadline</div>
+      <div class="legend-item"><span class="legend-dot"></span> Volym vid deadline</div>
+    </div>
+    <div class="forecast-text" id="forecast-text" style="display: none;">—</div>
+  </div>
+
+  <div class="section">Klarar vi scenarierna? <span class="section-hint">— klicka för att redigera</span></div>
+
+  <div class="scenarios-grid" id="scenarios-grid"></div>
+
+  <div class="section">Analys</div>
+
+  <div class="analysis-block">
+    <h3>Aktivitetsbeskrivning per roll</h3>
+    <div class="desc">Vad ingår i varje roll i leveransflödet.</div>
+    <div id="activities-container"></div>
+  </div>
+
+  <div class="analysis-block">
+    <h3>Begränsningar i dag</h3>
+    <div class="desc">Det som vi vet sätter taket idag och som behöver hanteras.</div>
+    <div class="checklist" id="constraints-checklist"></div>
+    <button class="add-checklist-item" onclick="addConstraint()">+ Lägg till begränsning</button>
+  </div>
+
+  <div class="analysis-block">
+    <h3>Anteckningar &amp; beslut</h3>
+    <div class="desc">Frågor att ta ställning till, beslut, ägarskap, åtgärder.</div>
+    <textarea class="constraints-textarea" id="notes" placeholder="t.ex. NOC måste höjas till 8/dag — ägare X, klart Y. Tekniker behöver utökas senast Z..."></textarea>
+  </div>
+
+  <div class="actions">
+    <button class="danger" onclick="resetAll()">Återställ allt</button>
+  </div>
+
+  <div class="footer-note">
+    <strong>Logik:</strong> aktuell takt/dag = MIN(alla rollers kapaciteter) × hitrate.
+    <br><br>
+    <strong>Rampperiod:</strong> vid uppstart av nya projekt är leveranstakten sällan på max från dag 1 — rekrytering, utbildning och processer tar tid att stabiliseras. Sätt antal månader till full takt så ritar grafen en mjuk uppstartskurva istället för rät linje. För pågående projekt: lämna på 0.
+    <br><br>
+    <strong>Sparas automatiskt:</strong> alla värden lagras i webbläsaren och finns kvar nästa gång du öppnar filen.
+  </div>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'maxtakt-state-v7';
+
+  const defaultRoles = [
+    { id: 'r1', name: 'Orderläggare', count: 2, takt: 3, unit: 'dag', enabled: true, max: 20 },
+    { id: 'r2', name: 'Leveranskoordinator', count: 1, takt: 5, unit: 'dag', enabled: true, max: 15 },
+    { id: 'r3', name: 'Nätarkitekt', count: 1, takt: 5, unit: 'vecka', enabled: true, max: 15 },
+    { id: 'r4', name: 'Tekniker', count: 4, takt: 3, unit: 'dag', enabled: true, max: 40 },
+    { id: 'r5', name: 'NOC', count: 1, takt: 4, unit: 'dag', enabled: true, max: 20 },
+  ];
+  const defaultScenarios = [
+    { id: 's1', name: 'Scenario 1 — baseline', target: 25 },
+    { id: 's2', name: 'Scenario 2', target: 100 },
+    { id: 's3', name: 'Scenario 3', target: 200 },
+  ];
+  const defaultConstraints = [
+    { id: 'c1', text: '', done: false },
+    { id: 'c2', text: '', done: false },
+    { id: 'c3', text: '', done: false },
+  ];
+
+  let state = {
+    roles: defaultRoles.map(r => ({...r})),
+    scenarios: defaultScenarios.map(s => ({...s})),
+    constraints: defaultConstraints.map(c => ({...c})),
+    hitrate: 90,
+    deadline: '2027-12-31',
+    onskadVolym: 390,
+    margin: 10,
+    rampMonths: 0,
+    leadtimeDays: 10,
+    typfallMix: { tf1: 0, tf2: 0, tf3: 390 }, // används bara när typfall är 'mix'
+    notes: '',
+    activities: {},
+    snapshot: null,
+  };
+
+  let currentSuggestion = null;
+  let saveTimer = null;
+  let dragSrcId = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved && typeof saved === 'object') {
+        state = { ...state, ...saved };
+        if (!state.activities) state.activities = {};
+        if (!state.scenarios || !Array.isArray(state.scenarios) || state.scenarios.length === 0) {
+          state.scenarios = defaultScenarios.map(s => ({...s}));
+        }
+        // constraints: konvertera från sträng till array om gammalt format
+        if (typeof state.constraints === 'string') {
+          state.constraints = state.constraints
+            ? [{id: 'c-legacy', text: state.constraints, done: false}]
+            : defaultConstraints.map(c => ({...c}));
+        }
+        if (!Array.isArray(state.constraints)) {
+          state.constraints = defaultConstraints.map(c => ({...c}));
+        }
+        if (state.margin === undefined) state.margin = 10;
+        if (state.rampMonths === undefined) state.rampMonths = 0;
+        if (state.leadtimeDays === undefined) state.leadtimeDays = 10;
+        if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
+        if (state.snapshot === undefined) state.snapshot = null;
+        // Migrera gamla roller utan enabled/unit till nytt schema
+        if (Array.isArray(state.roles)) {
+          state.roles.forEach(r => {
+            if (r.enabled === undefined) r.enabled = true;
+            if (!r.unit) r.unit = 'dag';
+          });
+          // Om Nätarkitekt saknas i sparad state, lägg till den (en gång)
+          const hasArkitekt = state.roles.some(r =>
+            r.name && r.name.toLowerCase().includes('arkitekt')
+          );
+          if (!hasArkitekt && !state._arkitektMigrated) {
+            // Hitta rätt position: efter Leveranskoordinator om den finns, annars efter index 1
+            const koordIdx = state.roles.findIndex(r =>
+              r.name && r.name.toLowerCase().includes('koordinator')
+            );
+            const insertAt = koordIdx >= 0 ? koordIdx + 1 : Math.min(2, state.roles.length);
+            state.roles.splice(insertAt, 0, {
+              id: 'r-arkitekt-' + Date.now(),
+              name: 'Nätarkitekt',
+              count: 1,
+              takt: 5,
+              unit: 'vecka',
+              enabled: true,
+              max: 15
+            });
+            state._arkitektMigrated = true;
+          }
+        }
+      }
+    } catch (e) { console.warn('Kunde inte ladda:', e); }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const ind = document.getElementById('saved-indicator');
+      ind.textContent = 'sparat';
+      ind.style.color = '#1d6e35';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { ind.style.color = '#c8c6bf'; }, 1500);
+    } catch (e) { console.warn('Kunde inte spara:', e); }
+  }
+
+  function markSnapshot() {
+    state.snapshot = {
+      roles: state.roles.map(r => ({...r})),
+      hitrate: state.hitrate,
+      savedAt: new Date().toISOString(),
+    };
+    saveState();
+    updateSnapshotUI();
+    recalc();
+  }
+
+  function revertToSnapshot() {
+    if (!state.snapshot) return;
+    if (!confirm('Återgå till markerat nuläge? Alla justeringar sedan dess försvinner.')) return;
+    state.roles = state.snapshot.roles.map(r => ({...r}));
+    state.hitrate = state.snapshot.hitrate;
+    saveState();
+    applyStateToInputs();
+    renderRoles();
+    renderActivities();
+    recalc();
+  }
+
+  function clearSnapshot() {
+    if (!state.snapshot) return;
+    if (!confirm('Ta bort markerat nuläge? Den gråa referenslinjen i grafen försvinner. Dina aktuella värden påverkas inte.')) return;
+    state.snapshot = null;
+    saveState();
+    updateSnapshotUI();
+    recalc();
+  }
+
+  function updateSnapshotUI() {
+    const info = document.getElementById('snapshot-info');
+    const revertBtn = document.getElementById('revert-btn');
+    const clearBtn = document.getElementById('clear-snapshot-btn');
+    const snapshotBtn = document.getElementById('snapshot-btn');
+    if (!info || !revertBtn || !clearBtn || !snapshotBtn) return;
+
+    const hasSnapshot = !!(state.snapshot && state.snapshot.savedAt);
+
+    if (hasSnapshot) {
+      const date = new Date(state.snapshot.savedAt);
+      info.textContent = 'nuläge markerat ' + date.toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'});
+      info.classList.add('has-snapshot');
+      revertBtn.style.display = 'inline-flex';
+      clearBtn.style.display = 'inline-flex';
+      snapshotBtn.textContent = '📌 Uppdatera nuläge';
+    } else {
+      info.textContent = 'inget nuläge markerat';
+      info.classList.remove('has-snapshot');
+      revertBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      snapshotBtn.textContent = '📌 Markera som nuläge';
+    }
+  }
+
+  function reorderRoles(srcId, targetId) {
+    if (srcId === targetId) return;
+    const srcIdx = state.roles.findIndex(r => r.id === srcId);
+    const targetIdx = state.roles.findIndex(r => r.id === targetId);
+    if (srcIdx < 0 || targetIdx < 0) return;
+    const [moved] = state.roles.splice(srcIdx, 1);
+    state.roles.splice(targetIdx, 0, moved);
+    saveState();
+    renderRoles();
+    renderActivities();
+    recalc();
+  }
+
+  function attachDragHandlers(row, id) {
+    row.addEventListener('dragstart', (e) => {
+      dragSrcId = id;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', id); } catch (err) {}
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      dragSrcId = null;
+    });
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (dragSrcId && dragSrcId !== id) row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over');
+    });
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      if (dragSrcId && dragSrcId !== id) reorderRoles(dragSrcId, id);
+    });
+  }
+
+  function renderRoles() {
+    const container = document.getElementById('roles-container');
+    container.innerHTML = '';
+    state.roles.forEach((role, idx) => {
+      const row = document.createElement('div');
+      row.className = 'role-row' + (role.enabled === false ? ' disabled' : '');
+      row.id = 'row-' + role.id;
+      row.draggable = true;
+      row.innerHTML = `
+        <input type="checkbox" class="role-checkbox" ${role.enabled !== false ? 'checked' : ''} data-id="${role.id}" data-field="enabled" title="Räkna med rollen i kalkylen">
+        <div class="drag-handle" title="Dra för att sortera om">⋮⋮</div>
+        <div class="role-num">${idx + 1}</div>
+        <input type="text" class="role-name-input" value="${escapeHtml(role.name)}" data-id="${role.id}" data-field="name">
+        <input type="range" min="1" max="${role.max}" value="${role.count}" step="1" data-id="${role.id}" data-field="count">
+        <div class="count" id="count-${role.id}">${role.count}</div>
+        <input type="number" value="${role.takt}" min="0" step="0.5" data-id="${role.id}" data-field="takt">
+        <select class="unit-select" data-id="${role.id}" data-field="unit">
+          <option value="dag" ${role.unit === 'dag' ? 'selected' : ''}>/dag</option>
+          <option value="vecka" ${role.unit === 'vecka' ? 'selected' : ''}>/vecka</option>
+          <option value="månad" ${role.unit === 'månad' ? 'selected' : ''}>/månad</option>
+        </select>
+        <div class="cap" id="cap-${role.id}">—</div>
+        <button class="remove-btn" data-id="${role.id}" title="Ta bort roll">×</button>
+      `;
+      container.appendChild(row);
+      attachDragHandlers(row, role.id);
+      row.querySelectorAll('input, button, select').forEach(el => {
+        el.addEventListener('mousedown', (e) => e.stopPropagation());
+      });
+    });
+
+    container.querySelectorAll('input[data-field], select[data-field]').forEach(input => {
+      const handler = (e) => {
+        const id = e.target.dataset.id;
+        const field = e.target.dataset.field;
+        const role = state.roles.find(r => r.id === id);
+        if (!role) return;
+        if (field === 'name') role.name = e.target.value;
+        else if (field === 'count') role.count = +e.target.value;
+        else if (field === 'takt') role.takt = +e.target.value;
+        else if (field === 'unit') role.unit = e.target.value;
+        else if (field === 'enabled') {
+          role.enabled = e.target.checked;
+          // Toggla disabled-klass direkt
+          const row = document.getElementById('row-' + id);
+          if (row) row.classList.toggle('disabled', !role.enabled);
+        }
+        saveState();
+        recalc();
+      };
+      input.addEventListener('input', handler);
+      input.addEventListener('change', (e) => {
+        handler(e);
+        renderActivities();
+      });
+    });
+
+    container.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        if (state.roles.length <= 1) {
+          alert('Det måste finnas minst en roll.');
+          return;
+        }
+        const role = state.roles.find(r => r.id === id);
+        if (confirm(`Ta bort rollen "${role.name}"?`)) {
+          state.roles = state.roles.filter(r => r.id !== id);
+          delete state.activities[id];
+          saveState();
+          renderRoles();
+          renderActivities();
+          recalc();
+        }
+      });
+    });
+  }
+
+  function addRole() {
+    const newId = 'r' + Date.now();
+    state.roles.push({ id: newId, name: 'Ny roll', count: 1, takt: 5, max: 20 });
+    saveState();
+    renderRoles();
+    renderActivities();
+    recalc();
+    setTimeout(() => {
+      const input = document.querySelector(`input[data-id="${newId}"][data-field="name"]`);
+      if (input) { input.focus(); input.select(); }
+    }, 50);
+  }
+
+  // === CHECKLIST FÖR BEGRÄNSNINGAR ===
+
+  function renderConstraints() {
+    const container = document.getElementById('constraints-checklist');
+    container.innerHTML = '';
+    state.constraints.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'checklist-item' + (c.done ? ' checked' : '');
+      item.innerHTML = `
+        <input type="checkbox" data-id="${c.id}" ${c.done ? 'checked' : ''}>
+        <input type="text" data-id="${c.id}" value="${escapeHtml(c.text)}" placeholder="t.ex. NOC klarar bara 4 klarrapporter/dag">
+        <button class="cl-remove" data-id="${c.id}" title="Ta bort">×</button>
+      `;
+      container.appendChild(item);
+    });
+
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const id = e.target.dataset.id;
+        const c = state.constraints.find(x => x.id === id);
+        if (c) {
+          c.done = e.target.checked;
+          saveState();
+          // Uppdatera visuellt direkt
+          e.target.closest('.checklist-item').classList.toggle('checked', c.done);
+        }
+      });
+    });
+
+    container.querySelectorAll('input[type=text]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const id = e.target.dataset.id;
+        const c = state.constraints.find(x => x.id === id);
+        if (c) {
+          c.text = e.target.value;
+          saveState();
+        }
+      });
+    });
+
+    container.querySelectorAll('.cl-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        state.constraints = state.constraints.filter(c => c.id !== id);
+        saveState();
+        renderConstraints();
+      });
+    });
+  }
+
+  function addConstraint() {
+    const newId = 'c' + Date.now();
+    state.constraints.push({ id: newId, text: '', done: false });
+    saveState();
+    renderConstraints();
+    setTimeout(() => {
+      const input = document.querySelector(`input[type=text][data-id="${newId}"]`);
+      if (input) input.focus();
+    }, 50);
+  }
+
+  // === SCENARIER ===
+
+  function renderScenarios() {
+    const container = document.getElementById('scenarios-grid');
+    container.innerHTML = '';
+    state.scenarios.forEach(scen => {
+      const div = document.createElement('div');
+      div.className = 'scen';
+      div.innerHTML = `
+        <button class="scen-remove-btn" data-id="${scen.id}" title="Ta bort scenario">×</button>
+        <input type="text" class="scen-name-input" value="${escapeHtml(scen.name)}" data-id="${scen.id}" data-field="name">
+        <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target">
+        <div class="target-suffix">leveranser/månad</div>
+        <div class="verdict-row">
+          <div class="verdict" id="verdict-${scen.id}">—</div>
+          <div class="gap" id="gap-${scen.id}"></div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    const addCard = document.createElement('div');
+    addCard.className = 'scen add-scenario';
+    addCard.textContent = '+ Lägg till scenario';
+    addCard.onclick = addScenario;
+    container.appendChild(addCard);
+
+    container.querySelectorAll('input[data-field]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const id = e.target.dataset.id;
+        const field = e.target.dataset.field;
+        const scen = state.scenarios.find(s => s.id === id);
+        if (!scen) return;
+        if (field === 'name') scen.name = e.target.value;
+        else if (field === 'target') scen.target = +e.target.value;
+        saveState();
+        recalcScenarios();
+      });
+    });
+
+    container.querySelectorAll('.scen-remove-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        const scen = state.scenarios.find(s => s.id === id);
+        if (confirm(`Ta bort scenariot "${scen.name}"?`)) {
+          state.scenarios = state.scenarios.filter(s => s.id !== id);
+          saveState();
+          renderScenarios();
+          recalcScenarios();
+        }
+      });
+    });
+  }
+
+  function addScenario() {
+    const newId = 's' + Date.now();
+    state.scenarios.push({ id: newId, name: 'Nytt scenario', target: 50 });
+    saveState();
+    renderScenarios();
+    recalcScenarios();
+    setTimeout(() => {
+      const input = document.querySelector(`input[data-id="${newId}"][data-field="name"]`);
+      if (input) { input.focus(); input.select(); }
+    }, 50);
+  }
+
+  function recalcScenarios() {
+    const hitrate = state.hitrate / 100;
+    const active = activeRoles();
+    if (active.length === 0) return;
+    const minCap = Math.min(...active.map(r => roleCapPerDay(r)));
+    const effMonth = minCap * hitrate * 21;
+
+    state.scenarios.forEach(scen => {
+      const verdict = document.getElementById('verdict-' + scen.id);
+      const gap = document.getElementById('gap-' + scen.id);
+      if (!verdict || !gap) return;
+      if (effMonth >= scen.target) {
+        verdict.textContent = 'JA';
+        verdict.className = 'verdict v-ok';
+        const overshoot = Math.round(effMonth - scen.target);
+        gap.textContent = overshoot > 0 ? '+' + overshoot + ' marginal' : 'precis på gränsen';
+      } else {
+        verdict.textContent = 'NEJ';
+        verdict.className = 'verdict v-fail';
+        gap.textContent = 'saknar ' + Math.round(scen.target - effMonth) + '/mån';
+      }
+    });
+  }
+
+  function renderActivities() {
+    const container = document.getElementById('activities-container');
+    container.innerHTML = '';
+    state.roles.forEach((role, idx) => {
+      const row = document.createElement('div');
+      row.className = 'activity-row' + (role.enabled === false ? ' disabled' : '');
+      row.id = 'act-row-' + role.id;
+      row.draggable = true;
+      const capPerDay = roleCapPerDay(role).toFixed(role.unit === 'dag' ? 0 : 1);
+      const unitSuffix = role.unit === 'vecka' ? '/vecka' : role.unit === 'månad' ? '/månad' : '/dag';
+      const taktStr = role.takt + unitSuffix;
+      row.innerHTML = `
+        <div class="activity-handle" title="Dra för att sortera om">⋮⋮</div>
+        <div class="activity-num">${idx + 1}</div>
+        <div class="role-label">${escapeHtml(role.name)}
+          <span class="small">${role.count} st · ${taktStr} · kap ${capPerDay}/dag</span>
+        </div>
+        <textarea data-role-id="${role.id}" placeholder="vad gör denna roll? beskriv aktiviteterna...">${escapeHtml(state.activities[role.id] || '')}</textarea>
+      `;
+      container.appendChild(row);
+      attachDragHandlers(row, role.id);
+      row.querySelectorAll('textarea').forEach(el => {
+        el.addEventListener('mousedown', (e) => e.stopPropagation());
+      });
+    });
+    container.querySelectorAll('textarea').forEach(t => {
+      t.addEventListener('input', (e) => {
+        state.activities[e.target.dataset.roleId] = e.target.value;
+        saveState();
+      });
+    });
+  }
+
+  function renderProcessFlow() {
+    const row = document.getElementById('pf-row');
+    row.innerHTML = '';
+    const active = activeRoles();
+    if (active.length === 0) return;
+
+    const caps = active.map(r => ({ id: r.id, name: r.name, val: roleCapPerDay(r) }));
+    const minCap = Math.min(...caps.map(c => c.val));
+
+    active.forEach((role, idx) => {
+      const cap = roleCapPerDay(role);
+      const isBottleneck = cap === minCap;
+
+      const step = document.createElement('div');
+      step.className = 'pf-step' + (isBottleneck ? ' bottleneck' : '');
+      step.innerHTML = `
+        ${isBottleneck ? '<div class="pf-flag">flaskhals</div>' : ''}
+        <div class="pf-num">${idx + 1}</div>
+        <div class="pf-name">${escapeHtml(role.name)}</div>
+        <div class="pf-cap">${cap.toFixed(role.unit === 'dag' ? 0 : 1)}</div>
+        <div class="pf-suffix">/dag</div>
+      `;
+      row.appendChild(step);
+
+      if (idx < active.length - 1) {
+        const arrow = document.createElement('div');
+        arrow.className = 'pf-arrow';
+        arrow.textContent = '→';
+        row.appendChild(arrow);
+      }
+    });
+  }
+
+  function bindGlobalInputs() {
+    document.getElementById('hitrate').addEventListener('input', (e) => {
+      state.hitrate = +e.target.value; saveState(); recalc();
+    });
+    document.getElementById('rampMonths').addEventListener('input', (e) => {
+      state.rampMonths = +e.target.value; saveState(); recalc();
+    });
+    document.getElementById('deadline').addEventListener('input', (e) => {
+      state.deadline = e.target.value; saveState(); recalc();
+    });
+    document.getElementById('onskad-volym').addEventListener('input', (e) => {
+      state.onskadVolym = +e.target.value; saveState(); updateMixSummary(); recalc();
+    });
+    document.getElementById('margin').addEventListener('input', (e) => {
+      state.margin = +e.target.value; saveState(); recalc();
+    });
+    document.getElementById('notes').addEventListener('input', (e) => {
+      state.notes = e.target.value; saveState();
+    });
+    ['tf1', 'tf2', 'tf3'].forEach(key => {
+      const el = document.getElementById('mix-' + key);
+      if (el) {
+        el.addEventListener('input', (e) => {
+          state.typfallMix[key] = +e.target.value || 0;
+          saveState();
+          updateMixSummary();
+          recalc();
+        });
+      }
+    });
+  }
+
+  function applyStateToInputs() {
+    document.getElementById('hitrate').value = state.hitrate;
+    document.getElementById('rampMonths').value = state.rampMonths;
+    document.getElementById('deadline').value = state.deadline;
+    document.getElementById('onskad-volym').value = state.onskadVolym;
+    document.getElementById('margin').value = state.margin;
+    document.getElementById('notes').value = state.notes;
+    updateTypfallButtons();
+  }
+
+  function setTypfall(value) {
+    if (value === 'mix') {
+      state.leadtimeDays = 'mix';
+    } else {
+      state.leadtimeDays = value;
+    }
+    saveState();
+    updateTypfallButtons();
+    recalc();
+  }
+
+  function updateTypfallButtons() {
+    const btn1 = document.getElementById('tf-1');
+    const btn2 = document.getElementById('tf-2');
+    const btn3 = document.getElementById('tf-3');
+    const btnMix = document.getElementById('tf-mix');
+    const mixRow = document.getElementById('mix-row');
+    if (!btn1 || !btn2 || !btn3 || !btnMix || !mixRow) return;
+    const isMix = state.leadtimeDays === 'mix';
+    btn1.classList.toggle('active', state.leadtimeDays === 10);
+    btn2.classList.toggle('active', state.leadtimeDays === 60);
+    btn3.classList.toggle('active', state.leadtimeDays === 100);
+    btnMix.classList.toggle('active', isMix);
+    mixRow.style.display = isMix ? 'grid' : 'none';
+    if (isMix) {
+      document.getElementById('mix-tf1').value = state.typfallMix.tf1 || 0;
+      document.getElementById('mix-tf2').value = state.typfallMix.tf2 || 0;
+      document.getElementById('mix-tf3').value = state.typfallMix.tf3 || 0;
+      updateMixSummary();
+    }
+  }
+
+  // Beräknar viktad ledtid baserat på antal per typfall
+  function getEffectiveLeadtime() {
+    if (state.leadtimeDays !== 'mix') return state.leadtimeDays;
+    const t1 = +state.typfallMix.tf1 || 0;
+    const t2 = +state.typfallMix.tf2 || 0;
+    const t3 = +state.typfallMix.tf3 || 0;
+    const sum = t1 + t2 + t3;
+    if (sum <= 0) return 10;
+    return (t1 * 10 + t2 * 60 + t3 * 100) / sum;
+  }
+
+  function updateMixSummary() {
+    const summary = document.getElementById('mix-summary');
+    if (!summary) return;
+    const t1 = +state.typfallMix.tf1 || 0;
+    const t2 = +state.typfallMix.tf2 || 0;
+    const t3 = +state.typfallMix.tf3 || 0;
+    const sum = t1 + t2 + t3;
+    const effLt = getEffectiveLeadtime();
+    const target = +state.onskadVolym || 0;
+
+    if (target <= 0) {
+      // Inget mål satt — visa bara summan utan varning
+      summary.classList.remove('warning');
+      summary.innerHTML = 'summa: <strong>' + sum + '</strong>' +
+        ' · viktad ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>' +
+        ' <span style="color:#a8a8a3">(sätt mål-volym ovan för att jämföra)</span>';
+      return;
+    }
+
+    const matches = sum === target;
+    summary.classList.toggle('warning', !matches);
+    summary.innerHTML = 'summa: <strong>' + sum + '</strong> / ' + target +
+      (matches ? '' : ' (måste vara ' + target + ')') +
+      ' · viktad ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
+  }
+
+  function resetAll() {
+    if (!confirm('Återställ alla värden, roller, scenarier och anteckningar? Detta kan inte ångras.')) return;
+    // Rensa state i minnet först (säkerhetsnät om reload försenas)
+    state.snapshot = null;
+    state.roles = defaultRoles.map(r => ({...r}));
+    state.scenarios = defaultScenarios.map(s => ({...s}));
+    state.constraints = defaultConstraints.map(c => ({...c}));
+    state.hitrate = 90;
+    state.deadline = '2027-12-31';
+    state.onskadVolym = 390;
+    state.margin = 10;
+    state.rampMonths = 0;
+    state.leadtimeDays = 10;
+    state.typfallMix = { tf1: 0, tf2: 0, tf3: 390 };
+    state.notes = '';
+    state.activities = {};
+    // Rensa localStorage — alla versioner för säkerhets skull
+    try {
+      for (let i = 1; i <= 10; i++) {
+        localStorage.removeItem('maxtakt-state-v' + i);
+      }
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+    // Ladda om sidan
+    location.reload();
+  }
+
+  // === EXPORTERA / IMPORTERA SOM JSON ===
+  function exportJson() {
+    try {
+      // Bygg en exportfil med metadata + state
+      const exportData = {
+        _format: 'leveransprojekt-kapacitetsplanering',
+        _version: 1,
+        _exportedAt: new Date().toISOString(),
+        state: state,
+      };
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      // Generera filnamn baserat på datum
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = 'leveransprojekt-' + dateStr + '.json';
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Kunde inte exportera: ' + e.message);
+    }
+  }
+
+  function importJson(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        // Stöd både nytt format med wrapper och rå state
+        const importedState = data.state ? data.state : data;
+        if (!importedState || typeof importedState !== 'object' || !Array.isArray(importedState.roles)) {
+          alert('Filen verkar inte vara en giltig kapacitetsplanering-export.');
+          return;
+        }
+        if (!confirm('Importera värden från filen? Dina nuvarande värden skrivs över.')) {
+          // Rensa input så samma fil kan väljas igen
+          event.target.value = '';
+          return;
+        }
+        // Skriv över state och spara
+        state = importedState;
+        // Säkerställ standardfält finns (i fall det är gammalt format)
+        if (state.snapshot === undefined) state.snapshot = null;
+        if (state.margin === undefined) state.margin = 10;
+        if (state.rampMonths === undefined) state.rampMonths = 0;
+        if (state.leadtimeDays === undefined) state.leadtimeDays = 10;
+        if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
+        if (!state.activities) state.activities = {};
+        if (!Array.isArray(state.constraints)) state.constraints = [];
+        if (!Array.isArray(state.scenarios)) state.scenarios = [];
+        // Säkerställ enabled/unit på roller
+        state.roles.forEach(r => {
+          if (r.enabled === undefined) r.enabled = true;
+          if (!r.unit) r.unit = 'dag';
+        });
+        saveState();
+        location.reload();
+      } catch (err) {
+        alert('Kunde inte läsa filen: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    // Rensa input efter läsning så samma fil kan väljas igen senare
+    event.target.value = '';
+  }
+
+  // === HJÄLPFUNKTIONER FÖR KAPACITET ===
+  // Returnerar takt per dag för en roll, oavsett enhet.
+  // 5 arbetsdagar/vecka, 21 arbetsdagar/månad används för konvertering.
+  function rolePerDay(role) {
+    const t = +role.takt || 0;
+    if (role.unit === 'vecka') return t / 5;
+    if (role.unit === 'månad') return t / 21;
+    return t;
+  }
+  // Returnerar kapacitet per dag (count × takt/dag)
+  function roleCapPerDay(role) {
+    return role.count * rolePerDay(role);
+  }
+  // Aktiva roller (enabled !== false)
+  function activeRoles(roles) {
+    return (roles || state.roles).filter(r => r.enabled !== false);
+  }
+
+  // === BERÄKNA KUMULATIV VOLYM MED RAMPNING ===
+  // Returnerar volym levererad vid tidpunkten t månader, givet full månatlig takt och ev. rampning
+  function cumulativeAt(t, fullMonthlyRate, rampMonths) {
+    if (t <= 0 || fullMonthlyRate <= 0) return 0;
+    if (rampMonths <= 0) {
+      return fullMonthlyRate * t;
+    }
+    if (t <= rampMonths) {
+      // Under rampperioden: linjär ökning från 0 till fullMonthlyRate
+      return 0.5 * fullMonthlyRate * t * t / rampMonths;
+    }
+    // Efter rampperioden
+    const rampVolym = 0.5 * fullMonthlyRate * rampMonths;
+    return rampVolym + (t - rampMonths) * fullMonthlyRate;
+  }
+
+  // Inverse: returnerar tidpunkt t (månader från start) då volym targetV nås,
+  // givet full månadstakt, ramp och ledtid. Returnerar Infinity om aldrig.
+  function timeToReach(targetV, fullMonthlyRate, rampMonths, leadtimeMonths) {
+    if (targetV <= 0) return leadtimeMonths;
+    if (fullMonthlyRate <= 0) return Infinity;
+    // Vi söker startT så att kumulativ start = targetV; klar-tid = startT + leadtime
+    let startT;
+    if (rampMonths <= 0) {
+      startT = targetV / fullMonthlyRate;
+    } else {
+      const rampVolym = 0.5 * fullMonthlyRate * rampMonths;
+      if (targetV <= rampVolym) {
+        // Inom rampperioden: 0.5 * R * t^2 / rampMonths = targetV
+        startT = Math.sqrt(2 * targetV * rampMonths / fullMonthlyRate);
+      } else {
+        // Efter ramp: rampVolym + (startT - rampMonths) * R = targetV
+        startT = rampMonths + (targetV - rampVolym) / fullMonthlyRate;
+      }
+    }
+    return startT + leadtimeMonths;
+  }
+
+  function recalc() {
+    const hitrate = state.hitrate / 100;
+    const margin = state.margin / 100;
+
+    state.roles.forEach(role => {
+      const cap = roleCapPerDay(role);
+      const capEl = document.getElementById('cap-' + role.id);
+      const countEl = document.getElementById('count-' + role.id);
+      if (capEl) capEl.textContent = cap.toFixed(1) + ' /dag';
+      if (countEl) countEl.textContent = role.count;
+    });
+
+    document.getElementById('hitrate-v').textContent = state.hitrate + '%';
+    document.getElementById('margin-v').textContent = state.margin + '%';
+    document.getElementById('rampMonths-v').textContent = state.rampMonths + ' mån';
+
+    const active = activeRoles();
+    if (active.length === 0) return;
+
+    const caps = active.map(r => ({ id: r.id, name: r.name, val: roleCapPerDay(r) }));
+    const minCap = Math.min(...caps.map(c => c.val));
+    const bottleneck = caps.find(c => c.val === minCap);
+
+    // Rensa bottleneck-klass på alla rader, sätt bara på den aktiva flaskhalsen
+    state.roles.forEach(r => {
+      const row = document.getElementById('row-' + r.id);
+      if (row) row.classList.toggle('bottleneck', r.id === bottleneck.id);
+    });
+
+    const effDay = minCap * hitrate;
+    const effMonth = effDay * 21;
+
+    document.getElementById('day-out').textContent = effDay.toFixed(1);
+    document.getElementById('month-out').textContent = Math.round(effMonth);
+    document.getElementById('bottleneck').textContent = bottleneck.name;
+
+    const deadline = new Date(state.deadline);
+    const today = new Date();
+    const monthsLeft = (deadline.getFullYear() - today.getFullYear()) * 12 + (deadline.getMonth() - today.getMonth()) + (deadline.getDate() - today.getDate()) / 30;
+
+    // Ledtid: hur lång tid varje leverans tar från start till klar
+    const effLeadtimeDays = getEffectiveLeadtime();
+    const leadtimeMonths = effLeadtimeDays / 21; // 21 arbetsdagar/månad
+    // Effektiv tid att starta leveranser = totalt - ledtid (sista start måste vara deadline - ledtid)
+    const effectiveStartMonths = Math.max(0, monthsLeft - leadtimeMonths);
+    // Potentiell levererad volym = vad som hinner startas innan sista möjliga startdatum, med ramp
+    const potentialVolym = Math.max(0, cumulativeAt(effectiveStartMonths, effMonth, state.rampMonths));
+
+    document.getElementById('vol-out').textContent = Math.round(potentialVolym);
+
+    // Räkna ut vad som krävs per månad i snitt (för "Per månad"-cellens undertext)
+    // Använd effectiveStartMonths eftersom vi måste vara klara med start innan deadline - ledtid
+    let requiredMonthly = 0;
+    if (effectiveStartMonths > 0 && state.onskadVolym > 0) {
+      const effectiveMonths = effectiveStartMonths >= state.rampMonths
+        ? (effectiveStartMonths - 0.5 * state.rampMonths)
+        : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(state.rampMonths, 0.001));
+      requiredMonthly = effectiveMonths > 0 ? state.onskadVolym / effectiveMonths : 0;
+    }
+
+    // Undertext för "Per månad vid full takt"
+    if (requiredMonthly > 0) {
+      document.getElementById('month-sub').innerHTML =
+        'krävs ca ' + Math.round(requiredMonthly) + '/mån för ' + state.onskadVolym + ' st';
+    } else {
+      document.getElementById('month-sub').textContent = 'vid ' + state.hitrate + '% hitrate';
+    }
+
+    // Undertext för "Volym till deadline" — jämförelse mot målet
+    const volMargin = potentialVolym - state.onskadVolym;
+    if (state.onskadVolym > 0 && monthsLeft > 0) {
+      if (volMargin >= 0) {
+        document.getElementById('vol-sub').innerHTML =
+          'av målet ' + state.onskadVolym + ' (<span style="color:#1d6e35">+' + Math.round(volMargin) + '</span> marginal)';
+      } else {
+        document.getElementById('vol-sub').innerHTML =
+          'av målet ' + state.onskadVolym + ' (<span style="color:#9a2424">−' + Math.round(Math.abs(volMargin)) + '</span> under)';
+      }
+    } else {
+      document.getElementById('vol-sub').textContent = 'över ' + monthsLeft.toFixed(1) + ' månader';
+    }
+
+    // Varningsruta över grafen om målet inte nås
+    const goalWarning = document.getElementById('goal-warning');
+    if (state.onskadVolym > 0 && monthsLeft > 0 && volMargin < 0 && effMonth > 0) {
+      goalWarning.style.display = 'flex';
+      document.getElementById('gw-title').textContent = 'Målet nås inte med nuvarande setup';
+      document.getElementById('gw-detail').innerHTML =
+        'Saknar <strong>' + Math.round(Math.abs(volMargin)) + ' st</strong> till deadline ' +
+        deadline.toLocaleDateString('sv-SE') + '. ' +
+        'Höj bemanningen, korta ledtiden eller flytta deadline för att stänga gapet.';
+    } else {
+      goalWarning.style.display = 'none';
+    }
+
+    const timeline = document.getElementById('timeline');
+    if (monthsLeft <= 0) {
+      timeline.innerHTML = '<strong>Deadline har passerat.</strong> Välj ett senare datum.';
+    } else if (effectiveStartMonths <= 0) {
+      timeline.innerHTML = '<strong>För kort tid.</strong> Ledtiden (' + Math.round(effLeadtimeDays) + ' dagar = ' + leadtimeMonths.toFixed(1) + ' mån) är längre än tiden till deadline. Välj kortare typfall eller flytta deadline.';
+    } else if (effMonth <= 0) {
+      timeline.innerHTML = '<strong>Ingen takt.</strong> Höj kapaciteten i någon roll.';
+    } else {
+      const lastStartDate = new Date(deadline);
+      lastStartDate.setDate(lastStartDate.getDate() - effLeadtimeDays * (7/5)); // konvertera arbetsdagar till kalenderdagar
+      let typfallStr;
+      if (state.leadtimeDays === 'mix') {
+        typfallStr = 'Blandat (viktad ledtid ' + effLeadtimeDays.toFixed(1) + ' dagar)';
+      } else {
+        typfallStr = 'Typfall ' + (state.leadtimeDays === 10 ? '1' : state.leadtimeDays === 60 ? '2' : '3') +
+                     ' (' + state.leadtimeDays + ' arbetsdagar)';
+      }
+      timeline.innerHTML = '<strong>Potential till deadline:</strong> Med ' +
+        Math.round(effMonth) + '/mån (full takt) hinner ni starta — och få klar — ' +
+        '<strong>' + Math.round(potentialVolym) + ' stycken</strong> fram till ' +
+        deadline.toLocaleDateString('sv-SE') + '. ' +
+        'Sista möjliga startdatum för ' + typfallStr + ': ' + lastStartDate.toLocaleDateString('sv-SE') + '. ' +
+        'Flaskhalsen är ' + bottleneck.name + '.';
+    }
+
+    const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
+    document.getElementById('banner-takt').textContent = Math.round(effMonth) + '/mån';
+    document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · vid ' + state.hitrate + '% hitrate';
+    document.getElementById('banner-bottleneck').textContent = bottleneck.name;
+    document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.val.toFixed(0) + '/dag — sätter taket';
+    document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' st';
+    document.getElementById('banner-volym-sub').innerHTML = 'över ' + monthsLeft.toFixed(1) + ' månader';
+    let bannerHeadline = 'Med dagens setup levererar vi <strong>' + Math.round(effMonth) + '/månad</strong> netto. ' +
+      'Flaskhalsen är <strong>' + bottleneck.name + '</strong>. ' +
+      'Total bemanning: ' + totalPersonal + ' personer.';
+    if (state.onskadVolym > 0 && volMargin < 0 && monthsLeft > 0 && effMonth > 0) {
+      bannerHeadline += ' <strong style="color:#F7DBDB">Saknar ' + Math.round(Math.abs(volMargin)) + ' st till målet.</strong>';
+    }
+    document.getElementById('banner-headline').innerHTML = bannerHeadline;
+    document.getElementById('banner-date').textContent = 'Genererad: ' + new Date().toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'});
+    document.getElementById('banner-deadline').textContent = 'Deadline: ' + deadline.toLocaleDateString('sv-SE');
+
+    recalcScenarios();
+    renderProcessFlow();
+
+    let snapshotMonth = null;
+    if (state.snapshot) {
+      const activeSnap = state.snapshot.roles.filter(r => r.enabled !== false);
+      if (activeSnap.length > 0) {
+        const snapMin = Math.min(...activeSnap.map(r => roleCapPerDay(r)));
+        snapshotMonth = snapMin * (state.snapshot.hitrate / 100) * 21;
+      }
+    }
+
+    // Räkna ut målet (för att kunna rita "vad krävs"-linje)
+    let targetMonthly;
+    let titleText;
+    let bodyPrefix;
+
+    if (monthsLeft <= 0) {
+      document.getElementById('suggest-card').classList.remove('show');
+      currentSuggestion = null;
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, state.rampMonths, leadtimeMonths);
+      updateChartLegend(snapshotMonth !== null, false);
+      return;
+    }
+    if (effectiveStartMonths <= 0) {
+      document.getElementById('suggest-card').classList.remove('show');
+      currentSuggestion = null;
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, state.rampMonths, leadtimeMonths);
+      updateChartLegend(snapshotMonth !== null, false);
+      return;
+    }
+    // Räkna baklänges med hänsyn till ramp OCH ledtid:
+    // Vi har effectiveStartMonths att starta volym i, sista start måste ske innan deadline - leadtime
+    const effectiveMonths = effectiveStartMonths >= state.rampMonths
+      ? (effectiveStartMonths - 0.5 * state.rampMonths)
+      : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(state.rampMonths, 0.001));
+    targetMonthly = effectiveMonths > 0 ? state.onskadVolym / effectiveMonths : state.onskadVolym;
+    titleText = 'Förslag på bemanning för ' + state.onskadVolym + ' st till ' + deadline.toLocaleDateString('sv-SE');
+    bodyPrefix = 'Mål: <strong>' + state.onskadVolym + ' st</strong> på ' +
+                 monthsLeft.toFixed(1) + ' månader' +
+                 ' (varav ' + effectiveStartMonths.toFixed(1) + ' mån effektiv tid efter ledtid)' +
+                 ' = <strong>' + targetMonthly.toFixed(1) + '/månad</strong> netto';
+
+    // Förlängning: när når vi målet med nuvarande takt?
+    let forecastMonths = null; // null = visa inte förlängning
+    let forecastDate = null;
+    let forecastTooFar = false;
+    if (state.onskadVolym > 0 && potentialVolym < state.onskadVolym && effMonth > 0) {
+      forecastMonths = timeToReach(state.onskadVolym, effMonth, state.rampMonths, leadtimeMonths);
+      // Begränsa förlängning till max 3x deadline-tiden för läsbarhet
+      if (forecastMonths > monthsLeft * 3) {
+        forecastTooFar = true;
+      } else {
+        forecastDate = new Date(today);
+        forecastDate.setMonth(forecastDate.getMonth() + Math.round(forecastMonths));
+      }
+    }
+
+    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, state.rampMonths, leadtimeMonths, forecastMonths, forecastTooFar);
+    updateChartLegend(snapshotMonth !== null, targetMonthly > 0);
+
+    // Uppdatera prognostext under grafen
+    const forecastEl = document.getElementById('forecast-text');
+    if (forecastEl) {
+      if (forecastTooFar) {
+        forecastEl.style.display = 'block';
+        forecastEl.innerHTML = '<strong>⚠ Prognos:</strong> Med nuvarande takt kommer ni inte i kapp inom överskådlig tid. Höj kapaciteten kraftigt eller justera målet.';
+      } else if (forecastDate) {
+        const monthsLate = forecastMonths - monthsLeft;
+        const lateDays = Math.round(monthsLate * 30);
+        const lateStr = monthsLate >= 12
+          ? (monthsLate / 12).toFixed(1) + ' år'
+          : monthsLate >= 1
+            ? Math.round(monthsLate) + ' månader'
+            : lateDays + ' dagar';
+        forecastEl.style.display = 'block';
+        forecastEl.innerHTML = '<strong>Prognos:</strong> Med nuvarande takt når ni ' +
+          state.onskadVolym + ' st <strong>' + forecastDate.toLocaleDateString('sv-SE') + '</strong> — ' +
+          lateStr + ' efter deadline ' + deadline.toLocaleDateString('sv-SE') + '.';
+      } else {
+        forecastEl.style.display = 'none';
+      }
+    }
+
+    let comparisonRoles = state.snapshot ? state.snapshot.roles : state.roles;
+
+    updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths);
+    updateActivityLabels();
+  }
+
+  function updateChartLegend(hasSnapshot, hasTarget) {
+    const legend = document.getElementById('chart-legend');
+    let html = `
+      <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
+      <div class="legend-item"><span class="legend-line deadline"></span> Deadline</div>
+      <div class="legend-item"><span class="legend-dot"></span> Volym vid deadline</div>
+    `;
+    if (hasTarget) {
+      html += `<div class="legend-item"><span class="legend-line target"></span> Vad som krävs (mål)</div>`;
+    }
+    if (hasSnapshot) {
+      html += `<div class="legend-item"><span class="legend-line snapshot"></span> Nuläge (snapshot)</div>`;
+    }
+    legend.innerHTML = html;
+  }
+
+  function updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths) {
+    if (targetMonthly <= 0 || hitrate <= 0 || state.roles.length === 0) {
+      document.getElementById('suggest-card').classList.remove('show');
+      currentSuggestion = null;
+      return;
+    }
+    const targetWithMargin = targetMonthly * (1 + margin);
+    const requiredDay = targetWithMargin / hitrate / 21;
+
+    const active = activeRoles();
+    const needed = {};
+    active.forEach(r => {
+      const perDay = rolePerDay(r);
+      needed[r.id] = perDay > 0 ? Math.ceil(requiredDay / perDay) : 0;
+    });
+
+    currentSuggestion = needed;
+
+    document.getElementById('suggest-title').textContent = titleText;
+
+    let snapshotText = '';
+    if (state.snapshot) snapshotText = ' Jämfört med <strong>nuläget</strong> (snapshot).';
+
+    document.getElementById('suggest-body').innerHTML =
+      bodyPrefix + ' (vid ' + Math.round(hitrate * 100) + '% hitrate). ' +
+      'Varje roll behöver klara minst ' + requiredDay.toFixed(1) + '/dag.' + snapshotText;
+
+    const rolesEl = document.getElementById('suggest-roles');
+    rolesEl.innerHTML = '';
+    active.forEach(r => {
+      const compRole = comparisonRoles.find(cr => cr.id === r.id);
+      const compCount = compRole ? compRole.count : r.count;
+      const div = document.createElement('div');
+      div.className = 'role-suggest';
+      const delta = needed[r.id] - compCount;
+      const deltaText = delta === 0 ? 'oförändrat' :
+                        delta > 0 ? '+' + delta + ' fler' :
+                        delta + ' färre';
+      const deltaClass = delta > 0 ? 'delta up' : 'delta';
+      div.innerHTML = '<div class="nm">' + escapeHtml(r.name) + '</div>' +
+                      '<div class="vl">' + needed[r.id] + ' st</div>' +
+                      '<div class="' + deltaClass + '">' + deltaText + '</div>';
+      rolesEl.appendChild(div);
+    });
+
+    const resultMinCap = Math.min(...active.map(r => needed[r.id] * rolePerDay(r)));
+    const resultMonth = resultMinCap * hitrate * 21;
+    // Resultvolym = vad som hinner startas och bli klart innan deadline
+    const resultVolym = cumulativeAt(effectiveStartMonths, resultMonth, state.rampMonths);
+
+    let outcomeText = '<strong>Med detta förslag:</strong> ' +
+      Math.round(resultMonth) + '/månad netto vid full takt';
+
+    if (monthsLeft > 0) {
+      outcomeText += ' = ' + Math.round(resultVolym) + ' st till ' + new Date(state.deadline).toLocaleDateString('sv-SE');
+    }
+
+    const overshoot = resultVolym - state.onskadVolym;
+    if (overshoot > 5) {
+      outcomeText += ' (<strong>+' + Math.round(overshoot) + ' st marginal</strong> över målet ' + state.onskadVolym + ')';
+    } else if (overshoot < -5) {
+      outcomeText += ' (<strong>−' + Math.round(Math.abs(overshoot)) + ' st</strong> under målet)';
+    } else {
+      outcomeText += ' (precis på målet)';
+    }
+
+    document.getElementById('suggest-outcome').innerHTML = outcomeText;
+    document.getElementById('suggest-card').classList.add('show');
+  }
+
+  function applySuggestion() {
+    if (!currentSuggestion) return;
+    state.roles.forEach(r => {
+      const sug = currentSuggestion[r.id];
+      if (sug !== undefined) r.count = Math.min(sug, r.max);
+    });
+    saveState();
+    renderRoles();
+    recalc();
+  }
+
+  function updateActivityLabels() {
+    const container = document.getElementById('activities-container');
+    state.roles.forEach((role, idx) => {
+      const ta = container.querySelector(`textarea[data-role-id="${role.id}"]`);
+      if (!ta) return;
+      const row = ta.closest('.activity-row');
+      const small = row.querySelector('.small');
+      const lbl = row.querySelector('.role-label');
+      const num = row.querySelector('.activity-num');
+      if (small) {
+        const cap = (role.count * role.takt).toFixed(0);
+        small.textContent = role.count + ' st · ' + role.takt + '/dag · kap ' + cap + '/dag';
+      }
+      if (lbl) {
+        const textNode = lbl.childNodes[0];
+        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+          textNode.textContent = role.name;
+        }
+      }
+      if (num) num.textContent = idx + 1;
+    });
+    const existingIds = Array.from(container.querySelectorAll('textarea')).map(t => t.dataset.roleId);
+    const currentIds = state.roles.map(r => r.id);
+    const removed = existingIds.filter(id => !currentIds.includes(id));
+    const added = currentIds.filter(id => !existingIds.includes(id));
+    if (removed.length || added.length) renderActivities();
+  }
+
+  function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar) {
+    const svg = document.getElementById('chart');
+    svg.innerHTML = '';
+    const W = 800, H = 340;
+    const M = { top: 28, right: 40, bottom: 56, left: 60 };
+    const innerW = W - M.left - M.right;
+    const innerH = H - M.top - M.bottom;
+    const ns = 'http://www.w3.org/2000/svg';
+
+    // Sätt viewBox att matcha
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    if (monthsLeft <= 0 || rate <= 0) {
+      const txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', W / 2); txt.setAttribute('y', H / 2);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '13'); txt.setAttribute('fill', '#a8a8a3');
+      txt.setAttribute('font-family', 'inherit');
+      txt.textContent = 'Inga data att visa.';
+      svg.appendChild(txt);
+      return;
+    }
+
+    // xMax: utöka om vi har en förlängning som ska visas (men begränsa till rimligt)
+    const showForecast = forecastMonths && !forecastTooFar && forecastMonths > monthsLeft;
+    let xMax;
+    if (showForecast) {
+      // Lägg till lite extra plats efter förlängningen
+      xMax = forecastMonths * 1.08;
+    } else {
+      xMax = monthsLeft * 1.05;
+    }
+    const lt = leadtimeMonths || 0;
+    // Hjälpfunktion: kumulativ levererad volym vid tidpunkt t (med ramp och ledtid)
+    // Vid t < ledtid: inga leveranser klara än
+    // Vid t >= ledtid: levererad = vad som startades vid (t - ledtid)
+    const cumAtForSnapshot = (t, mRate) => {
+      const startT = t - lt;
+      if (startT <= 0 || mRate <= 0) return 0;
+      if (!rampMonths || rampMonths <= 0) return mRate * startT;
+      if (startT <= rampMonths) return 0.5 * mRate * startT * startT / rampMonths;
+      return 0.5 * mRate * rampMonths + (startT - rampMonths) * mRate;
+    };
+    const snapshotVolym = snapshotMonth ? cumAtForSnapshot(monthsLeft, snapshotMonth) : 0;
+    // Mål-linjen: targetMonthly är "krävd takt", den linjen ska visa kumulativ måluppfyllelse,
+    // dvs en rät linje från (lt, 0) till (monthsLeft, onskadVolym) i klar-volym.
+    const targetVolym = (targetMonthly && targetMonthly > 0) ? state.onskadVolym : 0;
+    const yMax = Math.max(potentialVolym, snapshotVolym, targetVolym) * 1.18 || 100;
+
+    const xScale = m => M.left + (m / xMax) * innerW;
+    const yScale = v => M.top + innerH - (v / yMax) * innerH;
+
+    // === GRADIENT-DEFINITION ===
+    const defs = document.createElementNS(ns, 'defs');
+    const grad = document.createElementNS(ns, 'linearGradient');
+    grad.setAttribute('id', 'volume-gradient');
+    grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+    grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+    const stop1 = document.createElementNS(ns, 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('stop-color', '#1a1a1a');
+    stop1.setAttribute('stop-opacity', '0.18');
+    const stop2 = document.createElementNS(ns, 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('stop-color', '#1a1a1a');
+    stop2.setAttribute('stop-opacity', '0.02');
+    grad.appendChild(stop1); grad.appendChild(stop2);
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+
+    // === HORISONTELLA RUTNÄTSLINJER + Y-AXEL ETIKETTER ===
+    const yTicks = niceTicks(0, yMax, 5);
+    yTicks.forEach(t => {
+      const y = yScale(t);
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', M.left); line.setAttribute('x2', M.left + innerW);
+      line.setAttribute('y1', y); line.setAttribute('y2', y);
+      line.setAttribute('stroke', '#ebe9e2'); line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+      const lbl = document.createElementNS(ns, 'text');
+      lbl.setAttribute('x', M.left - 10); lbl.setAttribute('y', y + 4);
+      lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('font-size', '10');
+      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('font-variant-numeric', 'tabular-nums');
+      lbl.textContent = Math.round(t);
+      svg.appendChild(lbl);
+    });
+
+    // === X-AXEL: DATUMETIKETTER ===
+    const today = new Date();
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+    const xTickStep = niceMonthStep(xMax);
+
+    for (let m = 0; m <= xMax + 0.001; m += xTickStep) {
+      const x = xScale(m);
+      const tickDate = new Date(today);
+      tickDate.setMonth(tickDate.getMonth() + Math.round(m));
+
+      const lbl = document.createElementNS(ns, 'text');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top + innerH + 16);
+      lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '10');
+      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
+      lbl.textContent = monthNames[tickDate.getMonth()];
+      svg.appendChild(lbl);
+
+      const yrLbl = document.createElementNS(ns, 'text');
+      yrLbl.setAttribute('x', x); yrLbl.setAttribute('y', M.top + innerH + 30);
+      yrLbl.setAttribute('text-anchor', 'middle'); yrLbl.setAttribute('font-size', '9');
+      yrLbl.setAttribute('fill', '#c8c6bf'); yrLbl.setAttribute('font-family', 'inherit');
+      yrLbl.textContent = tickDate.getFullYear();
+      svg.appendChild(yrLbl);
+    }
+
+    // X-axel-linje
+    const xAxis = document.createElementNS(ns, 'line');
+    xAxis.setAttribute('x1', M.left); xAxis.setAttribute('x2', M.left + innerW);
+    xAxis.setAttribute('y1', M.top + innerH); xAxis.setAttribute('y2', M.top + innerH);
+    xAxis.setAttribute('stroke', '#d8d6cf'); xAxis.setAttribute('stroke-width', '1');
+    svg.appendChild(xAxis);
+
+    // "idag"-markör vid x=0
+    const todayDot = document.createElementNS(ns, 'circle');
+    todayDot.setAttribute('cx', xScale(0)); todayDot.setAttribute('cy', M.top + innerH);
+    todayDot.setAttribute('r', 3); todayDot.setAttribute('fill', '#1a1a1a');
+    svg.appendChild(todayDot);
+
+    const todayLbl = document.createElementNS(ns, 'text');
+    todayLbl.setAttribute('x', xScale(0)); todayLbl.setAttribute('y', M.top + innerH + 16);
+    todayLbl.setAttribute('text-anchor', 'middle'); todayLbl.setAttribute('font-size', '10');
+    todayLbl.setAttribute('fill', '#1a1a1a'); todayLbl.setAttribute('font-weight', '500');
+    todayLbl.setAttribute('font-family', 'inherit');
+    todayLbl.textContent = 'idag';
+    svg.appendChild(todayLbl);
+
+    // === DEADLINE-LINJE ===
+    const dx = xScale(monthsLeft);
+    const dLine = document.createElementNS(ns, 'line');
+    dLine.setAttribute('x1', dx); dLine.setAttribute('x2', dx);
+    dLine.setAttribute('y1', M.top - 4); dLine.setAttribute('y2', M.top + innerH);
+    dLine.setAttribute('stroke', '#9a2424'); dLine.setAttribute('stroke-width', '1.5');
+    dLine.setAttribute('stroke-dasharray', '3 4');
+    svg.appendChild(dLine);
+
+    const deadlineDate = new Date(state.deadline);
+    const deadlineStr = deadlineDate.toLocaleDateString('sv-SE');
+
+    const dLbl = document.createElementNS(ns, 'text');
+    dLbl.setAttribute('x', dx); dLbl.setAttribute('y', M.top - 10);
+    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '10');
+    dLbl.setAttribute('fill', '#9a2424'); dLbl.setAttribute('font-weight', '600');
+    dLbl.setAttribute('font-family', 'inherit');
+    dLbl.setAttribute('letter-spacing', '0.04em');
+    dLbl.textContent = 'DEADLINE';
+    svg.appendChild(dLbl);
+
+    // Antal punkter för kurvritning (används av snapshot, target och huvudlinje)
+    const numPoints = 80;
+
+    // === SNAPSHOT-LINJE (om finns) ===
+    if (snapshotMonth && snapshotMonth > 0) {
+      const snapVolym = cumAtForSnapshot(monthsLeft, snapshotMonth);
+
+      // Generera punkter för snapshot-kurvan
+      const snapPoints = [];
+      for (let i = 0; i <= numPoints; i++) {
+        const m = (monthsLeft * i) / numPoints;
+        const v = cumAtForSnapshot(m, snapshotMonth);
+        snapPoints.push({ x: xScale(m), y: yScale(v) });
+      }
+
+      const snapPath = document.createElementNS(ns, 'path');
+      let snapD = `M ${snapPoints[0].x} ${snapPoints[0].y} `;
+      for (let i = 1; i < snapPoints.length; i++) {
+        snapD += `L ${snapPoints[i].x} ${snapPoints[i].y} `;
+      }
+      snapPath.setAttribute('d', snapD);
+      snapPath.setAttribute('fill', 'none');
+      snapPath.setAttribute('stroke', '#a8a6a0');
+      snapPath.setAttribute('stroke-width', '1.5');
+      snapPath.setAttribute('stroke-dasharray', '5 3');
+      svg.appendChild(snapPath);
+
+      const snapLbl = document.createElementNS(ns, 'text');
+      snapLbl.setAttribute('x', xScale(monthsLeft) - 10);
+      snapLbl.setAttribute('y', yScale(snapVolym) + 14);
+      snapLbl.setAttribute('text-anchor', 'end');
+      snapLbl.setAttribute('font-size', '10');
+      snapLbl.setAttribute('fill', '#6b6b66');
+      snapLbl.setAttribute('font-family', 'inherit');
+      snapLbl.textContent = 'nuläge: ' + Math.round(snapVolym);
+      svg.appendChild(snapLbl);
+    }
+
+    // === MÅL-LINJE (vad som krävs) ===
+    if (targetMonthly && targetMonthly > 0) {
+      const targetStartX = xScale(lt);
+      const targetEndX = xScale(monthsLeft);
+      const targetPath = document.createElementNS(ns, 'path');
+      // Mål-linjen visar "kumulativ måluppfyllelse": startar vid (lt, 0) och går till (monthsLeft, onskadVolym)
+      targetPath.setAttribute('d', `M ${targetStartX} ${yScale(0)} L ${targetEndX} ${yScale(state.onskadVolym)}`);
+      targetPath.setAttribute('fill', 'none');
+      targetPath.setAttribute('stroke', '#990AE3');
+      targetPath.setAttribute('stroke-width', '2');
+      targetPath.setAttribute('stroke-dasharray', '6 4');
+      targetPath.setAttribute('opacity', '0.85');
+      svg.appendChild(targetPath);
+    }
+
+    // === HJÄLPFUNKTION FÖR KUMULATIV VOLYM (lokal kopia) ===
+    const cumAt = (t) => {
+      const startT = t - lt;
+      if (startT <= 0 || rate <= 0) return 0;
+      if (!rampMonths || rampMonths <= 0) return rate * startT;
+      if (startT <= rampMonths) return 0.5 * rate * startT * startT / rampMonths;
+      return 0.5 * rate * rampMonths + (startT - rampMonths) * rate;
+    };
+
+    // Generera punkter längs linjen (fler punkter = mjukare kurva)
+    const points = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const m = (monthsLeft * i) / numPoints;
+      const v = cumAt(m);
+      points.push({ x: xScale(m), y: yScale(v), m: m, v: v });
+    }
+
+    // === GRADIENT-FYLLNAD UNDER LINJEN ===
+    const fillPath = document.createElementNS(ns, 'path');
+    let fillD = `M ${xScale(0)} ${yScale(0)} `;
+    points.forEach(p => { fillD += `L ${p.x} ${p.y} `; });
+    fillD += `L ${xScale(monthsLeft)} ${yScale(0)} Z`;
+    fillPath.setAttribute('d', fillD);
+    fillPath.setAttribute('fill', 'url(#volume-gradient)');
+    svg.appendChild(fillPath);
+
+    // === HUVUDLINJEN ===
+    const path = document.createElementNS(ns, 'path');
+    let lineD = `M ${points[0].x} ${points[0].y} `;
+    for (let i = 1; i < points.length; i++) {
+      lineD += `L ${points[i].x} ${points[i].y} `;
+    }
+    path.setAttribute('d', lineD);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#1a1a1a');
+    path.setAttribute('stroke-width', '2.5'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+
+    // === FÖRLÄNGNING (PROGNOS) ===
+    if (showForecast) {
+      // Generera förlängningspunkter från monthsLeft till forecastMonths
+      const extPoints = [];
+      const extSteps = 40;
+      for (let i = 0; i <= extSteps; i++) {
+        const m = monthsLeft + ((forecastMonths - monthsLeft) * i / extSteps);
+        const v = cumAt(m);
+        extPoints.push({ x: xScale(m), y: yScale(v) });
+      }
+
+      const extPath = document.createElementNS(ns, 'path');
+      let extD = `M ${extPoints[0].x} ${extPoints[0].y} `;
+      for (let i = 1; i < extPoints.length; i++) {
+        extD += `L ${extPoints[i].x} ${extPoints[i].y} `;
+      }
+      extPath.setAttribute('d', extD);
+      extPath.setAttribute('fill', 'none');
+      extPath.setAttribute('stroke', '#1a1a1a');
+      extPath.setAttribute('stroke-width', '2');
+      extPath.setAttribute('stroke-dasharray', '4 4');
+      extPath.setAttribute('opacity', '0.5');
+      svg.appendChild(extPath);
+
+      // Markör vid klar-punkten
+      const fcX = xScale(forecastMonths);
+      const fcY = yScale(state.onskadVolym);
+
+      // Halo
+      const fcRing = document.createElementNS(ns, 'circle');
+      fcRing.setAttribute('cx', fcX); fcRing.setAttribute('cy', fcY);
+      fcRing.setAttribute('r', 9);
+      fcRing.setAttribute('fill', '#1a1a1a');
+      fcRing.setAttribute('opacity', '0.15');
+      svg.appendChild(fcRing);
+
+      // Punkt
+      const fcDot = document.createElementNS(ns, 'circle');
+      fcDot.setAttribute('cx', fcX); fcDot.setAttribute('cy', fcY);
+      fcDot.setAttribute('r', 4);
+      fcDot.setAttribute('fill', '#1a1a1a');
+      fcDot.setAttribute('stroke', '#fff');
+      fcDot.setAttribute('stroke-width', '2');
+      svg.appendChild(fcDot);
+
+      // Datum-etikett vid klar-punkten
+      const fcDate = new Date();
+      fcDate.setMonth(fcDate.getMonth() + Math.round(forecastMonths));
+      const dateStr = fcDate.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short' });
+
+      const fcLbl = document.createElementNS(ns, 'text');
+      fcLbl.setAttribute('x', fcX); fcLbl.setAttribute('y', fcY - 12);
+      fcLbl.setAttribute('text-anchor', 'middle');
+      fcLbl.setAttribute('font-size', '10');
+      fcLbl.setAttribute('fill', '#1a1a1a');
+      fcLbl.setAttribute('font-weight', '600');
+      fcLbl.setAttribute('font-family', 'inherit');
+      fcLbl.textContent = 'klar ' + dateStr;
+      svg.appendChild(fcLbl);
+    }
+
+    // === RAMP- OCH LEDTID-MARKERINGAR ===
+    // Räkna ut positioner och placera etiketter på olika höjder om de krockar
+    const rampActive = rampMonths && rampMonths > 0 && rampMonths < monthsLeft;
+    const ltActive = lt > 0 && lt < monthsLeft;
+    const rampX = rampActive ? xScale(rampMonths) : null;
+    const ltX = ltActive ? xScale(lt) : null;
+    // Om båda finns och ligger nära varandra (< 60px), stapla etiketter vertikalt
+    const labelsCollide = rampActive && ltActive && Math.abs(rampX - ltX) < 60;
+    const labelY1 = M.top + 4;       // Övre rad
+    const labelY2 = M.top + 16;      // Undre rad (om kollision)
+
+    if (rampActive) {
+      const rampLine = document.createElementNS(ns, 'line');
+      rampLine.setAttribute('x1', rampX); rampLine.setAttribute('x2', rampX);
+      rampLine.setAttribute('y1', M.top + 8); rampLine.setAttribute('y2', M.top + innerH);
+      rampLine.setAttribute('stroke', '#a8a6a0');
+      rampLine.setAttribute('stroke-width', '1');
+      rampLine.setAttribute('stroke-dasharray', '2 3');
+      rampLine.setAttribute('opacity', '0.6');
+      svg.appendChild(rampLine);
+
+      const rampLbl = document.createElementNS(ns, 'text');
+      rampLbl.setAttribute('x', rampX);
+      // Om kollision: ramp får övre rad (eftersom den ofta är till vänster om ledtid)
+      rampLbl.setAttribute('y', labelsCollide ? labelY1 : (M.top + 4));
+      rampLbl.setAttribute('text-anchor', 'middle');
+      rampLbl.setAttribute('font-size', '9');
+      rampLbl.setAttribute('fill', '#8a8a85');
+      rampLbl.setAttribute('font-family', 'inherit');
+      rampLbl.setAttribute('letter-spacing', '0.04em');
+      rampLbl.textContent = 'FULL TAKT';
+      svg.appendChild(rampLbl);
+    }
+
+    if (ltActive) {
+      const ltLine = document.createElementNS(ns, 'line');
+      ltLine.setAttribute('x1', ltX); ltLine.setAttribute('x2', ltX);
+      ltLine.setAttribute('y1', M.top + 8); ltLine.setAttribute('y2', M.top + innerH);
+      ltLine.setAttribute('stroke', '#a8a6a0');
+      ltLine.setAttribute('stroke-width', '1');
+      ltLine.setAttribute('stroke-dasharray', '2 3');
+      ltLine.setAttribute('opacity', '0.6');
+      svg.appendChild(ltLine);
+
+      const ltLbl = document.createElementNS(ns, 'text');
+      ltLbl.setAttribute('x', ltX);
+      // Om kollision: ledtid får undre rad
+      ltLbl.setAttribute('y', labelsCollide ? labelY2 : (M.top + 4));
+      ltLbl.setAttribute('text-anchor', 'middle');
+      ltLbl.setAttribute('font-size', '9');
+      ltLbl.setAttribute('fill', '#8a8a85');
+      ltLbl.setAttribute('font-family', 'inherit');
+      ltLbl.setAttribute('letter-spacing', '0.04em');
+      ltLbl.textContent = '1:A KLAR';
+      svg.appendChild(ltLbl);
+    }
+
+    // === MILSTOLPS-PUNKTER LÄNGS LINJEN ===
+    [0.25, 0.5, 0.75].forEach(frac => {
+      const m = monthsLeft * frac;
+      const v = cumAt(m);
+      if (v > yMax * 0.05) {
+        const x = xScale(m); const y = yScale(v);
+        const tickDot = document.createElementNS(ns, 'circle');
+        tickDot.setAttribute('cx', x); tickDot.setAttribute('cy', y);
+        tickDot.setAttribute('r', 3); tickDot.setAttribute('fill', '#1a1a1a');
+        tickDot.setAttribute('stroke', '#fff'); tickDot.setAttribute('stroke-width', '1.5');
+        svg.appendChild(tickDot);
+        const tickLbl = document.createElementNS(ns, 'text');
+        tickLbl.setAttribute('x', x + 8); tickLbl.setAttribute('y', y + 4);
+        tickLbl.setAttribute('font-size', '10'); tickLbl.setAttribute('fill', '#6b6b66');
+        tickLbl.setAttribute('font-family', 'inherit');
+        tickLbl.setAttribute('font-variant-numeric', 'tabular-nums');
+        tickLbl.textContent = Math.round(v);
+        svg.appendChild(tickLbl);
+      }
+    });
+
+    // === SLUTPUNKT MED BUBBLA ===
+    const endX = xScale(monthsLeft);
+    const endY = yScale(potentialVolym);
+
+    // Avgör om vi når målet — påverkar färgsättning
+    const goalNotMet = state.onskadVolym > 0 && potentialVolym < state.onskadVolym;
+    const bubbleColor = goalNotMet ? '#9a2424' : '#29004F';
+    const ringColor = goalNotMet ? '#9a2424' : '#990AE3';
+    const dotColor = goalNotMet ? '#9a2424' : '#990AE3';
+    const subColor = goalNotMet ? '#F7DBDB' : '#D8C5F0';
+
+    // Yttre ring (halo)
+    const ring = document.createElementNS(ns, 'circle');
+    ring.setAttribute('cx', endX); ring.setAttribute('cy', endY);
+    ring.setAttribute('r', 11); ring.setAttribute('fill', ringColor);
+    ring.setAttribute('opacity', '0.18');
+    svg.appendChild(ring);
+
+    // Inre punkt
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', endX); dot.setAttribute('cy', endY);
+    dot.setAttribute('r', 6); dot.setAttribute('fill', dotColor);
+    dot.setAttribute('stroke', '#fff'); dot.setAttribute('stroke-width', '2.5');
+    svg.appendChild(dot);
+
+    // Annoterings-bubbla
+    const volStr = Math.round(potentialVolym).toLocaleString('sv-SE') + ' st';
+    let subStr;
+    if (goalNotMet) {
+      subStr = 'saknar ' + Math.round(state.onskadVolym - potentialVolym) + ' st';
+    } else if (rampMonths && rampMonths > 0) {
+      subStr = 'med ' + rampMonths + ' mån ramp';
+    } else {
+      subStr = 'med nuvarande takt';
+    }
+
+    // Beräkna bubblans bredd baserat på text — tag det längsta av val och sub
+    const longestStr = subStr.length > volStr.length ? subStr : volStr;
+    const bubbleW = Math.max(longestStr.length * 7 + 28, 100);
+    const bubbleH = 38;
+    const bubbleX = endX - bubbleW - 14;
+    const bubbleY = endY - bubbleH / 2;
+
+    // Säkerställ att bubblan inte hamnar utanför
+    let finalBubbleX = bubbleX;
+    if (bubbleX < M.left) {
+      finalBubbleX = endX + 14;
+    }
+    let finalBubbleY = bubbleY;
+    if (bubbleY < M.top - 4) {
+      finalBubbleY = M.top - 4;
+    }
+
+    const bubble = document.createElementNS(ns, 'rect');
+    bubble.setAttribute('x', finalBubbleX); bubble.setAttribute('y', finalBubbleY);
+    bubble.setAttribute('width', bubbleW); bubble.setAttribute('height', bubbleH);
+    bubble.setAttribute('rx', 8); bubble.setAttribute('ry', 8);
+    bubble.setAttribute('fill', bubbleColor);
+    svg.appendChild(bubble);
+
+    const bubbleVal = document.createElementNS(ns, 'text');
+    bubbleVal.setAttribute('x', finalBubbleX + bubbleW / 2);
+    bubbleVal.setAttribute('y', finalBubbleY + 17);
+    bubbleVal.setAttribute('text-anchor', 'middle');
+    bubbleVal.setAttribute('font-size', '13');
+    bubbleVal.setAttribute('font-weight', '600');
+    bubbleVal.setAttribute('fill', '#ffffff');
+    bubbleVal.setAttribute('font-family', 'inherit');
+    bubbleVal.setAttribute('font-variant-numeric', 'tabular-nums');
+    bubbleVal.textContent = volStr;
+    svg.appendChild(bubbleVal);
+
+    const bubbleSub = document.createElementNS(ns, 'text');
+    bubbleSub.setAttribute('x', finalBubbleX + bubbleW / 2);
+    bubbleSub.setAttribute('y', finalBubbleY + 30);
+    bubbleSub.setAttribute('text-anchor', 'middle');
+    bubbleSub.setAttribute('font-size', '9');
+    bubbleSub.setAttribute('fill', subColor);
+    bubbleSub.setAttribute('font-family', 'inherit');
+    bubbleSub.setAttribute('letter-spacing', '0.04em');
+    bubbleSub.textContent = subStr;
+    svg.appendChild(bubbleSub);
+
+    // === MÅL-BUBBLA (om mål är angivet) ===
+    if (targetMonthly && targetMonthly > 0) {
+      const targetEndVolym = state.onskadVolym;
+      const targetEndY = yScale(targetEndVolym);
+
+      // Yttre ring (halo) i guld
+      const tRing = document.createElementNS(ns, 'circle');
+      tRing.setAttribute('cx', endX); tRing.setAttribute('cy', targetEndY);
+      tRing.setAttribute('r', 9); tRing.setAttribute('fill', '#990AE3');
+      tRing.setAttribute('opacity', '0.20');
+      svg.appendChild(tRing);
+
+      // Inre punkt
+      const tDot = document.createElementNS(ns, 'circle');
+      tDot.setAttribute('cx', endX); tDot.setAttribute('cy', targetEndY);
+      tDot.setAttribute('r', 5); tDot.setAttribute('fill', '#990AE3');
+      tDot.setAttribute('stroke', '#fff'); tDot.setAttribute('stroke-width', '2');
+      svg.appendChild(tDot);
+
+      // Mål-bubbla
+      const targetVolStr = Math.round(targetEndVolym).toLocaleString('sv-SE') + ' st';
+      const tBubbleW = Math.max(targetVolStr.length * 8 + 24, 90);
+      const tBubbleH = 38;
+
+      // Smart placering: målets bubbla hamnar på motsatt sida från huvudbubblan
+      // för att undvika krock
+      const mainBubbleOnLeft = (finalBubbleX < endX);
+
+      // Om målets endY är ungefär samma som huvudbubblans, placera den på motsatt sida
+      const yDistance = Math.abs(targetEndY - endY);
+      const closeInY = yDistance < bubbleH + 10;
+
+      let tBubbleX, tBubbleY;
+      if (closeInY) {
+        // Placera på motsatt sida horisontellt
+        if (mainBubbleOnLeft) {
+          tBubbleX = endX + 14;
+        } else {
+          tBubbleX = endX - tBubbleW - 14;
+        }
+        tBubbleY = targetEndY - tBubbleH / 2;
+      } else {
+        // Placera på samma sida som huvudbubblan, vertikalt offsetad
+        tBubbleX = mainBubbleOnLeft ? finalBubbleX : (endX + 14);
+        tBubbleY = targetEndY - tBubbleH / 2;
+      }
+
+      // Säkerställ att bubblan inte hamnar utanför grafen
+      if (tBubbleX < M.left) tBubbleX = M.left + 4;
+      if (tBubbleX + tBubbleW > M.left + innerW) tBubbleX = M.left + innerW - tBubbleW - 4;
+      if (tBubbleY < M.top - 4) tBubbleY = M.top - 4;
+      if (tBubbleY + tBubbleH > M.top + innerH) tBubbleY = M.top + innerH - tBubbleH - 4;
+
+      const tBubble = document.createElementNS(ns, 'rect');
+      tBubble.setAttribute('x', tBubbleX); tBubble.setAttribute('y', tBubbleY);
+      tBubble.setAttribute('width', tBubbleW); tBubble.setAttribute('height', tBubbleH);
+      tBubble.setAttribute('rx', 8); tBubble.setAttribute('ry', 8);
+      tBubble.setAttribute('fill', '#990AE3');
+      svg.appendChild(tBubble);
+
+      const tBubbleVal = document.createElementNS(ns, 'text');
+      tBubbleVal.setAttribute('x', tBubbleX + tBubbleW / 2);
+      tBubbleVal.setAttribute('y', tBubbleY + 17);
+      tBubbleVal.setAttribute('text-anchor', 'middle');
+      tBubbleVal.setAttribute('font-size', '13');
+      tBubbleVal.setAttribute('font-weight', '600');
+      tBubbleVal.setAttribute('fill', '#ffffff');
+      tBubbleVal.setAttribute('font-family', 'inherit');
+      tBubbleVal.setAttribute('font-variant-numeric', 'tabular-nums');
+      tBubbleVal.textContent = targetVolStr;
+      svg.appendChild(tBubbleVal);
+
+      const tBubbleSub = document.createElementNS(ns, 'text');
+      tBubbleSub.setAttribute('x', tBubbleX + tBubbleW / 2);
+      tBubbleSub.setAttribute('y', tBubbleY + 30);
+      tBubbleSub.setAttribute('text-anchor', 'middle');
+      tBubbleSub.setAttribute('font-size', '9');
+      tBubbleSub.setAttribute('fill', '#fff');
+      tBubbleSub.setAttribute('font-family', 'inherit');
+      tBubbleSub.setAttribute('letter-spacing', '0.04em');
+      tBubbleSub.setAttribute('opacity', '0.9');
+      tBubbleSub.textContent = 'mål';
+      svg.appendChild(tBubbleSub);
+    }
+  }
+
+  function niceTicks(min, max, count) {
+    const range = max - min;
+    if (range <= 0) return [0];
+    const step = niceNum(range / count);
+    const niceMin = Math.floor(min / step) * step;
+    const niceMax = Math.ceil(max / step) * step;
+    const ticks = [];
+    for (let v = niceMin; v <= niceMax + 0.001; v += step) ticks.push(v);
+    return ticks;
+  }
+  function niceNum(x) {
+    const exp = Math.floor(Math.log10(x));
+    const f = x / Math.pow(10, exp);
+    let nf;
+    if (f < 1.5) nf = 1; else if (f < 3) nf = 2;
+    else if (f < 7) nf = 5; else nf = 10;
+    return nf * Math.pow(10, exp);
+  }
+  function niceMonthStep(maxMonths) {
+    if (maxMonths <= 6) return 1;
+    if (maxMonths <= 12) return 2;
+    if (maxMonths <= 24) return 3;
+    if (maxMonths <= 60) return 6;
+    return 12;
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  loadState();
+  applyStateToInputs();
+  renderRoles();
+  renderScenarios();
+  renderActivities();
+  renderConstraints();
+  bindGlobalInputs();
+  updateSnapshotUI();
+  recalc();
+</script>
+
+</body>
+</html>
