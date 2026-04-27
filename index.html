@@ -97,7 +97,7 @@
 
   .summary-banner {
     display: none;
-    background: linear-gradient(135deg, #29004F 0%, #3D0080 100%);
+    background: linear-gradient(135deg, #7B00BF 0%, #990AE3 100%);
     color: #ffffff;
     border-radius: 14px;
     padding: 28px 32px;
@@ -144,9 +144,9 @@
   .summary-banner .banner-meta {
     margin-top: 24px;
     padding-top: 18px;
-    border-top: 0.5px solid #5C0E92;
+    border-top: 0.5px solid rgba(255,255,255,0.25);
     font-size: 11px;
-    color: #a8a6a0;
+    color: #e0d0f8;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
@@ -1172,21 +1172,22 @@
 
   @media print {
     @page {
-      margin: 18mm 14mm;
+      margin: 16mm 16mm;
     }
     body { background: #ffffff; }
-    .page { padding: 0; max-width: none; }
+    .page { padding: 0; max-width: none; width: 100%; }
+
+    /* === DÖLJ UI-ELEMENT === */
     .toolbar, .add-role-row, .scen.add-scenario, .actions, .remove-btn,
     .scen-remove-btn, .drag-handle, .activity-handle, .cl-remove,
-    .add-checklist-item,
-    input[type=range] { display: none !important; }
-    .summary-banner { display: block !important; }
-    .role-row, .activity-row, .checklist-item { page-break-inside: avoid; }
-    .role-row { border-bottom: 0.5px solid #d8d6cf; }
-    .activity-row { border-bottom: 0.5px solid #d8d6cf; }
-    .analysis-block, .chart-card, .summary, .process-flow, .suggest-card,
-    .timeline, .summary-banner { page-break-inside: avoid; }
-    .scenarios-grid { page-break-inside: avoid; }
+    .add-checklist-item, input[type=range],
+    .role-checkbox, .unit-select,
+    .role-header { display: none !important; }
+
+    /* === VISA BANNER === */
+    .summary-banner { display: block !important; border-radius: 10px; }
+
+    /* === DÖLJ HJÄLPTEXTER === */
     .footer-note { display: none !important; }
     .subtitle { display: none !important; }
     .section .section-hint { display: none !important; }
@@ -1195,20 +1196,17 @@
     .global-row .role-name .hint { display: none !important; }
     .target-cell label .hint { display: none !important; }
     .suggest-card .margin-row label .hint { display: none !important; }
+    .tt { border-bottom: none; }
+    .tt::after, .tt::before { display: none !important; }
+
+    /* === ROLLISTA: 5 kolumner (num, namn, antal, takt, kap/dag) === */
     .role-row {
       grid-template-columns: 30px 1fr 50px 80px 80px;
+      border-bottom: 0.5px solid #d8d6cf;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
-    .role-header {
-      grid-template-columns: 30px 1fr 50px 80px 80px;
-    }
-    .activity-row {
-      grid-template-columns: 30px 160px 1fr;
-    }
-    .checklist-item {
-      grid-template-columns: 22px 1fr;
-    }
-    .role-row .role-name-input, .scen-name-input, .scen-target-input,
-    .checklist-item input[type=text] {
+    .role-row .role-name-input {
       border: none !important;
       background: transparent !important;
       padding: 0 !important;
@@ -1217,33 +1215,40 @@
       border: none !important;
       padding: 0 !important;
       background: transparent !important;
+      text-align: right;
     }
-    /* Dölj tomma textareas i print så det inte blir tomma rutor */
-    .activity-row textarea:placeholder-shown,
-    .constraints-textarea:placeholder-shown {
-      display: none !important;
+
+    /* === AKTIVITETSRADER === */
+    .activity-row {
+      grid-template-columns: 30px 160px 1fr;
+      border-bottom: 0.5px solid #d8d6cf;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
-    /* Dölj rader med tom aktivitetsbeskrivning helt */
-    .activity-row:has(textarea:placeholder-shown) {
-      display: none !important;
+    .activity-row:has(textarea:placeholder-shown) { display: none !important; }
+
+    /* === CHECKLISTA === */
+    .checklist-item {
+      grid-template-columns: 22px 1fr;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
-    /* Dölj checklist-items med tom text */
-    .checklist-item:has(input[type=text]:placeholder-shown) {
-      display: none !important;
+    .checklist-item:has(input[type=text]:placeholder-shown) { display: none !important; }
+    .checklist-item input[type=text] {
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
     }
-    /* Dölj begränsningar-blocket helt om alla items är tomma */
-    /* Dölj anteckningar-blocket om textarea är tom */
-    .analysis-block:has(.constraints-textarea:placeholder-shown:only-of-type),
-    .analysis-block:has(.checklist:empty) {
-      /* Detta är svårt att göra reliable - hoppar över */
+
+    /* === SCENARIER === */
+    .scen-name-input, .scen-target-input {
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
     }
-    button { display: none !important; }
-    .suggest-card { background: #f4f2eb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .v-ok, .v-fail { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .tt { border-bottom: none; }
-    .tt::after, .tt::before { display: none !important; }
-    .summary-banner, .process-flow, .pf-step { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    /* Snyggare textarea-utskrift */
+
+    /* === TEXTAREA-UTSKRIFT === */
+    .constraints-textarea:placeholder-shown { display: none !important; }
     textarea {
       border: none !important;
       background: transparent !important;
@@ -1253,13 +1258,31 @@
       overflow: visible !important;
       height: auto !important;
     }
-    /* Section headers blir tydligare i print */
+
+    /* === PROCESSFLÖDE === */
+    .process-flow .pf-step { min-width: 80px; }
+    .process-flow .pf-row { flex-wrap: wrap; gap: 6px; }
+
+    /* === SIDBRYTNING === */
     .section {
       page-break-after: avoid;
-      margin-top: 20px !important;
+      break-after: avoid;
+      margin-top: 18px !important;
     }
-    .analysis-block h3 {
-      page-break-after: avoid;
+    .analysis-block h3 { page-break-after: avoid; break-after: avoid; }
+    .analysis-block, .chart-card, .summary, .process-flow, .suggest-card,
+    .timeline, .summary-banner, .scenarios-grid {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* === FÄRGER I PRINT === */
+    button { display: none !important; }
+    .suggest-card { background: #f4f2eb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .v-ok, .v-fail { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .summary-banner, .process-flow, .pf-step, .goal-warning, .forecast-text {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
   }
 
@@ -1290,7 +1313,7 @@
 <div class="page">
 
   <h1>Leveransprojekt — Kapacitetsplanering</h1>
-  <p class="subtitle">Dra i staplarna för antal personer. Klicka i fälten för att ändra. Allt sparas automatiskt.</p>
+  <p class="subtitle">Justera antal och takt per roll. Allt sparas automatiskt.</p>
 
   <div class="toolbar">
     <button onclick="window.print()" title="Skriv ut eller spara som PDF">🖨 Skriv ut / PDF</button>
@@ -1350,11 +1373,11 @@
   </div>
 
   <div class="process-flow">
-    <div class="pf-title"><span class="tt" data-tip="Leveranskedjan i den ordning aktiviteterna sker. Flaskhalsen är markerad med rött.">Leveransflöde — kapacitet per steg</span></div>
+    <div class="pf-title"><span class="tt" data-tip="Kapacitet per steg. Flaskhals markerad i rött.">Kapacitet per steg i leveranskedjan</span></div>
     <div class="pf-row" id="pf-row"></div>
   </div>
 
-  <div class="section">Räkna baklänges — vad krävs?</div>
+  <div class="section">Mål &amp; behov</div>
 
   <div class="target-cell">
     <label>Mål — total volym
@@ -1416,7 +1439,7 @@
     <div class="outcome" id="suggest-outcome">—</div>
   </div>
 
-  <div class="section">Hitrate, deadline &amp; rampperiod</div>
+  <div class="section">Parametrar</div>
 
   <div class="global-row">
     <div class="role-name"><span class="tt" data-tip="Andel leveranser som lyckas på första försöket.">Hitrate</span>
@@ -1439,21 +1462,21 @@
     <input type="date" id="deadline" value="2027-12-31">
   </div>
 
-  <div class="section">Aktuell takt <span class="section-hint">— resultatet av nuvarande bemanning</span></div>
+  <div class="section">Aktuell takt <span class="section-hint">— med nuvarande bemanning</span></div>
 
   <div class="summary">
     <div class="stat">
-      <div class="lbl"><span class="tt" data-tip="MIN(alla rollers kapaciteter) × hitrate. Den lägsta kapaciteten i kedjan sätter taket.">Per arbetsdag</span></div>
+      <div class="lbl"><span class="tt" data-tip="MIN(alla rollers kapaciteter) × hitrate. Den lägsta kapaciteten i kedjan sätter taket.">Per dag</span></div>
       <div class="val" id="day-out">—</div>
       <div class="sub">flaskhals: <span id="bottleneck">—</span></div>
     </div>
     <div class="stat">
-      <div class="lbl"><span class="tt" data-tip="Vad ni levererar per månad vid full takt — alltså efter ev. rampperiod är klar.">Per månad vid full takt</span></div>
+      <div class="lbl"><span class="tt" data-tip="Vad ni levererar per månad vid full takt — alltså efter ev. rampperiod är klar.">Per månad</span></div>
       <div class="val" id="month-out">—</div>
       <div class="sub" id="month-sub">—</div>
     </div>
     <div class="stat">
-      <div class="lbl"><span class="tt" data-tip="Total volym ni hinner leverera fram till deadline med nuvarande bemanning. Tar hänsyn till ramp om den är aktiv.">Volym till deadline</span></div>
+      <div class="lbl"><span class="tt" data-tip="Total volym ni hinner leverera fram till deadline med nuvarande bemanning. Tar hänsyn till ramp om den är aktiv.">Totalt till deadline</span></div>
       <div class="val" id="vol-out">—</div>
       <div class="sub" id="vol-sub">—</div>
     </div>
@@ -1470,7 +1493,7 @@
   </div>
 
   <div class="chart-card">
-    <div class="chart-title">Kumulativ volym över tid — vad takten ger fram till deadline</div>
+    <div class="chart-title">Kumulativ volym fram till deadline</div>
     <svg id="chart" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="legend" id="chart-legend">
       <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
@@ -1480,21 +1503,21 @@
     <div class="forecast-text" id="forecast-text" style="display: none;">—</div>
   </div>
 
-  <div class="section">Klarar vi scenarierna? <span class="section-hint">— klicka för att redigera</span></div>
+  <div class="section">Scenarion <span class="section-hint">— klicka för att redigera</span></div>
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
   <div class="section">Analys</div>
 
   <div class="analysis-block">
-    <h3>Aktivitetsbeskrivning per roll</h3>
-    <div class="desc">Vad ingår i varje roll i leveransflödet.</div>
+    <h3>Aktiviteter per roll</h3>
+    <div class="desc">Vad ingår i varje roll.</div>
     <div id="activities-container"></div>
   </div>
 
   <div class="analysis-block">
-    <h3>Begränsningar i dag</h3>
-    <div class="desc">Det som vi vet sätter taket idag och som behöver hanteras.</div>
+    <h3>Kända begränsningar</h3>
+    <div class="desc">Det som sätter taket i dag och behöver hanteras.</div>
     <div class="checklist" id="constraints-checklist"></div>
     <button class="add-checklist-item" onclick="addConstraint()">+ Lägg till begränsning</button>
   </div>
@@ -1510,11 +1533,9 @@
   </div>
 
   <div class="footer-note">
-    <strong>Logik:</strong> aktuell takt/dag = MIN(alla rollers kapaciteter) × hitrate.
-    <br><br>
-    <strong>Rampperiod:</strong> vid uppstart av nya projekt är leveranstakten sällan på max från dag 1 — rekrytering, utbildning och processer tar tid att stabiliseras. Sätt antal månader till full takt så ritar grafen en mjuk uppstartskurva istället för rät linje. För pågående projekt: lämna på 0.
-    <br><br>
-    <strong>Sparas automatiskt:</strong> alla värden lagras i webbläsaren och finns kvar nästa gång du öppnar filen.
+    <strong>Logik:</strong> Takt/dag = MIN(alla rollers kapaciteter) × hitrate.
+    <strong>Rampperiod:</strong> Antal månader till full takt vid uppstart. Sätt 0 för projekt i drift.
+    <strong>Sparas:</strong> Allt lagras automatiskt i webbläsaren.
   </div>
 
 </div>
@@ -2364,7 +2385,7 @@
     // Undertext för "Per månad vid full takt"
     if (requiredMonthly > 0) {
       document.getElementById('month-sub').innerHTML =
-        'krävs ca ' + Math.round(requiredMonthly) + '/mån för ' + state.onskadVolym + ' st';
+        'krävs ' + Math.round(requiredMonthly) + '/mån för att nå målet';
     } else {
       document.getElementById('month-sub').textContent = 'vid ' + state.hitrate + '% hitrate';
     }
@@ -2387,11 +2408,9 @@
     const goalWarning = document.getElementById('goal-warning');
     if (state.onskadVolym > 0 && monthsLeft > 0 && volMargin < 0 && effMonth > 0) {
       goalWarning.style.display = 'flex';
-      document.getElementById('gw-title').textContent = 'Målet nås inte med nuvarande setup';
+      document.getElementById('gw-title').textContent = 'Målet nås inte';
       document.getElementById('gw-detail').innerHTML =
-        'Saknar <strong>' + Math.round(Math.abs(volMargin)) + ' st</strong> till deadline ' +
-        deadline.toLocaleDateString('sv-SE') + '. ' +
-        'Höj bemanningen, korta ledtiden eller flytta deadline för att stänga gapet.';
+        'Saknar <strong>' + Math.round(Math.abs(volMargin)) + ' st</strong> — höj bemanningen, korta ledtiden eller flytta deadline.';
     } else {
       goalWarning.style.display = 'none';
     }
@@ -2400,7 +2419,7 @@
     if (monthsLeft <= 0) {
       timeline.innerHTML = '<strong>Deadline har passerat.</strong> Välj ett senare datum.';
     } else if (effectiveStartMonths <= 0) {
-      timeline.innerHTML = '<strong>För kort tid.</strong> Ledtiden (' + Math.round(effLeadtimeDays) + ' dagar = ' + leadtimeMonths.toFixed(1) + ' mån) är längre än tiden till deadline. Välj kortare typfall eller flytta deadline.';
+      timeline.innerHTML = '<strong>För kort tid kvar.</strong> Ledtiden (' + Math.round(effLeadtimeDays) + ' dagar) är längre än återstående tid till deadline.';
     } else if (effMonth <= 0) {
       timeline.innerHTML = '<strong>Ingen takt.</strong> Höj kapaciteten i någon roll.';
     } else {
@@ -2413,12 +2432,10 @@
         typfallStr = 'Typfall ' + (state.leadtimeDays === 10 ? '1' : state.leadtimeDays === 60 ? '2' : '3') +
                      ' (' + state.leadtimeDays + ' arbetsdagar)';
       }
-      timeline.innerHTML = '<strong>Potential till deadline:</strong> Med ' +
-        Math.round(effMonth) + '/mån (full takt) hinner ni starta — och få klar — ' +
-        '<strong>' + Math.round(potentialVolym) + ' stycken</strong> fram till ' +
-        deadline.toLocaleDateString('sv-SE') + '. ' +
-        'Sista möjliga startdatum för ' + typfallStr + ': ' + lastStartDate.toLocaleDateString('sv-SE') + '. ' +
-        'Flaskhalsen är ' + bottleneck.name + '.';
+      timeline.innerHTML = '<strong>' + Math.round(potentialVolym) + ' st</strong> kan levereras till ' +
+        deadline.toLocaleDateString('sv-SE') + ' med nuvarande takt (' + Math.round(effMonth) + '/mån). ' +
+        'Sista startdag (' + typfallStr + '): <strong>' + lastStartDate.toLocaleDateString('sv-SE') + '</strong>. ' +
+        'Flaskhals: ' + bottleneck.name + '.';
     }
 
     const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
@@ -2428,11 +2445,9 @@
     document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.val.toFixed(0) + '/dag — sätter taket';
     document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' st';
     document.getElementById('banner-volym-sub').innerHTML = 'över ' + monthsLeft.toFixed(1) + ' månader';
-    let bannerHeadline = 'Med dagens setup levererar vi <strong>' + Math.round(effMonth) + '/månad</strong> netto. ' +
-      'Flaskhalsen är <strong>' + bottleneck.name + '</strong>. ' +
-      'Total bemanning: ' + totalPersonal + ' personer.';
+    let bannerHeadline = 'Takt: <strong>' + Math.round(effMonth) + '/månad</strong> · Flaskhals: <strong>' + bottleneck.name + '</strong> · ' + totalPersonal + ' personer totalt.';
     if (state.onskadVolym > 0 && volMargin < 0 && monthsLeft > 0 && effMonth > 0) {
-      bannerHeadline += ' <strong style="color:#F7DBDB">Saknar ' + Math.round(Math.abs(volMargin)) + ' st till målet.</strong>';
+      bannerHeadline += ' <strong style="color:#FFD6F0">⚠ Saknar ' + Math.round(Math.abs(volMargin)) + ' st till målet.</strong>';
     }
     document.getElementById('banner-headline').innerHTML = bannerHeadline;
     document.getElementById('banner-date').textContent = 'Genererad: ' + new Date().toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'});
@@ -2475,11 +2490,9 @@
       ? (effectiveStartMonths - 0.5 * state.rampMonths)
       : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(state.rampMonths, 0.001));
     targetMonthly = effectiveMonths > 0 ? state.onskadVolym / effectiveMonths : state.onskadVolym;
-    titleText = 'Förslag på bemanning för ' + state.onskadVolym + ' st till ' + deadline.toLocaleDateString('sv-SE');
-    bodyPrefix = 'Mål: <strong>' + state.onskadVolym + ' st</strong> på ' +
-                 monthsLeft.toFixed(1) + ' månader' +
-                 ' (varav ' + effectiveStartMonths.toFixed(1) + ' mån effektiv tid efter ledtid)' +
-                 ' = <strong>' + targetMonthly.toFixed(1) + '/månad</strong> netto';
+    titleText = 'Förslag på bemanning — ' + state.onskadVolym + ' st till ' + deadline.toLocaleDateString('sv-SE');
+    bodyPrefix = 'Mål: <strong>' + state.onskadVolym + ' st</strong> innan ' + deadline.toLocaleDateString('sv-SE') +
+                 ' = <strong>' + Math.round(targetMonthly) + '/månad</strong>';
 
     // Förlängning: när når vi målet med nuvarande takt?
     let forecastMonths = null; // null = visa inte förlängning
@@ -2504,7 +2517,7 @@
     if (forecastEl) {
       if (forecastTooFar) {
         forecastEl.style.display = 'block';
-        forecastEl.innerHTML = '<strong>⚠ Prognos:</strong> Med nuvarande takt kommer ni inte i kapp inom överskådlig tid. Höj kapaciteten kraftigt eller justera målet.';
+        forecastEl.innerHTML = '<strong>⚠ Prognos:</strong> Når inte målet inom överskådlig tid med nuvarande takt — höj kapaciteten eller justera målet.';
       } else if (forecastDate) {
         const monthsLate = forecastMonths - monthsLeft;
         const lateDays = Math.round(monthsLate * 30);
@@ -2514,9 +2527,9 @@
             ? Math.round(monthsLate) + ' månader'
             : lateDays + ' dagar';
         forecastEl.style.display = 'block';
-        forecastEl.innerHTML = '<strong>Prognos:</strong> Med nuvarande takt når ni ' +
-          state.onskadVolym + ' st <strong>' + forecastDate.toLocaleDateString('sv-SE') + '</strong> — ' +
-          lateStr + ' efter deadline ' + deadline.toLocaleDateString('sv-SE') + '.';
+        forecastEl.innerHTML = '<strong>Prognos:</strong> Med nuvarande takt nås målet ' +
+          '<strong>' + forecastDate.toLocaleDateString('sv-SE') + '</strong> — ' +
+          lateStr + ' efter deadline.';
       } else {
         forecastEl.style.display = 'none';
       }
@@ -2572,7 +2585,7 @@
 
     document.getElementById('suggest-body').innerHTML =
       bodyPrefix + ' (vid ' + Math.round(hitrate * 100) + '% hitrate). ' +
-      'Varje roll behöver klara minst ' + requiredDay.toFixed(1) + '/dag.' + snapshotText;
+      'Minsta kapacitet per roll: ' + requiredDay.toFixed(1) + '/dag.' + snapshotText;
 
     const rolesEl = document.getElementById('suggest-roles');
     rolesEl.innerHTML = '';
@@ -2598,7 +2611,7 @@
     const resultVolym = cumulativeAt(effectiveStartMonths, resultMonth, state.rampMonths);
 
     let outcomeText = '<strong>Med detta förslag:</strong> ' +
-      Math.round(resultMonth) + '/månad netto vid full takt';
+      Math.round(resultMonth) + '/månad';
 
     if (monthsLeft > 0) {
       outcomeText += ' = ' + Math.round(resultVolym) + ' st till ' + new Date(state.deadline).toLocaleDateString('sv-SE');
