@@ -97,7 +97,7 @@
 
   .summary-banner {
     display: none;
-    background: linear-gradient(135deg, #7B00BF 0%, #990AE3 100%);
+    background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
     color: #ffffff;
     border-radius: 14px;
     padding: 28px 32px;
@@ -901,7 +901,26 @@
     color: #8a8a85;
     text-align: center;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
+  .scen .scen-unit-select {
+    font-size: 12px;
+    border: 0.5px solid #c8c6bf;
+    border-radius: 6px;
+    padding: 3px 6px;
+    background: #ffffff;
+    color: #4a4a45;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  .scen .scen-unit-select:hover { border-color: #a8a6a0; }
+  .scen .scen-unit-select:focus { outline: none; border-color: #1a1a1a; }
   .scen .verdict-row { text-align: center; }
   .verdict {
     font-size: 13px;
@@ -1338,7 +1357,7 @@
         <div class="small" id="banner-bottleneck-sub">—</div>
       </div>
       <div class="banner-cell">
-        <div class="lbl">Volym till deadline</div>
+        <div class="lbl">Mot målet till deadline</div>
         <div class="big" id="banner-volym">—</div>
         <div class="small" id="banner-volym-sub">—</div>
       </div>
@@ -1510,7 +1529,7 @@
     <div class="forecast-text" id="forecast-text" style="display: none;">—</div>
   </div>
 
-  <div class="section">Scenarion <span class="section-hint">— klicka för att redigera</span></div>
+  <div class="section">Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
@@ -1558,9 +1577,9 @@
     { id: 'r5', name: 'NOC', count: 1, takt: 4, unit: 'dag', enabled: true, max: 20 },
   ];
   const defaultScenarios = [
-    { id: 's1', name: 'Scenario 1 — baseline', target: 25 },
-    { id: 's2', name: 'Scenario 2', target: 100 },
-    { id: 's3', name: 'Scenario 3', target: 200 },
+    { id: 's1', name: 'Scenario 1 — baseline', target: 25, unit: 'månad' },
+    { id: 's2', name: 'Scenario 2', target: 100, unit: 'månad' },
+    { id: 's3', name: 'Scenario 3', target: 200, unit: 'månad' },
   ];
   const defaultConstraints = [
     { id: 'c1', text: '', done: false },
@@ -1599,6 +1618,9 @@
         if (!state.activities) state.activities = {};
         if (!state.scenarios || !Array.isArray(state.scenarios) || state.scenarios.length === 0) {
           state.scenarios = defaultScenarios.map(s => ({...s}));
+        }
+        if (Array.isArray(state.scenarios)) {
+          state.scenarios.forEach(s => { if (!s.unit) s.unit = 'månad'; });
         }
         // constraints: konvertera från sträng till array om gammalt format
         if (typeof state.constraints === 'string') {
@@ -1924,11 +1946,20 @@
     state.scenarios.forEach(scen => {
       const div = document.createElement('div');
       div.className = 'scen';
+      const u = scen.unit || 'månad';
       div.innerHTML = `
         <button class="scen-remove-btn" data-id="${scen.id}" title="Ta bort scenario">×</button>
         <input type="text" class="scen-name-input" value="${escapeHtml(scen.name)}" data-id="${scen.id}" data-field="name">
         <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target">
-        <div class="target-suffix">leveranser/månad</div>
+        <div class="target-suffix">
+          <span>leveranser /</span>
+          <select class="scen-unit-select" data-id="${scen.id}" data-field="unit">
+            <option value="dag" ${u === 'dag' ? 'selected' : ''}>dag</option>
+            <option value="vecka" ${u === 'vecka' ? 'selected' : ''}>vecka</option>
+            <option value="månad" ${u === 'månad' ? 'selected' : ''}>månad</option>
+            <option value="år" ${u === 'år' ? 'selected' : ''}>år</option>
+          </select>
+        </div>
         <div class="verdict-row">
           <div class="verdict" id="verdict-${scen.id}">—</div>
           <div class="gap" id="gap-${scen.id}"></div>
@@ -1943,17 +1974,20 @@
     addCard.onclick = addScenario;
     container.appendChild(addCard);
 
-    container.querySelectorAll('input[data-field]').forEach(input => {
-      input.addEventListener('input', (e) => {
+    container.querySelectorAll('input[data-field], select[data-field]').forEach(input => {
+      const handler = (e) => {
         const id = e.target.dataset.id;
         const field = e.target.dataset.field;
         const scen = state.scenarios.find(s => s.id === id);
         if (!scen) return;
         if (field === 'name') scen.name = e.target.value;
         else if (field === 'target') scen.target = +e.target.value;
+        else if (field === 'unit') scen.unit = e.target.value;
         saveState();
         recalcScenarios();
-      });
+      };
+      input.addEventListener('input', handler);
+      input.addEventListener('change', handler);
     });
 
     container.querySelectorAll('.scen-remove-btn').forEach(btn => {
@@ -1972,7 +2006,7 @@
 
   function addScenario() {
     const newId = 's' + Date.now();
-    state.scenarios.push({ id: newId, name: 'Nytt scenario', target: 50 });
+    state.scenarios.push({ id: newId, name: 'Nytt scenario', target: 50, unit: 'månad' });
     saveState();
     renderScenarios();
     recalcScenarios();
@@ -1987,21 +2021,35 @@
     const active = activeRoles();
     if (active.length === 0) return;
     const minCap = Math.min(...active.map(r => roleCapPerDay(r)));
-    const effMonth = minCap * hitrate * 21;
+    const effDay = minCap * hitrate;
+    const perUnit = (u) => {
+      if (u === 'dag') return effDay;
+      if (u === 'vecka') return effDay * 5;
+      if (u === 'år') return effDay * 252;
+      return effDay * 21; // månad (default)
+    };
+    const unitLabel = (u) => (u === 'dag' ? '/dag' : u === 'vecka' ? '/vecka' : u === 'år' ? '/år' : '/mån');
 
     state.scenarios.forEach(scen => {
       const verdict = document.getElementById('verdict-' + scen.id);
       const gap = document.getElementById('gap-' + scen.id);
       if (!verdict || !gap) return;
-      if (effMonth >= scen.target) {
+      const u = scen.unit || 'månad';
+      const eff = perUnit(u);
+      const lbl = unitLabel(u);
+      const target = +scen.target || 0;
+      const decimals = (u === 'dag') ? 1 : 0;
+      if (eff >= target) {
         verdict.textContent = 'JA';
         verdict.className = 'verdict v-ok';
-        const overshoot = Math.round(effMonth - scen.target);
-        gap.textContent = overshoot > 0 ? '+' + overshoot + ' marginal' : 'precis på gränsen';
+        const overshoot = eff - target;
+        gap.textContent = overshoot > 0
+          ? '+' + overshoot.toFixed(decimals) + lbl + ' marginal'
+          : 'precis på gränsen';
       } else {
         verdict.textContent = 'NEJ';
         verdict.className = 'verdict v-fail';
-        gap.textContent = 'saknar ' + Math.round(scen.target - effMonth) + '/mån';
+        gap.textContent = 'saknar ' + (target - eff).toFixed(decimals) + lbl;
       }
     });
   }
@@ -2506,15 +2554,42 @@
     document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · vid ' + state.hitrate + '% hitrate';
     document.getElementById('banner-bottleneck').textContent = bottleneck.name;
     document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.val.toFixed(0) + '/dag — sätter taket';
-    document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' st';
-    document.getElementById('banner-volym-sub').innerHTML = 'över ' + monthsLeft.toFixed(1) + ' månader';
-    let bannerHeadline = 'Takt: <strong>' + Math.round(effMonth) + '/månad</strong> · Flaskhals: <strong>' + bottleneck.name + '</strong> · ' + totalPersonal + ' personer totalt.';
-    if (state.onskadVolym > 0 && volMargin < 0 && monthsLeft > 0 && effMonth > 0) {
-      bannerHeadline += ' <strong style="color:#FFD6F0">⚠ Saknar ' + Math.round(Math.abs(volMargin)) + ' st till målet.</strong>';
+    if (state.onskadVolym > 0) {
+      document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' / ' + state.onskadVolym;
+    } else {
+      document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' st';
+    }
+    if (state.onskadVolym > 0 && monthsLeft > 0) {
+      if (volMargin >= 0) {
+        document.getElementById('banner-volym-sub').innerHTML = '<span style="color:#C8F0CC">+' + Math.round(volMargin) + ' marginal</span> · ' + monthsLeft.toFixed(1) + ' mån kvar';
+      } else {
+        document.getElementById('banner-volym-sub').innerHTML = '<span style="color:#FFD6F0">−' + Math.round(Math.abs(volMargin)) + ' under målet</span> · ' + monthsLeft.toFixed(1) + ' mån kvar';
+      }
+    } else {
+      document.getElementById('banner-volym-sub').innerHTML = monthsLeft.toFixed(1) + ' mån till deadline';
+    }
+    let bannerHeadline;
+    if (state.onskadVolym > 0 && monthsLeft > 0 && effMonth > 0) {
+      if (volMargin >= 0) {
+        bannerHeadline = 'Når målet: <strong>' + Math.round(potentialVolym) + ' av ' + state.onskadVolym +
+          '</strong> till deadline (<span style="color:#C8F0CC">+' + Math.round(volMargin) + ' marginal</span>). ' +
+          'Flaskhals: <strong>' + bottleneck.name + '</strong>. Bemanning: ' + totalPersonal + ' pers.';
+      } else {
+        bannerHeadline = 'Når <strong>' + Math.round(potentialVolym) + ' av ' + state.onskadVolym +
+          '</strong> — <span style="color:#FFD6F0">saknar ' + Math.round(Math.abs(volMargin)) + ' st</span> till deadline. ' +
+          'Flaskhals: <strong>' + bottleneck.name + '</strong>. Bemanning: ' + totalPersonal + ' pers.';
+      }
+    } else {
+      bannerHeadline = 'Levererar <strong>' + Math.round(effMonth) + '/mån</strong> netto. ' +
+        'Flaskhals: <strong>' + bottleneck.name + '</strong>. Bemanning: ' + totalPersonal + ' pers.';
     }
     document.getElementById('banner-headline').innerHTML = bannerHeadline;
     document.getElementById('banner-date').textContent = 'Genererad: ' + new Date().toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'});
-    document.getElementById('banner-deadline').textContent = 'Deadline: ' + deadline.toLocaleDateString('sv-SE');
+    const startStr = (state.projektStart && state.projektStart.length >= 8)
+      ? new Date(state.projektStart).toLocaleDateString('sv-SE')
+      : new Date().toLocaleDateString('sv-SE') + ' (idag)';
+    const periodLen = monthsLeft > 0 ? '   ·   ' + monthsLeft.toFixed(1) + ' mån' : '';
+    document.getElementById('banner-deadline').textContent = 'Start ' + startStr + '   →   Deadline ' + deadline.toLocaleDateString('sv-SE') + periodLen;
 
     recalcScenarios();
     renderProcessFlow();

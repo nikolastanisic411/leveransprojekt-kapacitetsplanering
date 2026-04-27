@@ -12,9 +12,9 @@
       { "id": "r5", "name": "NOC", "count": 1, "takt": 4, "unit": "dag", "enabled": true, "max": 20 }
     ],
     "scenarios": [
-      { "id": "s1", "name": "Scenario 1 — baseline", "target": 25 },
-      { "id": "s2", "name": "Scenario 2", "target": 100 },
-      { "id": "s3", "name": "Scenario 3", "target": 200 }
+      { "id": "s1", "name": "Scenario 1 — baseline", "target": 25, "unit": "månad" },
+      { "id": "s2", "name": "Scenario 2", "target": 100, "unit": "månad" },
+      { "id": "s3", "name": "Scenario 3", "target": 200, "unit": "månad" }
     ],
     "constraints": [
       { "id": "c1", "text": "NOC klarar bara 4 klarrapporter/dag — sätter taket idag", "done": false },
