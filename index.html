@@ -3401,10 +3401,20 @@
       const chipText = 'klar ' + dateStr;
       const chipW = chipText.length * 7 + 20;
       const chipH = 22;
-      let chipX = fcX - chipW - 10;
-      if (chipX < M.left) chipX = fcX + 10;
-      const chipY = fcY - chipH - 8;
-      const finalChipY = chipY < M.top ? M.top + 4 : chipY;
+      // Centrera horisontellt på prognospunkten, klampa inom diagrammet
+      let chipX = fcX - chipW / 2;
+      if (chipX < M.left + 4) chipX = M.left + 4;
+      if (chipX + chipW > M.left + innerW - 4) chipX = M.left + innerW - chipW - 4;
+      // Y: sätt chipen tydligt UNDER prognospunkten (fri från mål-bubblan som ligger ±19px från punkten).
+      // Om det inte finns plats under, lägg den över med samma clearance.
+      const clearance = 28; // mer än mål-bubblans halva höjd (19) + lite luft
+      let finalChipY;
+      if (fcY + clearance + chipH <= M.top + innerH - 4) {
+        finalChipY = fcY + clearance;
+      } else {
+        finalChipY = fcY - chipH - clearance;
+        if (finalChipY < M.top + 4) finalChipY = M.top + 4;
+      }
 
       const fcChip = document.createElementNS(ns, 'rect');
       fcChip.setAttribute('x', chipX); fcChip.setAttribute('y', finalChipY);
