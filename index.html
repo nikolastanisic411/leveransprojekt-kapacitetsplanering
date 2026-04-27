@@ -1458,6 +1458,13 @@
   </div>
 
   <div class="target-cell">
+    <label>Projektstart
+      <span class="hint">när rampen börjar räknas — tomt = idag</span>
+    </label>
+    <input type="date" id="projektStart">
+  </div>
+
+  <div class="target-cell">
     <label>Deadline</label>
     <input type="date" id="deadline" value="2027-12-31">
   </div>
@@ -1567,6 +1574,7 @@
     constraints: defaultConstraints.map(c => ({...c})),
     hitrate: 90,
     deadline: '2027-12-31',
+    projektStart: '',
     onskadVolym: 390,
     margin: 10,
     rampMonths: 0,
@@ -1604,6 +1612,7 @@
         if (state.margin === undefined) state.margin = 10;
         if (state.rampMonths === undefined) state.rampMonths = 0;
         if (state.leadtimeDays === undefined) state.leadtimeDays = 10;
+        if (state.projektStart === undefined) state.projektStart = '';
         if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
         if (state.snapshot === undefined) state.snapshot = null;
         // Migrera gamla roller utan enabled/unit till nytt schema
@@ -1720,6 +1729,16 @@
   }
 
   function attachDragHandlers(row, id) {
+    // Raden är INTE draggable som standard — aktiveras bara via handtaget
+    row.draggable = false;
+
+    // Aktivera drag enbart när man håller i ⋮⋮-handtaget
+    const handle = row.querySelector('.drag-handle, .activity-handle');
+    if (handle) {
+      handle.addEventListener('mousedown', () => { row.draggable = true; });
+      handle.addEventListener('mouseleave', () => { if (!dragSrcId) row.draggable = false; });
+    }
+
     row.addEventListener('dragstart', (e) => {
       dragSrcId = id;
       row.classList.add('dragging');
@@ -1727,6 +1746,7 @@
       try { e.dataTransfer.setData('text/plain', id); } catch (err) {}
     });
     row.addEventListener('dragend', () => {
+      row.draggable = false;
       row.classList.remove('dragging');
       document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
       dragSrcId = null;
@@ -1753,7 +1773,6 @@
       const row = document.createElement('div');
       row.className = 'role-row' + (role.enabled === false ? ' disabled' : '');
       row.id = 'row-' + role.id;
-      row.draggable = true;
       row.innerHTML = `
         <input type="checkbox" class="role-checkbox" ${role.enabled !== false ? 'checked' : ''} data-id="${role.id}" data-field="enabled" title="Räkna med rollen i kalkylen">
         <div class="drag-handle" title="Dra för att sortera om">⋮⋮</div>
@@ -1994,7 +2013,6 @@
       const row = document.createElement('div');
       row.className = 'activity-row' + (role.enabled === false ? ' disabled' : '');
       row.id = 'act-row-' + role.id;
-      row.draggable = true;
       const capPerDay = roleCapPerDay(role).toFixed(role.unit === 'dag' ? 0 : 1);
       const unitSuffix = role.unit === 'vecka' ? '/vecka' : role.unit === 'månad' ? '/månad' : '/dag';
       const taktStr = role.takt + unitSuffix;
@@ -2060,6 +2078,9 @@
     document.getElementById('rampMonths').addEventListener('input', (e) => {
       state.rampMonths = +e.target.value; saveState(); recalc();
     });
+    document.getElementById('projektStart').addEventListener('input', (e) => {
+      state.projektStart = e.target.value; saveState(); recalc();
+    });
     document.getElementById('deadline').addEventListener('input', (e) => {
       state.deadline = e.target.value; saveState(); recalc();
     });
@@ -2089,6 +2110,7 @@
     document.getElementById('hitrate').value = state.hitrate;
     document.getElementById('rampMonths').value = state.rampMonths;
     document.getElementById('deadline').value = state.deadline;
+    document.getElementById('projektStart').value = state.projektStart || '';
     document.getElementById('onskad-volym').value = state.onskadVolym;
     document.getElementById('margin').value = state.margin;
     document.getElementById('notes').value = state.notes;
@@ -2173,6 +2195,7 @@
     state.constraints = defaultConstraints.map(c => ({...c}));
     state.hitrate = 90;
     state.deadline = '2027-12-31';
+    state.projektStart = '';
     state.onskadVolym = 390;
     state.margin = 10;
     state.rampMonths = 0;
@@ -2362,13 +2385,34 @@
     const today = new Date();
     const monthsLeft = (deadline.getFullYear() - today.getFullYear()) * 12 + (deadline.getMonth() - today.getMonth()) + (deadline.getDate() - today.getDate()) / 30;
 
+    // Projektstart: hur långt in i rampen är vi redan?
+    // Om projektstart är i framtiden → extra fördröjning innan rampen ens börjar
+    // Om projektstart är i det förflutna → delar av rampen är redan avklarad
+    let effectiveRamp = state.rampMonths;
+    let startDelayMonths = 0; // månader tills projektet startar (0 om redan igång)
+    if (state.projektStart) {
+      const startDate = new Date(state.projektStart);
+      const elapsedMonths = (today.getFullYear() - startDate.getFullYear()) * 12
+        + (today.getMonth() - startDate.getMonth())
+        + (today.getDate() - startDate.getDate()) / 30;
+      if (elapsedMonths < 0) {
+        // Projektet har inte startat — fördröjning kvar = -elapsedMonths
+        startDelayMonths = -elapsedMonths;
+        effectiveRamp = state.rampMonths; // full ramp kvarstår
+      } else {
+        // Projektet är igång — ramp är delvis avklarad
+        effectiveRamp = Math.max(0, state.rampMonths - elapsedMonths);
+        startDelayMonths = 0;
+      }
+    }
+
     // Ledtid: hur lång tid varje leverans tar från start till klar
     const effLeadtimeDays = getEffectiveLeadtime();
     const leadtimeMonths = effLeadtimeDays / 21; // 21 arbetsdagar/månad
-    // Effektiv tid att starta leveranser = totalt - ledtid (sista start måste vara deadline - ledtid)
-    const effectiveStartMonths = Math.max(0, monthsLeft - leadtimeMonths);
-    // Potentiell levererad volym = vad som hinner startas innan sista möjliga startdatum, med ramp
-    const potentialVolym = Math.max(0, cumulativeAt(effectiveStartMonths, effMonth, state.rampMonths));
+    // Effektiv tid att starta leveranser = totalt - ledtid - ev. startfördröjning
+    const effectiveStartMonths = Math.max(0, monthsLeft - leadtimeMonths - startDelayMonths);
+    // Potentiell levererad volym = vad som hinner startas innan sista möjliga startdatum, med justerad ramp
+    const potentialVolym = Math.max(0, cumulativeAt(effectiveStartMonths, effMonth, effectiveRamp));
 
     document.getElementById('vol-out').textContent = Math.round(potentialVolym);
 
@@ -2376,9 +2420,9 @@
     // Använd effectiveStartMonths eftersom vi måste vara klara med start innan deadline - ledtid
     let requiredMonthly = 0;
     if (effectiveStartMonths > 0 && state.onskadVolym > 0) {
-      const effectiveMonths = effectiveStartMonths >= state.rampMonths
-        ? (effectiveStartMonths - 0.5 * state.rampMonths)
-        : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(state.rampMonths, 0.001));
+      const effectiveMonths = effectiveStartMonths >= effectiveRamp
+        ? (effectiveStartMonths - 0.5 * effectiveRamp)
+        : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(effectiveRamp, 0.001));
       requiredMonthly = effectiveMonths > 0 ? state.onskadVolym / effectiveMonths : 0;
     }
 
@@ -2418,13 +2462,16 @@
     const timeline = document.getElementById('timeline');
     if (monthsLeft <= 0) {
       timeline.innerHTML = '<strong>Deadline har passerat.</strong> Välj ett senare datum.';
+    } else if (startDelayMonths > 0 && startDelayMonths >= monthsLeft - leadtimeMonths) {
+      timeline.innerHTML = '<strong>Projektet startar för sent.</strong> Projektstart ' +
+        new Date(state.projektStart).toLocaleDateString('sv-SE') + ' lämnar för lite tid till deadline.';
     } else if (effectiveStartMonths <= 0) {
       timeline.innerHTML = '<strong>För kort tid kvar.</strong> Ledtiden (' + Math.round(effLeadtimeDays) + ' dagar) är längre än återstående tid till deadline.';
     } else if (effMonth <= 0) {
       timeline.innerHTML = '<strong>Ingen takt.</strong> Höj kapaciteten i någon roll.';
     } else {
       const lastStartDate = new Date(deadline);
-      lastStartDate.setDate(lastStartDate.getDate() - effLeadtimeDays * (7/5)); // konvertera arbetsdagar till kalenderdagar
+      lastStartDate.setDate(lastStartDate.getDate() - effLeadtimeDays * (7/5));
       let typfallStr;
       if (state.leadtimeDays === 'mix') {
         typfallStr = 'Blandat (viktad ledtid ' + effLeadtimeDays.toFixed(1) + ' dagar)';
@@ -2432,10 +2479,26 @@
         typfallStr = 'Typfall ' + (state.leadtimeDays === 10 ? '1' : state.leadtimeDays === 60 ? '2' : '3') +
                      ' (' + state.leadtimeDays + ' arbetsdagar)';
       }
+      // Bygg statusinfo om projektstart
+      let startInfo = '';
+      if (state.projektStart) {
+        const startDate = new Date(state.projektStart);
+        const elapsedMonths = (today.getFullYear() - startDate.getFullYear()) * 12
+          + (today.getMonth() - startDate.getMonth())
+          + (today.getDate() - startDate.getDate()) / 30;
+        if (startDelayMonths > 0) {
+          startInfo = ' Projektet startar ' + startDate.toLocaleDateString('sv-SE') +
+            ' (' + startDelayMonths.toFixed(1) + ' mån kvar). Full takt nås ' +
+            (startDelayMonths + effectiveRamp).toFixed(1) + ' mån från idag.';
+        } else if (effectiveRamp < state.rampMonths && state.rampMonths > 0) {
+          startInfo = ' Rampen är ' + Math.round(elapsedMonths) + ' av ' + state.rampMonths +
+            ' mån avklarad — full takt om ' + effectiveRamp.toFixed(1) + ' mån.';
+        }
+      }
       timeline.innerHTML = '<strong>' + Math.round(potentialVolym) + ' st</strong> kan levereras till ' +
         deadline.toLocaleDateString('sv-SE') + ' med nuvarande takt (' + Math.round(effMonth) + '/mån). ' +
         'Sista startdag (' + typfallStr + '): <strong>' + lastStartDate.toLocaleDateString('sv-SE') + '</strong>. ' +
-        'Flaskhals: ' + bottleneck.name + '.';
+        'Flaskhals: ' + bottleneck.name + '.' + startInfo;
     }
 
     const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
@@ -2473,22 +2536,22 @@
     if (monthsLeft <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
-      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, state.rampMonths, leadtimeMonths);
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
     if (effectiveStartMonths <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
-      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, state.rampMonths, leadtimeMonths);
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
     // Räkna baklänges med hänsyn till ramp OCH ledtid:
     // Vi har effectiveStartMonths att starta volym i, sista start måste ske innan deadline - leadtime
-    const effectiveMonths = effectiveStartMonths >= state.rampMonths
-      ? (effectiveStartMonths - 0.5 * state.rampMonths)
-      : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(state.rampMonths, 0.001));
+    const effectiveMonths = effectiveStartMonths >= effectiveRamp
+      ? (effectiveStartMonths - 0.5 * effectiveRamp)
+      : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(effectiveRamp, 0.001));
     targetMonthly = effectiveMonths > 0 ? state.onskadVolym / effectiveMonths : state.onskadVolym;
     titleText = 'Förslag på bemanning — ' + state.onskadVolym + ' st till ' + deadline.toLocaleDateString('sv-SE');
     bodyPrefix = 'Mål: <strong>' + state.onskadVolym + ' st</strong> innan ' + deadline.toLocaleDateString('sv-SE') +
@@ -2499,7 +2562,7 @@
     let forecastDate = null;
     let forecastTooFar = false;
     if (state.onskadVolym > 0 && potentialVolym < state.onskadVolym && effMonth > 0) {
-      forecastMonths = timeToReach(state.onskadVolym, effMonth, state.rampMonths, leadtimeMonths);
+      forecastMonths = timeToReach(state.onskadVolym, effMonth, effectiveRamp, leadtimeMonths);
       // Begränsa förlängning till max 6x deadline-tiden för läsbarhet
       if (forecastMonths > monthsLeft * 6) {
         forecastTooFar = true;
@@ -2509,7 +2572,7 @@
       }
     }
 
-    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, state.rampMonths, leadtimeMonths, forecastMonths, forecastTooFar);
+    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, effectiveRamp, leadtimeMonths, forecastMonths, forecastTooFar);
     updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft));
 
     // Uppdatera prognostext under grafen
@@ -2537,7 +2600,7 @@
 
     let comparisonRoles = state.snapshot ? state.snapshot.roles : state.roles;
 
-    updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths);
+    updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp);
     updateActivityLabels();
   }
 
@@ -2560,7 +2623,8 @@
     legend.innerHTML = html;
   }
 
-  function updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths) {
+  function updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp) {
+    if (effectiveRamp === undefined) effectiveRamp = state.rampMonths;
     if (targetMonthly <= 0 || hitrate <= 0 || state.roles.length === 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
@@ -2608,7 +2672,7 @@
     const resultMinCap = Math.min(...active.map(r => needed[r.id] * rolePerDay(r)));
     const resultMonth = resultMinCap * hitrate * 21;
     // Resultvolym = vad som hinner startas och bli klart innan deadline
-    const resultVolym = cumulativeAt(effectiveStartMonths, resultMonth, state.rampMonths);
+    const resultVolym = cumulativeAt(effectiveStartMonths, resultMonth, effectiveRamp);
 
     let outcomeText = '<strong>Med detta förslag:</strong> ' +
       Math.round(resultMonth) + '/månad';
