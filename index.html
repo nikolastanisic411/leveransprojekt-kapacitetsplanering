@@ -1566,7 +1566,7 @@
   </div>
 
   <div class="chart-card">
-    <div class="chart-title">Detaljerad planering — kapacitet per roll <span class="chart-subtitle">flaskhalsen är den lägsta linjen, övriga roller har överkapacitet</span></div>
+    <div class="chart-title">Detaljerad planering — per roll <span class="chart-subtitle">hur många items varje roll löser, från när till när</span></div>
     <svg id="roles-chart" viewBox="0 0 800 320" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="legend" id="roles-chart-legend"></div>
   </div>
@@ -2684,7 +2684,7 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
-      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart);
+      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2692,7 +2692,7 @@
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
-      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart);
+      drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2750,7 +2750,7 @@
     let comparisonRoles = state.snapshot ? state.snapshot.roles : state.roles;
 
     updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp);
-    drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart);
+    drawRolesChart(monthsLeft, leadtimeMonths, effectiveRamp, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline);
     updateActivityLabels();
   }
 
@@ -2890,176 +2890,226 @@
     return ROLE_COLORS[idx % ROLE_COLORS.length];
   }
 
-  function drawRolesChart(monthsLeft, leadtimeMonths, rampMonths, startDelayMonths, elapsedFromStart) {
+  function drawRolesChart(monthsLeft, leadtimeMonths, rampMonths, startDelayMonths, elapsedFromStart, potentialVolym, projektStartDate, deadline) {
     const svg = document.getElementById('roles-chart');
     const legendEl = document.getElementById('roles-chart-legend');
     if (!svg || !legendEl) return;
     svg.innerHTML = '';
     legendEl.innerHTML = '';
-    const W = 800, H = 320;
-    const M = { top: 26, right: 40, bottom: 50, left: 60 };
-    const innerW = W - M.left - M.right;
-    const innerH = H - M.top - M.bottom;
     const ns = 'http://www.w3.org/2000/svg';
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    startDelayMonths = startDelayMonths || 0;
-    elapsedFromStart = elapsedFromStart || 0;
 
-    if (monthsLeft <= 0) {
+    const hitrate = state.hitrate / 100;
+    const active = activeRoles();
+    if (active.length === 0 || !potentialVolym || potentialVolym <= 0) {
+      const W = 800, H = 100;
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       const txt = document.createElementNS(ns, 'text');
       txt.setAttribute('x', W/2); txt.setAttribute('y', H/2);
       txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('font-size', '13');
       txt.setAttribute('fill', '#a8a8a3'); txt.setAttribute('font-family', 'inherit');
-      txt.textContent = 'Inga data att visa.';
-      svg.appendChild(txt); return;
+      txt.textContent = 'Sätt mål-volym och bemanning för att se planeringen.';
+      svg.appendChild(txt);
+      return;
     }
 
-    const hitrate = state.hitrate / 100;
-    const active = activeRoles();
-    if (active.length === 0) return;
+    // Layout: 1 rad per roll, ca 38px hög + topp/bottenmarginal
+    const rowH = 40;
+    const W = 800;
+    const H = active.length * rowH + 70;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const M = { top: 30, right: 40, bottom: 30, left: 160 };
+    const innerW = W - M.left - M.right;
+    const innerH = active.length * rowH;
 
-    // Per-roll månadstakt (full kapacitet, vid full ramp, efter hitrate)
-    const roleMonthly = active.map(r => roleCapPerDay(r) * hitrate * 21);
-    const minMonthly = Math.min(...roleMonthly);
-    // Hitta flaskhalsen (lägst kap/dag bland aktiva)
+    // X-axel: från projektstart till deadline
+    const today = new Date();
+    const startDate = projektStartDate || today;
+    const dayMs = 1000 * 60 * 60 * 24;
+    const totalDays = Math.max(1, (deadline - startDate) / dayMs);
+    const xScale = days => M.left + (days / totalDays) * innerW;
+
+    // Beräkna per roll
     const minCap = Math.min(...active.map(r => roleCapPerDay(r)));
-
-    const lt = leadtimeMonths || 0;
-    const cumAtRole = (t, mRate) => {
-      const tFromStart = t + elapsedFromStart - startDelayMonths;
-      const startT = tFromStart - lt;
-      if (startT <= 0 || mRate <= 0) return 0;
-      if (!rampMonths || rampMonths <= 0) return mRate * startT;
-      if (startT <= rampMonths) return 0.5 * mRate * startT * startT / rampMonths;
-      return 0.5 * mRate * rampMonths + (startT - rampMonths) * mRate;
-    };
-
-    const xMax = monthsLeft * 1.05;
-    const yMax = Math.max(...active.map((_, i) => cumAtRole(monthsLeft, roleMonthly[i]))) * 1.15 || 100;
-
-    const xScale = m => M.left + (m / xMax) * innerW;
-    const yScale = v => M.top + innerH - (v / yMax) * innerH;
-
-    // === Y-axel ===
-    const yTicks = niceTicks(0, yMax, 5);
-    yTicks.forEach(t => {
-      const y = yScale(t);
-      const line = document.createElementNS(ns, 'line');
-      line.setAttribute('x1', M.left); line.setAttribute('x2', M.left + innerW);
-      line.setAttribute('y1', y); line.setAttribute('y2', y);
-      line.setAttribute('stroke', '#ebe9e2'); line.setAttribute('stroke-width', '1');
-      svg.appendChild(line);
-      const lbl = document.createElementNS(ns, 'text');
-      lbl.setAttribute('x', M.left - 10); lbl.setAttribute('y', y + 4);
-      lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('font-size', '10');
-      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
-      lbl.setAttribute('font-variant-numeric', 'tabular-nums');
-      lbl.textContent = Math.round(t);
-      svg.appendChild(lbl);
+    const roleData = active.map((role, idx) => {
+      const dailyCap = roleCapPerDay(role) * hitrate; // levererar/dag efter hitrate
+      const daysNeeded = dailyCap > 0 ? potentialVolym / dailyCap : Infinity;
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + Math.ceil(daysNeeded));
+      const isBottleneck = roleCapPerDay(role) === minCap;
+      const overshoots = endDate > deadline;
+      return { role, idx, dailyCap, daysNeeded, endDate, isBottleneck, overshoots };
     });
 
-    // === X-axel: månader ===
-    const today = new Date();
+    // Bakgrund: hela tillgängliga periodens omfång
+    // Tidsetiketter på toppen — månader
     const monthNames = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
-    const xTickStep = niceMonthStep(xMax);
-    for (let m = 0; m <= xMax + 0.001; m += xTickStep) {
-      const x = xScale(m);
-      const tickDate = new Date(today);
+    const monthsTotal = Math.max(1, totalDays / 30);
+    const tickStep = monthsTotal <= 6 ? 1 : monthsTotal <= 18 ? 2 : monthsTotal <= 36 ? 3 : 6;
+    for (let m = 0; m <= monthsTotal + 0.001; m += tickStep) {
+      const tickDate = new Date(startDate);
       tickDate.setMonth(tickDate.getMonth() + Math.round(m));
+      if (tickDate > deadline) break;
+      const days = (tickDate - startDate) / dayMs;
+      const x = xScale(days);
+      // Lodrät rutnätslinje
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', x); line.setAttribute('x2', x);
+      line.setAttribute('y1', M.top - 4); line.setAttribute('y2', M.top + innerH);
+      line.setAttribute('stroke', '#ebe9e2'); line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+      // Etikett
       const lbl = document.createElementNS(ns, 'text');
-      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top + innerH + 16);
+      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top - 12);
       lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '10');
       lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
-      lbl.textContent = monthNames[tickDate.getMonth()];
+      lbl.textContent = monthNames[tickDate.getMonth()] + ' ' + (tickDate.getFullYear() % 100);
       svg.appendChild(lbl);
     }
 
-    // X-axel-linje
-    const xAxis = document.createElementNS(ns, 'line');
-    xAxis.setAttribute('x1', M.left); xAxis.setAttribute('x2', M.left + innerW);
-    xAxis.setAttribute('y1', M.top + innerH); xAxis.setAttribute('y2', M.top + innerH);
-    xAxis.setAttribute('stroke', '#d8d6cf'); xAxis.setAttribute('stroke-width', '1');
-    svg.appendChild(xAxis);
+    // Idag-markör (om inom intervallet)
+    if (today >= startDate && today <= deadline) {
+      const todayDays = (today - startDate) / dayMs;
+      const tx = xScale(todayDays);
+      const tLine = document.createElementNS(ns, 'line');
+      tLine.setAttribute('x1', tx); tLine.setAttribute('x2', tx);
+      tLine.setAttribute('y1', M.top - 4); tLine.setAttribute('y2', M.top + innerH + 4);
+      tLine.setAttribute('stroke', '#1a1a1a'); tLine.setAttribute('stroke-width', '1');
+      tLine.setAttribute('stroke-dasharray', '2 3'); tLine.setAttribute('opacity', '0.4');
+      svg.appendChild(tLine);
+      const tLbl = document.createElementNS(ns, 'text');
+      tLbl.setAttribute('x', tx); tLbl.setAttribute('y', M.top - 18);
+      tLbl.setAttribute('text-anchor', 'middle'); tLbl.setAttribute('font-size', '9');
+      tLbl.setAttribute('fill', '#1a1a1a'); tLbl.setAttribute('font-family', 'inherit');
+      tLbl.setAttribute('letter-spacing', '0.04em');
+      tLbl.textContent = 'IDAG';
+      svg.appendChild(tLbl);
+    }
 
-    // === Deadline-linje ===
-    const dx = xScale(monthsLeft);
+    // Deadline-markör
+    const dx = xScale(totalDays);
     const dLine = document.createElementNS(ns, 'line');
     dLine.setAttribute('x1', dx); dLine.setAttribute('x2', dx);
-    dLine.setAttribute('y1', M.top - 4); dLine.setAttribute('y2', M.top + innerH);
+    dLine.setAttribute('y1', M.top - 4); dLine.setAttribute('y2', M.top + innerH + 4);
     dLine.setAttribute('stroke', '#9a2424'); dLine.setAttribute('stroke-width', '1.5');
     dLine.setAttribute('stroke-dasharray', '3 4');
     svg.appendChild(dLine);
     const dLbl = document.createElementNS(ns, 'text');
-    dLbl.setAttribute('x', dx); dLbl.setAttribute('y', M.top - 8);
-    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '10');
+    dLbl.setAttribute('x', dx); dLbl.setAttribute('y', M.top - 18);
+    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '9');
     dLbl.setAttribute('fill', '#9a2424'); dLbl.setAttribute('font-weight', '600');
-    dLbl.setAttribute('font-family', 'inherit');
+    dLbl.setAttribute('font-family', 'inherit'); dLbl.setAttribute('letter-spacing', '0.04em');
     dLbl.textContent = 'DEADLINE';
     svg.appendChild(dLbl);
 
-    // === Projektstart-markör (om i framtiden) ===
-    if (startDelayMonths > 0 && startDelayMonths < monthsLeft) {
-      const psX = xScale(startDelayMonths);
-      const psLine = document.createElementNS(ns, 'line');
-      psLine.setAttribute('x1', psX); psLine.setAttribute('x2', psX);
-      psLine.setAttribute('y1', M.top - 4); psLine.setAttribute('y2', M.top + innerH);
-      psLine.setAttribute('stroke', '#5C0E92'); psLine.setAttribute('stroke-width', '1.5');
-      psLine.setAttribute('stroke-dasharray', '4 4'); psLine.setAttribute('opacity', '0.7');
-      svg.appendChild(psLine);
-    }
+    // En rad per roll
+    roleData.forEach((d, i) => {
+      const rowY = M.top + i * rowH;
+      const barY = rowY + 8;
+      const barH = rowH - 16;
 
-    // === Per-roll-linjer ===
-    const numPoints = 80;
-    active.forEach((role, idx) => {
-      const isBottleneck = roleCapPerDay(role) === minCap;
-      const color = isBottleneck ? '#9a2424' : colorForRole(idx);
-      const pts = [];
-      for (let i = 0; i <= numPoints; i++) {
-        const m = (monthsLeft * i) / numPoints;
-        const v = cumAtRole(m, roleMonthly[idx]);
-        pts.push({ x: xScale(m), y: yScale(v) });
+      // Roll-namn till vänster
+      const nameLbl = document.createElementNS(ns, 'text');
+      nameLbl.setAttribute('x', M.left - 12);
+      nameLbl.setAttribute('y', barY + barH / 2 + 4);
+      nameLbl.setAttribute('text-anchor', 'end');
+      nameLbl.setAttribute('font-size', '12');
+      nameLbl.setAttribute('font-weight', d.isBottleneck ? '600' : '500');
+      nameLbl.setAttribute('fill', d.isBottleneck ? '#9a2424' : '#1a1a1a');
+      nameLbl.setAttribute('font-family', 'inherit');
+      nameLbl.textContent = d.role.name + (d.isBottleneck ? '  ⚑' : '');
+      svg.appendChild(nameLbl);
+
+      // Bakgrundsspår (hela tillgängliga periodens omfång)
+      const trackBg = document.createElementNS(ns, 'rect');
+      trackBg.setAttribute('x', M.left); trackBg.setAttribute('y', barY);
+      trackBg.setAttribute('width', innerW); trackBg.setAttribute('height', barH);
+      trackBg.setAttribute('rx', 4); trackBg.setAttribute('ry', 4);
+      trackBg.setAttribute('fill', '#f4f2eb');
+      svg.appendChild(trackBg);
+
+      // Aktiv arbetsbar
+      const barEndDays = Math.min(d.daysNeeded, totalDays);
+      const barOverflowDays = Math.max(0, d.daysNeeded - totalDays);
+      const barColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#7c4dab');
+
+      const bar = document.createElementNS(ns, 'rect');
+      bar.setAttribute('x', M.left); bar.setAttribute('y', barY);
+      bar.setAttribute('width', xScale(barEndDays) - M.left); bar.setAttribute('height', barH);
+      bar.setAttribute('rx', 4); bar.setAttribute('ry', 4);
+      bar.setAttribute('fill', barColor);
+      bar.setAttribute('opacity', d.overshoots ? '0.85' : (d.isBottleneck ? '0.95' : '0.7'));
+      svg.appendChild(bar);
+
+      // Overflow-bar (om bar går förbi deadline)
+      if (barOverflowDays > 0) {
+        const overflowEndDays = totalDays + barOverflowDays;
+        // Klampa till max 1.3x totalDays för synlig vink
+        const visibleOverflow = Math.min(barOverflowDays, totalDays * 0.3);
+        const overX = xScale(totalDays);
+        const overW = (visibleOverflow / totalDays) * innerW;
+        const overflow = document.createElementNS(ns, 'rect');
+        overflow.setAttribute('x', overX); overflow.setAttribute('y', barY);
+        overflow.setAttribute('width', overW); overflow.setAttribute('height', barH);
+        overflow.setAttribute('fill', '#9a2424');
+        overflow.setAttribute('opacity', '0.5');
+        // Diagonal-mönster via stripes (enkel: dashed border)
+        overflow.setAttribute('stroke', '#9a2424');
+        overflow.setAttribute('stroke-dasharray', '3 2');
+        overflow.setAttribute('stroke-width', '1');
+        svg.appendChild(overflow);
       }
-      const path = document.createElementNS(ns, 'path');
-      let d = `M ${pts[0].x} ${pts[0].y} `;
-      for (let i = 1; i < pts.length; i++) d += `L ${pts[i].x} ${pts[i].y} `;
-      path.setAttribute('d', d);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', color);
-      path.setAttribute('stroke-width', isBottleneck ? '3' : '1.8');
-      path.setAttribute('stroke-linejoin', 'round');
-      if (!isBottleneck) path.setAttribute('opacity', '0.85');
-      svg.appendChild(path);
 
-      // Slutpunkts-etikett vid deadline
-      const endV = cumAtRole(monthsLeft, roleMonthly[idx]);
-      const endX = xScale(monthsLeft);
-      const endY = yScale(endV);
-      const endLbl = document.createElementNS(ns, 'text');
-      endLbl.setAttribute('x', endX + 6);
-      endLbl.setAttribute('y', endY + 4);
-      endLbl.setAttribute('font-size', '10');
-      endLbl.setAttribute('fill', color);
-      endLbl.setAttribute('font-weight', isBottleneck ? '600' : '500');
-      endLbl.setAttribute('font-family', 'inherit');
-      endLbl.setAttribute('font-variant-numeric', 'tabular-nums');
-      endLbl.textContent = Math.round(endV);
-      svg.appendChild(endLbl);
+      // Volym + takt-text inuti bar (om plats finns)
+      const barW = xScale(barEndDays) - M.left;
+      const innerText = Math.round(potentialVolym) + ' st • ' + d.dailyCap.toFixed(1) + '/dag';
+      if (barW > innerText.length * 6 + 12) {
+        const txt = document.createElementNS(ns, 'text');
+        txt.setAttribute('x', M.left + 8);
+        txt.setAttribute('y', barY + barH / 2 + 4);
+        txt.setAttribute('font-size', '11');
+        txt.setAttribute('fill', '#ffffff');
+        txt.setAttribute('font-weight', '500');
+        txt.setAttribute('font-family', 'inherit');
+        txt.textContent = innerText;
+        svg.appendChild(txt);
+      }
 
-      // Legend
-      const item = document.createElement('div');
-      item.className = 'legend-item';
-      const sw = document.createElement('span');
-      sw.className = 'legend-line';
-      sw.style.background = color;
-      if (isBottleneck) sw.style.height = '3px';
-      item.appendChild(sw);
-      const txt = document.createTextNode(role.name + ' — ' + roleMonthly[idx].toFixed(1) + '/mån' + (isBottleneck ? ' (flaskhals)' : ''));
-      item.appendChild(txt);
-      legendEl.appendChild(item);
+      // Klart-datum till höger om bar
+      const klarTxt = document.createElementNS(ns, 'text');
+      klarTxt.setAttribute('x', xScale(barEndDays) + 6);
+      klarTxt.setAttribute('y', barY + barH / 2 + 4);
+      klarTxt.setAttribute('font-size', '11');
+      klarTxt.setAttribute('fill', d.overshoots ? '#9a2424' : '#4a4a45');
+      klarTxt.setAttribute('font-weight', d.overshoots ? '600' : '500');
+      klarTxt.setAttribute('font-family', 'inherit');
+      const klarStr = d.overshoots
+        ? 'klar ' + d.endDate.toLocaleDateString('sv-SE') + ' (för sent)'
+        : 'klar ' + d.endDate.toLocaleDateString('sv-SE');
+      klarTxt.textContent = klarStr;
+      // Om texten skulle gå utanför, sätt den inuti baren istället
+      if (xScale(barEndDays) + klarStr.length * 6 + 6 > M.left + innerW) {
+        klarTxt.setAttribute('x', xScale(barEndDays) - 6);
+        klarTxt.setAttribute('text-anchor', 'end');
+        klarTxt.setAttribute('fill', '#ffffff');
+      }
+      svg.appendChild(klarTxt);
     });
+
+    // Sammanfattning under
+    const sumLbl = document.createElementNS(ns, 'text');
+    sumLbl.setAttribute('x', M.left);
+    sumLbl.setAttribute('y', M.top + innerH + 22);
+    sumLbl.setAttribute('font-size', '11');
+    sumLbl.setAttribute('fill', '#6b6b66');
+    sumLbl.setAttribute('font-family', 'inherit');
+    const totalDaysShown = Math.round(totalDays);
+    sumLbl.textContent = 'Total volym: ' + Math.round(potentialVolym) + ' st  ·  Period: ' +
+      startDate.toLocaleDateString('sv-SE') + ' → ' + deadline.toLocaleDateString('sv-SE') +
+      '  ·  Flaskhals (⚑) sätter taket — andra roller blir klara tidigare och har slack.';
+    svg.appendChild(sumLbl);
   }
 
-  function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
+    function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
     startDelayMonths = startDelayMonths || 0;
     const svg = document.getElementById('chart');
     svg.innerHTML = '';
