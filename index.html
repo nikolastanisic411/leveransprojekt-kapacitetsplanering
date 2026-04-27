@@ -2536,8 +2536,13 @@
           + (today.getDate() - startDate.getDate()) / 30;
         if (startDelayMonths > 0) {
           startInfo = ' Projektet startar ' + startDate.toLocaleDateString('sv-SE') +
-            ' (' + startDelayMonths.toFixed(1) + ' mån kvar). Full takt nås ' +
-            (startDelayMonths + effectiveRamp).toFixed(1) + ' mån från idag.';
+            ' (' + startDelayMonths.toFixed(1) + ' mån kvar).';
+          if (effectiveRamp > 0) {
+            startInfo += ' Full takt nås ' + (startDelayMonths + effectiveRamp).toFixed(1) +
+              ' mån från idag (efter ' + effectiveRamp.toFixed(1) + ' mån ramp).';
+          } else {
+            startInfo += ' Full takt från start.';
+          }
         } else if (effectiveRamp < state.rampMonths && state.rampMonths > 0) {
           startInfo = ' Rampen är ' + Math.round(elapsedMonths) + ' av ' + state.rampMonths +
             ' mån avklarad — full takt om ' + effectiveRamp.toFixed(1) + ' mån.';
@@ -2611,14 +2616,14 @@
     if (monthsLeft <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
-      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths);
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
     if (effectiveStartMonths <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
-      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths);
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
       updateChartLegend(snapshotMonth !== null, false, false);
       return;
     }
@@ -2647,7 +2652,7 @@
       }
     }
 
-    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, effectiveRamp, leadtimeMonths, forecastMonths, forecastTooFar);
+    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, effectiveRamp, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths);
     updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft));
 
     // Uppdatera prognostext under grafen
@@ -2808,7 +2813,8 @@
     if (removed.length || added.length) renderActivities();
   }
 
-  function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar) {
+  function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
+    startDelayMonths = startDelayMonths || 0;
     const svg = document.getElementById('chart');
     svg.innerHTML = '';
     const W = 800, H = 340;
@@ -2845,7 +2851,7 @@
     // Vid t < ledtid: inga leveranser klara än
     // Vid t >= ledtid: levererad = vad som startades vid (t - ledtid)
     const cumAtForSnapshot = (t, mRate) => {
-      const startT = t - lt;
+      const startT = t - lt - startDelayMonths;
       if (startT <= 0 || mRate <= 0) return 0;
       if (!rampMonths || rampMonths <= 0) return mRate * startT;
       if (startT <= rampMonths) return 0.5 * mRate * startT * startT / rampMonths;
@@ -2942,6 +2948,28 @@
     todayLbl.textContent = 'idag';
     svg.appendChild(todayLbl);
 
+    // === PROJEKTSTART-MARKÖR (om i framtiden) ===
+    if (startDelayMonths > 0 && startDelayMonths < monthsLeft) {
+      const psX = xScale(startDelayMonths);
+      const psLine = document.createElementNS(ns, 'line');
+      psLine.setAttribute('x1', psX); psLine.setAttribute('x2', psX);
+      psLine.setAttribute('y1', M.top - 4); psLine.setAttribute('y2', M.top + innerH);
+      psLine.setAttribute('stroke', '#5C0E92');
+      psLine.setAttribute('stroke-width', '1.5');
+      psLine.setAttribute('stroke-dasharray', '4 4');
+      psLine.setAttribute('opacity', '0.7');
+      svg.appendChild(psLine);
+
+      const psLbl = document.createElementNS(ns, 'text');
+      psLbl.setAttribute('x', psX); psLbl.setAttribute('y', M.top - 10);
+      psLbl.setAttribute('text-anchor', 'middle'); psLbl.setAttribute('font-size', '10');
+      psLbl.setAttribute('fill', '#5C0E92'); psLbl.setAttribute('font-weight', '600');
+      psLbl.setAttribute('font-family', 'inherit');
+      psLbl.setAttribute('letter-spacing', '0.04em');
+      psLbl.textContent = 'PROJEKTSTART';
+      svg.appendChild(psLbl);
+    }
+
     // === DEADLINE-LINJE ===
     const dx = xScale(monthsLeft);
     const dLine = document.createElementNS(ns, 'line');
@@ -3003,7 +3031,7 @@
 
     // === MÅL-LINJE (vad som krävs) ===
     if (targetMonthly && targetMonthly > 0) {
-      const targetStartX = xScale(lt);
+      const targetStartX = xScale(lt + startDelayMonths);
       const targetEndX = xScale(monthsLeft);
       const targetPath = document.createElementNS(ns, 'path');
       // Mål-linjen visar "kumulativ måluppfyllelse": startar vid (lt, 0) och går till (monthsLeft, onskadVolym)
@@ -3018,7 +3046,7 @@
 
     // === HJÄLPFUNKTION FÖR KUMULATIV VOLYM (lokal kopia) ===
     const cumAt = (t) => {
-      const startT = t - lt;
+      const startT = t - lt - startDelayMonths;
       if (startT <= 0 || rate <= 0) return 0;
       if (!rampMonths || rampMonths <= 0) return rate * startT;
       if (startT <= rampMonths) return 0.5 * rate * startT * startT / rampMonths;
@@ -3168,10 +3196,10 @@
 
     // === RAMP- OCH LEDTID-MARKERINGAR ===
     // Räkna ut positioner och placera etiketter på olika höjder om de krockar
-    const rampActive = rampMonths && rampMonths > 0 && rampMonths < monthsLeft;
-    const ltActive = lt > 0 && lt < monthsLeft;
-    const rampX = rampActive ? xScale(rampMonths) : null;
-    const ltX = ltActive ? xScale(lt) : null;
+    const rampActive = rampMonths && rampMonths > 0 && (startDelayMonths + rampMonths) < monthsLeft;
+    const ltActive = lt > 0 && (lt + startDelayMonths) < monthsLeft;
+    const rampX = rampActive ? xScale(startDelayMonths + rampMonths) : null;
+    const ltX = ltActive ? xScale(startDelayMonths + lt) : null;
     // Om båda finns och ligger nära varandra (< 60px), stapla etiketter vertikalt
     const labelsCollide = rampActive && ltActive && Math.abs(rampX - ltX) < 60;
     const labelY1 = M.top + 4;       // Övre rad
