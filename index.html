@@ -895,6 +895,8 @@
     display: none;
   }
   .suggest-card.show { display: block; }
+  /* Visa suggest-card alltid efter steg 3 — innehållet visar pedagogiskt tomstate när data saknas */
+  #suggest-card { display: block; }
   .suggest-card .head {
     display: flex;
     justify-content: space-between;
@@ -1940,26 +1942,6 @@
     </div>
   </div>
 
-  <div class="suggest-card" id="suggest-card">
-    <div class="head">
-      <div class="title" id="suggest-title">Förslag på bemanning</div>
-      <button class="suggest" onclick="applySuggestion()">Använd förslaget</button>
-    </div>
-    <div class="body" id="suggest-body">—</div>
-
-    <div class="margin-row">
-      <label><span class="tt" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
-        <span class="hint">buffert utöver minimum</span>
-      </label>
-      <input type="range" id="margin" min="0" max="50" value="10" step="5">
-      <div class="val" id="margin-v">10%</div>
-    </div>
-
-    <div class="roles" id="suggest-roles"></div>
-
-    <div class="outcome" id="suggest-outcome">—</div>
-  </div>
-
   <div class="section"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
 
   <div class="global-row">
@@ -1991,8 +1973,30 @@
     <input type="date" id="deadline" value="">
   </div>
 
+  <div class="section"><span class="step-num">3</span>Förslag på setup <span class="section-hint">— verktyget räknar fram en föreslagen bemanning baserat på mål och parametrar; använd den som utgångspunkt eller justera själv i nästa steg</span></div>
+
+  <div class="suggest-card" id="suggest-card">
+    <div class="head">
+      <div class="title" id="suggest-title">Förslag på bemanning</div>
+      <button class="suggest" onclick="applySuggestion()">Använd förslaget</button>
+    </div>
+    <div class="body" id="suggest-body">—</div>
+
+    <div class="margin-row">
+      <label><span class="tt" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
+        <span class="hint">buffert utöver minimum</span>
+      </label>
+      <input type="range" id="margin" min="0" max="50" value="10" step="5">
+      <div class="val" id="margin-v">10%</div>
+    </div>
+
+    <div class="roles" id="suggest-roles"></div>
+
+    <div class="outcome" id="suggest-outcome">—</div>
+  </div>
+
   <div class="section">
-    <span><span class="step-num">3</span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— justera roller, takter och vilka typfall de deltar i</span></span>
+    <span><span class="step-num">4</span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— justera själv eller använd förslaget ovan som utgångspunkt</span></span>
     <span class="saved-indicator" id="saved-indicator">sparat</span>
   </div>
 
@@ -2025,7 +2029,7 @@
     <div class="pf-row" id="pf-row"></div>
   </div>
 
-  <div class="section"><span class="step-num">4</span>Resultat — aktuell takt <span class="section-hint">— vad ger din setup för utfall?</span></div>
+  <div class="section"><span class="step-num">5</span>Resultat — aktuell takt <span class="section-hint">— vad ger din setup för utfall?</span></div>
 
   <div class="summary">
     <div class="stat">
@@ -2083,7 +2087,7 @@
     <div class="handover-footer" id="handover-footer"></div>
   </div>
 
-  <div class="section"><span class="step-num">5</span>Utfall — uppföljning <span class="section-hint">— rapportera in vad ni faktiskt hinner per period så vi kan jämföra mot planen</span></div>
+  <div class="section"><span class="step-num">6</span>Utfall — uppföljning <span class="section-hint">— rapportera in vad ni faktiskt hinner per period så vi kan jämföra mot planen</span></div>
 
   <div class="utfall-card">
     <div class="utfall-controls">
@@ -2101,7 +2105,7 @@
     <div class="utfall-summary" id="utfall-summary"></div>
   </div>
 
-  <div class="section"><span class="step-num">6</span>Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
+  <div class="section"><span class="step-num">7</span>Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
