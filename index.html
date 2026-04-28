@@ -3277,7 +3277,13 @@
     document.getElementById('projektStart').addEventListener('input', (e) => {
       state.projektStart = e.target.value; saveState(); recalc();
     });
+    document.getElementById('projektStart').addEventListener('change', (e) => {
+      state.projektStart = e.target.value; saveState(); recalc();
+    });
     document.getElementById('deadline').addEventListener('input', (e) => {
+      state.deadline = e.target.value; saveState(); recalc();
+    });
+    document.getElementById('deadline').addEventListener('change', (e) => {
       state.deadline = e.target.value; saveState(); recalc();
     });
     ['handover-order', 'handover-arch', 'handover-tek'].forEach(id => {
