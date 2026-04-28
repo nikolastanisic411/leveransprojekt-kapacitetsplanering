@@ -139,6 +139,45 @@
     color: #d8d6cf;
     line-height: 1.5;
   }
+  .klart-per-roll {
+    margin: -16px 0 24px;
+    padding: 10px 16px;
+    background: #f4f2eb;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #4a4a45;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .klart-per-roll .klart-label {
+    font-size: 11px;
+    color: #8a8a85;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    margin-right: 4px;
+  }
+  .klart-per-roll .klart-role {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .klart-per-roll .klart-role-name {
+    color: #6b6b66;
+    font-size: 11px;
+  }
+  .klart-per-roll .klart-role-num {
+    color: #1a1a1a;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .klart-per-roll .klart-sep {
+    color: #c8c6bf;
+    font-size: 10px;
+  }
   .summary-banner .banner-headline {
     font-size: 16px;
     color: #ffffff;
@@ -1507,6 +1546,7 @@
 
     /* === ROLLISTA: 5 kolumner (num, namn, antal, takt, kap/dag) === */
     .role-cap-input, .role-hitrate-input, .role-tf-group, .role-spann { display: none !important; }
+    .klart-per-roll { background: transparent !important; border: none !important; padding: 0 !important; margin: 0 0 12px !important; }
     .utfall-card .utfall-controls,
     .utfall-card .utfall-actions,
     .utfall-card .util-remove { display: none !important; }
@@ -1662,6 +1702,8 @@
       <span id="banner-deadline">—</span>
     </div>
   </div>
+
+  <div class="klart-per-roll" id="klart-per-roll" style="display:none"></div>
 
   <div class="section">
     <span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— dra ⋮⋮ för att sortera om</span></span>
@@ -3349,6 +3391,7 @@
 
     updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp);
     drawRolesMatrix(potentialVolym, projektStartDate, deadline);
+    updateKlartPerRoll();
     updateActivityLabels();
   }
 
@@ -3458,6 +3501,36 @@
     saveState();
     renderRoles();
     recalc();
+  }
+
+  function updateKlartPerRoll() {
+    const el = document.getElementById('klart-per-roll');
+    if (!el) return;
+    if (!state.utfall || !Array.isArray(state.utfall.entries) || state.utfall.entries.length === 0) {
+      el.style.display = 'none';
+      return;
+    }
+    // Summera perRole över alla utfalls-perioder
+    const sums = {};
+    state.utfall.entries.forEach(e => {
+      if (!e.perRole) return;
+      Object.keys(e.perRole).forEach(roleId => {
+        sums[roleId] = (sums[roleId] || 0) + (+e.perRole[roleId] || 0);
+      });
+    });
+    const roles = state.roles.filter(r => r.enabled !== false);
+    if (roles.length === 0) { el.style.display = 'none'; return; }
+    let html = '<span class="klart-label">Klart per roll:</span>';
+    roles.forEach((r, i) => {
+      const n = sums[r.id] || 0;
+      html += '<span class="klart-role">';
+      html += '<span class="klart-role-name">' + escapeHtml(r.name) + '</span>';
+      html += '<span class="klart-role-num">' + n + '</span>';
+      html += '</span>';
+      if (i < roles.length - 1) html += '<span class="klart-sep">·</span>';
+    });
+    el.innerHTML = html;
+    el.style.display = '';
   }
 
   function updateActivityLabels() {
