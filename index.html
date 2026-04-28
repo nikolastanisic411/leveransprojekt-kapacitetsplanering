@@ -228,6 +228,14 @@
   }
   .section.is-current .step-num {
     box-shadow: 0 0 0 3px rgba(92,14,146,0.18);
+    animation: pulse-current 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-current {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(92,14,146,0.18); }
+    50% { box-shadow: 0 0 0 7px rgba(92,14,146,0.08); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .section.is-current .step-num { animation: none; }
   }
 
   .step-num {
