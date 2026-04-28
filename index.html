@@ -61,6 +61,14 @@
     border-color: #1a1a1a;
   }
   .toolbar button.primary:hover { background: #333; }
+  .toolbar button.toolbar-reset {
+    color: #9a2424;
+    border-color: #f0c0c0;
+  }
+  .toolbar button.toolbar-reset:hover {
+    background: #FBE8E8;
+    border-color: #9a2424;
+  }
   .toolbar .snapshot-info {
     margin-left: auto;
     font-size: 11px;
@@ -1625,6 +1633,7 @@
     <button id="snapshot-btn" onclick="markSnapshot()" title="Spara nuvarande inställningar som referens">📌 Markera som nuläge</button>
     <button id="revert-btn" onclick="revertToSnapshot()" title="Gå tillbaka till markerat nuläge" style="display: none;">↩ Återgå till nuläge</button>
     <button id="clear-snapshot-btn" onclick="clearSnapshot()" title="Ta bort markerat nuläge" style="display: none;">✕ Ta bort nuläge</button>
+    <button class="toolbar-reset" onclick="resetAll()" title="Rensa alla värden, roller och rapporterade utfall — börja på blank planering">🗑 Återställ allt</button>
 
     <span class="snapshot-info" id="snapshot-info">inget nuläge markerat</span>
   </div>
@@ -1869,9 +1878,7 @@
     <textarea class="constraints-textarea" id="notes" placeholder="t.ex. NOC måste höjas till 8/dag — ägare X, klart Y. Tekniker behöver utökas senast Z..."></textarea>
   </div>
 
-  <div class="actions">
-    <button class="danger" onclick="resetAll()">Återställ allt</button>
-  </div>
+
 
   <div class="footer-note">
     <strong>Logik:</strong> Takt/dag = MIN(alla rollers kapaciteter) × hitrate.
