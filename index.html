@@ -3314,13 +3314,15 @@
     ['tf1', 'tf2', 'tf3'].forEach(key => {
       const el = document.getElementById('mix-' + key);
       if (el) {
-        el.addEventListener('input', (e) => {
+        const handler = (e) => {
           state.typfallMix[key] = +e.target.value || 0;
           saveState();
           updateMixSummary();
           renderRoles();
           recalc();
-        });
+        };
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
       }
     });
   }
