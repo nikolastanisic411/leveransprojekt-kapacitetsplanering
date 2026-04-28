@@ -1891,9 +1891,23 @@
 <script>
   const STORAGE_KEY = 'maxtakt-state-v7';
 
-  const defaultRoles = [];
-  const defaultScenarios = [];
-  const defaultConstraints = [];
+  const defaultRoles = [
+    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r2', name: 'Leveranskoordinator', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'dag', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r3', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+    { id: 'r4', name: 'Tekniker', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+    { id: 'r5', name: 'NOC', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+  ];
+  const defaultScenarios = [
+    { id: 's1', name: 'Scenario 1', target: 0, unit: 'månad' },
+    { id: 's2', name: 'Scenario 2', target: 0, unit: 'månad' },
+    { id: 's3', name: 'Scenario 3', target: 0, unit: 'månad' },
+  ];
+  const defaultConstraints = [
+    { id: 'c1', text: '', done: false },
+    { id: 'c2', text: '', done: false },
+    { id: 'c3', text: '', done: false },
+  ];
 
   let state = {
     roles: defaultRoles.map(r => ({...r})),
