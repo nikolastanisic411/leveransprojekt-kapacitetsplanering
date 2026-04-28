@@ -1751,39 +1751,6 @@
   <div class="per-subset-row" id="per-subset-row" style="display:none"></div>
   <div class="klart-per-roll" id="klart-per-roll" style="display:none"></div>
 
-  <div class="section">
-    <span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— dra ⋮⋮ för att sortera om</span></span>
-    <span class="saved-indicator" id="saved-indicator">sparat</span>
-  </div>
-
-  <div class="role-header">
-    <div></div>
-    <div></div>
-    <div>#</div>
-    <div>Roll</div>
-    <div></div>
-    <div></div>
-    <div class="col-takt"><span class="tt" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
-    <div class="col-takt">Enhet</div>
-    <div class="col-tak"><span class="tt" data-tip="Hårt tak per dag. Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak/dag</span></div>
-    <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent. Lämna tomt = använd den globala hitraten.">Hit %</span></div>
-    <div class="col-cap"><span class="tt" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
-    <div class="col-tf"><span class="tt" data-tip="Vilka typfall denna roll deltar i. Roller utan markering för aktivt typfall exkluderas från flaskhalsberäkningen.">Typfall</span></div>
-    <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span></div>
-    <div></div>
-  </div>
-
-  <div id="roles-container"></div>
-
-  <div class="add-role-row">
-    <button class="add-row" onclick="addRole()">+ Lägg till roll</button>
-  </div>
-
-  <div class="process-flow">
-    <div class="pf-title"><span class="tt" data-tip="Kapacitet per steg. Flaskhals markerad i rött.">Kapacitet per steg i leveranskedjan</span></div>
-    <div class="pf-row" id="pf-row"></div>
-  </div>
-
   <div class="section">Mål &amp; behov</div>
 
   <div class="target-cell">
@@ -1875,6 +1842,39 @@
   <div class="target-cell">
     <label>Deadline<span class="required-mark" title="Sätt ditt projekts deadline — annars räknas tiden mot ett godtyckligt datum">*</span></label>
     <input type="date" id="deadline" value="">
+  </div>
+
+  <div class="section">
+    <span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— dra ⋮⋮ för att sortera om</span></span>
+    <span class="saved-indicator" id="saved-indicator">sparat</span>
+  </div>
+
+  <div class="role-header">
+    <div></div>
+    <div></div>
+    <div>#</div>
+    <div>Roll</div>
+    <div></div>
+    <div></div>
+    <div class="col-takt"><span class="tt" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
+    <div class="col-takt">Enhet</div>
+    <div class="col-tak"><span class="tt" data-tip="Hårt tak per dag. Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak/dag</span></div>
+    <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent. Lämna tomt = använd den globala hitraten.">Hit %</span></div>
+    <div class="col-cap"><span class="tt" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
+    <div class="col-tf"><span class="tt" data-tip="Vilka typfall denna roll deltar i. Roller utan markering för aktivt typfall exkluderas från flaskhalsberäkningen.">Typfall</span></div>
+    <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span></div>
+    <div></div>
+  </div>
+
+  <div id="roles-container"></div>
+
+  <div class="add-role-row">
+    <button class="add-row" onclick="addRole()">+ Lägg till roll</button>
+  </div>
+
+  <div class="process-flow">
+    <div class="pf-title"><span class="tt" data-tip="Kapacitet per steg. Flaskhals markerad i rött.">Kapacitet per steg i leveranskedjan</span></div>
+    <div class="pf-row" id="pf-row"></div>
   </div>
 
   <div class="section">Aktuell takt <span class="section-hint">— med nuvarande bemanning</span></div>
