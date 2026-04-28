@@ -139,6 +139,47 @@
     color: #d8d6cf;
     line-height: 1.5;
   }
+  .per-subset-row {
+    margin: -16px 0 12px;
+    padding: 10px 16px;
+    background: #f8f3fc;
+    border: 0.5px solid #e0d4ed;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #4a4a45;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .per-subset-row .ps-label {
+    font-size: 11px;
+    color: #5C0E92;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .per-subset-row .ps-tf {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .per-subset-row .ps-tf-name {
+    color: #6b6b66;
+    font-size: 11px;
+  }
+  .per-subset-row .ps-tf-volym {
+    color: #1a1a1a;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .per-subset-row .ps-tf-volym.short { color: #9a2424; }
+  .per-subset-row .ps-tf-meta {
+    font-size: 10px;
+    color: #8a8a85;
+  }
+  .per-subset-row .ps-sep { color: #d8c5e8; font-size: 10px; }
   .klart-per-roll {
     margin: -16px 0 24px;
     padding: 10px 16px;
@@ -1547,6 +1588,7 @@
     /* === ROLLISTA: 5 kolumner (num, namn, antal, takt, kap/dag) === */
     .role-cap-input, .role-hitrate-input, .role-tf-group, .role-spann { display: none !important; }
     .klart-per-roll { background: transparent !important; border: none !important; padding: 0 !important; margin: 0 0 12px !important; }
+    .per-subset-row { background: transparent !important; border: none !important; padding: 0 !important; margin: 0 0 12px !important; }
     .utfall-card .utfall-controls,
     .utfall-card .utfall-actions,
     .utfall-card .util-remove { display: none !important; }
@@ -1703,6 +1745,7 @@
     </div>
   </div>
 
+  <div class="per-subset-row" id="per-subset-row" style="display:none"></div>
   <div class="klart-per-roll" id="klart-per-roll" style="display:none"></div>
 
   <div class="section">
@@ -2750,6 +2793,40 @@
     }
   }
 
+  // Beräknar per-subset volym med proportionell kapacitet-allokering.
+  // Givet pipeline-kapacitet (bottleneck_eff_day) delas den proportionellt mot volym-andel.
+  // Varje subset får tid att fylla sin volym givet sin egen ledtid.
+  // Returnerar { totalVolym, totalPotential, subsets: [{tf, name, volume, leadtimeDays, effectiveTimeMonths, capacityShare, potentialVolym, fits}] }
+  function computeSubsetVolumes(monthsAvailable, bottleneckEffDay, effectiveRamp) {
+    const subsets = getActiveSubsets();
+    const totalVolume = subsets.reduce((s, x) => s + x.volume, 0);
+    const results = subsets.map(s => {
+      const Ltf_months = s.leadtimeDays / 21;
+      const effectiveTimeMonths = Math.max(0, monthsAvailable - Ltf_months);
+      const capacityShare = totalVolume > 0 ? s.volume / totalVolume : 0;
+      // Per-subset bottleneck — bara roller som deltar i detta TF
+      const tfActive = activeRoles().filter(r => r.typfalls && r.typfalls[s.tf]);
+      const tfBottleneckEffDay = tfActive.length > 0
+        ? Math.min(...tfActive.map(r => roleEffectivePerDay(r)))
+        : 0;
+      // Effektiv kapacitet för denna TF = bottleneck × andel av total volym
+      const tfCapacityPerDay = tfBottleneckEffDay * capacityShare;
+      const tfCapacityPerMonth = tfCapacityPerDay * 21;
+      const max_volume = cumulativeAt(effectiveTimeMonths, tfCapacityPerMonth, effectiveRamp);
+      const potentialVolym = Math.min(s.volume, Math.max(0, max_volume));
+      return {
+        ...s,
+        effectiveTimeMonths,
+        capacityShare,
+        tfBottleneckEffDay,
+        potentialVolym,
+        fits: potentialVolym >= s.volume - 0.5,
+      };
+    });
+    const totalPotential = results.reduce((s, x) => s + x.potentialVolym, 0);
+    return { totalVolume, totalPotential, subsets: results };
+  }
+
   // Returnerar lista av aktiva subsets (typfall med volym > 0)
   // Varje subset: { tf: 'tf1'|'tf2'|'tf3', name: 'Typfall 1', volume, leadtimeDays }
   function getActiveSubsets() {
@@ -3415,6 +3492,7 @@
 
     updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp);
     drawRolesMatrix(potentialVolym, projektStartDate, deadline);
+    updatePerSubsetRow(monthsAvailable, minEff, effectiveRamp);
     updateKlartPerRoll();
     updateActivityLabels();
   }
@@ -3525,6 +3603,44 @@
     saveState();
     renderRoles();
     recalc();
+  }
+
+  function updatePerSubsetRow(monthsAvailable, bottleneckEffDay, effectiveRamp) {
+    const el = document.getElementById('per-subset-row');
+    if (!el) return;
+    if (state.leadtimeDays !== 'mix') {
+      // Single TF — ingen poäng att visa breakdown
+      el.style.display = 'none';
+      return;
+    }
+    const result = computeSubsetVolumes(monthsAvailable, bottleneckEffDay, effectiveRamp);
+    if (!result.subsets || result.subsets.length === 0) {
+      el.style.display = 'none';
+      return;
+    }
+    let html = '<span class="ps-label">Per typfall:</span>';
+    result.subsets.forEach((s, i) => {
+      const isShort = s.potentialVolym < s.volume - 0.5;
+      const numClass = isShort ? 'ps-tf-volym short' : 'ps-tf-volym';
+      html += '<span class="ps-tf">';
+      html += '<span class="ps-tf-name">' + s.name + '</span>';
+      html += '<span class="' + numClass + '">' + Math.round(s.potentialVolym) + ' / ' + s.volume + '</span>';
+      html += '<span class="ps-tf-meta">(' + s.leadtimeDays + ' dgr)</span>';
+      html += '</span>';
+      if (i < result.subsets.length - 1) html += '<span class="ps-sep">·</span>';
+    });
+    // Total summa per subset jämfört mot total volym
+    const total = result.totalPotential;
+    const totalV = result.totalVolume;
+    if (total < totalV - 0.5) {
+      html += '<span class="ps-sep">·</span>';
+      html += '<span style="color:#9a2424;font-weight:600">Saknar ' + Math.round(totalV - total) + ' st</span>';
+    } else {
+      html += '<span class="ps-sep">·</span>';
+      html += '<span style="color:#1d6e35;font-weight:600">Alla TF hinns med</span>';
+    }
+    el.innerHTML = html;
+    el.style.display = '';
   }
 
   function updateKlartPerRoll() {
