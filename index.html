@@ -3299,9 +3299,12 @@
         recalc();
       });
     });
-    document.getElementById('onskad-volym').addEventListener('input', (e) => {
+    const onskadEl = document.getElementById('onskad-volym');
+    const onskadHandler = (e) => {
       state.onskadVolym = +e.target.value; saveState(); updateMixSummary(); recalc();
-    });
+    };
+    onskadEl.addEventListener('input', onskadHandler);
+    onskadEl.addEventListener('change', onskadHandler);
     document.getElementById('margin').addEventListener('input', (e) => {
       state.margin = +e.target.value; saveState(); recalc();
     });
