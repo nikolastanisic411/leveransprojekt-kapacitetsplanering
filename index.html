@@ -526,6 +526,25 @@
     color: #6b6b66;
     line-height: 1.4;
   }
+  .apply-suggestion-cta.disabled {
+    background: #fdfcf8;
+    border-color: #e5e3dc;
+  }
+  .apply-suggestion-cta.disabled .apply-suggestion-btn {
+    background: #c8c6bf;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  .apply-suggestion-cta.disabled .apply-suggestion-btn:hover {
+    background: #c8c6bf;
+    transform: none;
+    box-shadow: none;
+  }
+  .apply-suggestion-cta.disabled .apply-suggestion-hint {
+    color: #9a2424;
+    font-weight: 500;
+  }
   .ui-mode-toggle {
     display: flex;
     align-items: center;
@@ -2324,9 +2343,9 @@
     <span class="saved-indicator" id="saved-indicator">sparat</span>
   </div>
 
-  <div class="apply-suggestion-cta">
-    <button class="apply-suggestion-btn" onclick="applySuggestion()">⚡ Använd förslaget från steg 3</button>
-    <span class="apply-suggestion-hint">Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.</span>
+  <div class="apply-suggestion-cta" id="apply-cta">
+    <button class="apply-suggestion-btn" id="apply-cta-btn" onclick="applySuggestion()">⚡ Använd förslaget från steg 3</button>
+    <span class="apply-suggestion-hint" id="apply-cta-hint">Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.</span>
   </div>
 
   <div class="ui-mode-toggle">
@@ -3849,6 +3868,7 @@
       updateKlartPerRoll();
       updateHandoverSummary();
       updateStepProgress();
+      updateApplyCtaState();
       return;
     }
     const today = new Date();
@@ -4119,6 +4139,7 @@
     updateHandoverPanel();
     updateHandoverSummary();
     updateStepProgress();
+    updateApplyCtaState();
     updateActivityLabels();
   }
 
@@ -4367,6 +4388,24 @@
     }
     el.innerHTML = html;
     el.style.display = '';
+  }
+
+  function updateApplyCtaState() {
+    const cta = document.getElementById('apply-cta');
+    const btn = document.getElementById('apply-cta-btn');
+    const hint = document.getElementById('apply-cta-hint');
+    if (!cta || !btn || !hint) return;
+    const result = computeSuggestion();
+    if (result && result.needed) {
+      cta.classList.remove('disabled');
+      btn.disabled = false;
+      hint.textContent = 'Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.';
+    } else {
+      cta.classList.add('disabled');
+      btn.disabled = true;
+      const msg = result && result.message ? result.message : 'Komplett mål, deadline och roller behövs.';
+      hint.textContent = msg;
+    }
   }
 
   function applyUiMode() {
@@ -5623,6 +5662,7 @@
   updateHandoverPanel();
   updateHandoverSummary();
   updateStepProgress();
+  updateApplyCtaState();
   updateSnapshotUI();
   recalc();
 </script>
