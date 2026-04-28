@@ -2317,7 +2317,7 @@
   <div class="suggest-card" id="suggest-card">
     <div class="head">
       <div class="title" id="suggest-title">Förslag på bemanning</div>
-      <button class="suggest" onclick="applySuggestion()">⚡ Använd förslaget</button>
+      <button class="suggest" id="suggest-card-btn" onclick="applySuggestion()">⚡ Använd förslaget</button>
     </div>
     <div class="body" id="suggest-body">Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.</div>
 
@@ -4394,17 +4394,23 @@
     const cta = document.getElementById('apply-cta');
     const btn = document.getElementById('apply-cta-btn');
     const hint = document.getElementById('apply-cta-hint');
-    if (!cta || !btn || !hint) return;
+    const suggestBtn = document.getElementById('suggest-card-btn');
     const result = computeSuggestion();
-    if (result && result.needed) {
-      cta.classList.remove('disabled');
-      btn.disabled = false;
-      hint.textContent = 'Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.';
-    } else {
-      cta.classList.add('disabled');
-      btn.disabled = true;
-      const msg = result && result.message ? result.message : 'Komplett mål, deadline och roller behövs.';
-      hint.textContent = msg;
+    const enabled = !!(result && result.needed);
+    if (cta && btn && hint) {
+      if (enabled) {
+        cta.classList.remove('disabled');
+        btn.disabled = false;
+        hint.textContent = 'Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.';
+      } else {
+        cta.classList.add('disabled');
+        btn.disabled = true;
+        const msg = result && result.message ? result.message : 'Komplett mål, deadline och roller behövs.';
+        hint.textContent = msg;
+      }
+    }
+    if (suggestBtn) {
+      suggestBtn.disabled = !enabled;
     }
   }
 
