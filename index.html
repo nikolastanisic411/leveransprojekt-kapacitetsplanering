@@ -2713,13 +2713,29 @@
   function updateRolesEmptyState() {
     const el = document.getElementById('roles-empty-state');
     if (!el) return;
-    if (state.roles.length === 0) { el.style.display = 'none'; return; }
+    if (state.roles.length === 0) {
+      el.innerHTML = '<strong>Inga roller</strong> — klicka <em>+ Lägg till roll</em> nedan för att börja, eller <button onclick="addStandardRoles()" style="background:#5C0E92;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;font-family:inherit;margin-left:8px">⚡ Lägg till standard-roller</button>';
+      el.style.display = '';
+      return;
+    }
     const active = activeRoles();
     if (active.length > 0) { el.style.display = 'none'; return; }
     const tfNames = currentTypfalls().map(tf => tf.toUpperCase()).join(', ');
     el.innerHTML = '<strong>⚠ Inga roller deltar i aktuellt typfall (' + tfNames + ').</strong> ' +
       'Klicka på TF-pillerna i någon rollrad för att aktivera den i detta typfall, eller välj annat typfall ovanför.';
     el.style.display = '';
+  }
+
+  function addStandardRoles() {
+    state.roles = [
+      { id: 'r1-' + Date.now(), name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+      { id: 'r2-' + Date.now(), name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+      { id: 'r3-' + Date.now(), name: 'Tekniker', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    ];
+    saveState();
+    renderRoles();
+    renderActivities();
+    recalc();
   }
 
   function renderRoles() {
