@@ -4015,8 +4015,16 @@
     } else {
       document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' st';
     }
+    // Mix-validering: om mix-summan inte matchar onskadVolym, visa varning istället för marginal
+    let mixMismatch = false;
+    if (state.leadtimeDays === 'mix' && state.onskadVolym > 0) {
+      const mixSum = (+state.typfallMix.tf1 || 0) + (+state.typfallMix.tf2 || 0) + (+state.typfallMix.tf3 || 0);
+      mixMismatch = mixSum !== state.onskadVolym;
+    }
     if (state.onskadVolym > 0 && monthsLeft > 0) {
-      if (volMargin >= 0) {
+      if (mixMismatch) {
+        document.getElementById('banner-volym-sub').innerHTML = '<span style="color:#FFD6F0">Mix-summan matchar inte mål-volymen</span>';
+      } else if (volMargin >= 0) {
         document.getElementById('banner-volym-sub').innerHTML = '<span style="color:#C8F0CC">+' + Math.round(volMargin) + ' marginal</span> · ' + monthsLeft.toFixed(1) + ' mån kvar';
       } else {
         document.getElementById('banner-volym-sub').innerHTML = '<span style="color:#FFD6F0">−' + Math.round(Math.abs(volMargin)) + ' under målet</span> · ' + monthsLeft.toFixed(1) + ' mån kvar';
