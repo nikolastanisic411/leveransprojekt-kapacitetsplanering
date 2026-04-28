@@ -1693,7 +1693,7 @@
     <label>Mål — total volym<span class="required-mark" title="Sätt ditt projekts målvolym — annars är jämförelsen mot mål meningslös">*</span>
       <span class="hint">antal som ska vara klara till deadline</span>
     </label>
-    <input type="number" id="onskad-volym" value="390" min="1" step="1">
+    <input type="number" id="onskad-volym" value="0" min="0" step="1">
   </div>
 
   <div class="target-cell">
@@ -1723,9 +1723,9 @@
       </div>
       <div class="mix-field">
         <span class="mix-lbl">Typfall 3<small>100 dagar</small></span>
-        <input type="number" id="mix-tf3" min="0" step="1" value="390">
+        <input type="number" id="mix-tf3" min="0" step="1" value="0">
       </div>
-      <div class="mix-summary" id="mix-summary">summa: 390 / 390 · viktad ledtid: 100 dagar</div>
+      <div class="mix-summary" id="mix-summary">summa: 0 / 0 · viktad ledtid: — dagar</div>
     </div>
   </div>
 
@@ -1777,7 +1777,7 @@
 
   <div class="target-cell">
     <label>Deadline<span class="required-mark" title="Sätt ditt projekts deadline — annars räknas tiden mot ett godtyckligt datum">*</span></label>
-    <input type="date" id="deadline" value="2027-12-31">
+    <input type="date" id="deadline" value="">
   </div>
 
   <div class="section">Aktuell takt <span class="section-hint">— med nuvarande bemanning</span></div>
@@ -1884,36 +1884,22 @@
 <script>
   const STORAGE_KEY = 'maxtakt-state-v7';
 
-  const defaultRoles = [
-    { id: 'r1', name: 'Orderläggare', count: 2, countMin: 2, countMax: 2, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
-    { id: 'r2', name: 'Leveranskoordinator', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'dag', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
-    { id: 'r3', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r4', name: 'Tekniker', count: 4, countMin: 4, countMax: 4, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r5', name: 'NOC', count: 1, countMin: 1, countMax: 1, takt: 4, unit: 'dag', enabled: true, max: 20, cap: 4, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-  ];
-  const defaultScenarios = [
-    { id: 's1', name: 'Scenario 1 — baseline', target: 25, unit: 'månad' },
-    { id: 's2', name: 'Scenario 2', target: 100, unit: 'månad' },
-    { id: 's3', name: 'Scenario 3', target: 200, unit: 'månad' },
-  ];
-  const defaultConstraints = [
-    { id: 'c1', text: '', done: false },
-    { id: 'c2', text: '', done: false },
-    { id: 'c3', text: '', done: false },
-  ];
+  const defaultRoles = [];
+  const defaultScenarios = [];
+  const defaultConstraints = [];
 
   let state = {
     roles: defaultRoles.map(r => ({...r})),
     scenarios: defaultScenarios.map(s => ({...s})),
     constraints: defaultConstraints.map(c => ({...c})),
     hitrate: 90,
-    deadline: '2027-12-31',
+    deadline: '',
     projektStart: '',
-    onskadVolym: 390,
+    onskadVolym: 0,
     margin: 10,
     rampMonths: 0,
     leadtimeDays: 10,
-    typfallMix: { tf1: 0, tf2: 0, tf3: 390 }, // används bara när typfall är 'mix'
+    typfallMix: { tf1: 0, tf2: 0, tf3: 0 }, // används bara när typfall är 'mix'
     notes: '',
     activities: {},
     snapshot: null,
@@ -1967,27 +1953,6 @@
             if (r.countMin === undefined || r.countMin === null) r.countMin = r.count;
             if (r.countMax === undefined || r.countMax === null) r.countMax = r.count;
           });
-          // Om Nätarkitekt saknas i sparad state, lägg till den (en gång)
-          const hasArkitekt = state.roles.some(r =>
-            r.name && r.name.toLowerCase().includes('arkitekt')
-          );
-          if (!hasArkitekt && !state._arkitektMigrated) {
-            // Hitta rätt position: efter Leveranskoordinator om den finns, annars efter index 1
-            const koordIdx = state.roles.findIndex(r =>
-              r.name && r.name.toLowerCase().includes('koordinator')
-            );
-            const insertAt = koordIdx >= 0 ? koordIdx + 1 : Math.min(2, state.roles.length);
-            state.roles.splice(insertAt, 0, {
-              id: 'r-arkitekt-' + Date.now(),
-              name: 'Nätarkitekt',
-              count: 1,
-              takt: 5,
-              unit: 'vecka',
-              enabled: true,
-              max: 15
-            });
-            state._arkitektMigrated = true;
-          }
         }
       }
     } catch (e) { console.warn('Kunde inte ladda:', e); }
@@ -2771,13 +2736,13 @@
     state.scenarios = defaultScenarios.map(s => ({...s}));
     state.constraints = defaultConstraints.map(c => ({...c}));
     state.hitrate = 90;
-    state.deadline = '2027-12-31';
+    state.deadline = '';
     state.projektStart = '';
-    state.onskadVolym = 390;
+    state.onskadVolym = 0;
     state.margin = 10;
     state.rampMonths = 0;
     state.leadtimeDays = 10;
-    state.typfallMix = { tf1: 0, tf2: 0, tf3: 390 };
+    state.typfallMix = { tf1: 0, tf2: 0, tf3: 0 };
     state.notes = '';
     state.activities = {};
     state.utfall = { granularity: 'vecka', entries: [] };
@@ -3096,6 +3061,16 @@
     document.getElementById('bottleneck').textContent = bottleneck.name;
 
     const deadline = new Date(state.deadline);
+    if (!state.deadline || isNaN(deadline.getTime())) {
+      // Ingen deadline satt — visa neutralt tomt läge för deadline-baserade fält
+      const tEl = document.getElementById('timeline');
+      if (tEl) tEl.innerHTML = '<strong>Ingen deadline satt.</strong> Sätt deadline för att se beräkningar mot tid.';
+      const volEl = document.getElementById('vol-out');
+      if (volEl) volEl.textContent = '—';
+      const volSubEl = document.getElementById('vol-sub');
+      if (volSubEl) volSubEl.textContent = 'sätt deadline för att räkna fram volym';
+      return;
+    }
     const today = new Date();
     // monthsLeft: rent display-värde — antal månader från IDAG till deadline
     const monthsLeft = (deadline.getFullYear() - today.getFullYear()) * 12 + (deadline.getMonth() - today.getMonth()) + (deadline.getDate() - today.getDate()) / 30;
