@@ -907,6 +907,32 @@
     font-weight: 400;
     margin-left: 8px;
   }
+  .utfall-card { background: #ffffff; border: 0.5px solid #e5e3dc; border-radius: 12px; padding: 18px 20px; margin-top: 6px; }
+  .utfall-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid #e5e3dc; }
+  .utfall-gran { display: flex; align-items: center; gap: 6px; }
+  .utfall-gran-label { font-size: 12px; color: #6b6b66; margin-right: 4px; }
+  .utfall-gran-btn { background: #ffffff; border: 0.5px solid #c8c6bf; color: #4a4a45; padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; font-family: inherit; }
+  .utfall-gran-btn:hover { border-color: #6b6b66; }
+  .utfall-gran-btn.active { background: #1a1a1a; color: #ffffff; border-color: #1a1a1a; }
+  .utfall-table-wrap { overflow-x: auto; }
+  .utfall-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  .utfall-table th { text-align: left; font-size: 11px; color: #8a8a85; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; padding: 8px 6px; border-bottom: 0.5px solid #e5e3dc; white-space: nowrap; }
+  .utfall-table th.num, .utfall-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .utfall-table th.tf-col { color: #5C0E92; }
+  .utfall-table td { padding: 6px 6px; border-bottom: 0.5px solid #f0eee7; vertical-align: middle; }
+  .utfall-table .period-cell { font-weight: 500; color: #1a1a1a; min-width: 110px; }
+  .utfall-table input[type=number] { width: 56px; padding: 4px 6px; border: 0.5px solid #c8c6bf; border-radius: 4px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; background: #ffffff; color: #1a1a1a; font-family: inherit; }
+  .utfall-table input[type=number]:focus { outline: none; border-color: #1a1a1a; }
+  .utfall-table input[type=date] { padding: 4px 6px; border: 0.5px solid transparent; border-radius: 4px; font-size: 12px; background: transparent; color: #1a1a1a; font-family: inherit; }
+  .utfall-table input[type=date]:hover { border-color: #e5e3dc; }
+  .utfall-table input[type=date]:focus { outline: none; border-color: #1a1a1a; background: #ffffff; }
+  .utfall-table .util-total { font-weight: 600; color: #1a1a1a; }
+  .utfall-table .util-remove { background: transparent; border: none; color: #c8c6bf; cursor: pointer; padding: 4px 6px; font-size: 14px; line-height: 1; border-radius: 4px; }
+  .utfall-table .util-remove:hover { color: #9a2424; background: #FBE8E8; }
+  .utfall-actions { margin-top: 12px; display: flex; gap: 8px; }
+  .utfall-summary { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid #e5e3dc; font-size: 12px; color: #4a4a45; line-height: 1.5; }
+  .utfall-summary strong { color: #1a1a1a; }
+  .utfall-empty { color: #a8a8a3; font-style: italic; padding: 20px 8px; font-size: 12px; }
   .pipeline-flow-line {
     font-size: 12px;
     color: #4a4a45;
@@ -1473,6 +1499,11 @@
 
     /* === ROLLISTA: 5 kolumner (num, namn, antal, takt, kap/dag) === */
     .role-cap-input, .role-hitrate-input, .role-tf-group, .role-spann { display: none !important; }
+    .utfall-card .utfall-controls,
+    .utfall-card .utfall-actions,
+    .utfall-card .util-remove { display: none !important; }
+    .utfall-card { padding: 8px 0; border: none; }
+    .utfall-table input { border: none !important; background: transparent !important; padding: 0 !important; }
     .role-row {
       grid-template-columns: 30px 1fr 50px 80px 80px;
       border-bottom: 0.5px solid #d8d6cf;
@@ -1795,6 +1826,24 @@
     <div id="roles-matrix"></div>
   </div>
 
+  <div class="section">Utfall <span class="section-hint">— rapportera faktiskt antal klara leveranser per period och jämför mot plan</span></div>
+
+  <div class="utfall-card">
+    <div class="utfall-controls">
+      <div class="utfall-gran">
+        <span class="utfall-gran-label">Granularitet:</span>
+        <button id="utfall-gran-dag" class="utfall-gran-btn" onclick="setUtfallGranularity('dag')">Per dag</button>
+        <button id="utfall-gran-vecka" class="utfall-gran-btn active" onclick="setUtfallGranularity('vecka')">Per vecka</button>
+        <button id="utfall-gran-månad" class="utfall-gran-btn" onclick="setUtfallGranularity('månad')">Per månad</button>
+      </div>
+    </div>
+    <div class="utfall-table-wrap" id="utfall-table-wrap"></div>
+    <div class="utfall-actions">
+      <button class="add-row" onclick="addUtfallEntry()">+ Rapportera ny period</button>
+    </div>
+    <div class="utfall-summary" id="utfall-summary"></div>
+  </div>
+
   <div class="section">Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
@@ -1868,6 +1917,7 @@
     notes: '',
     activities: {},
     snapshot: null,
+    utfall: { granularity: 'vecka', entries: [] },
   };
 
   let currentSuggestion = null;
@@ -1903,6 +1953,9 @@
         if (state.projektStart === undefined) state.projektStart = '';
         if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
         if (state.snapshot === undefined) state.snapshot = null;
+        if (!state.utfall || typeof state.utfall !== 'object') state.utfall = { granularity: 'vecka', entries: [] };
+        if (!state.utfall.granularity) state.utfall.granularity = 'vecka';
+        if (!Array.isArray(state.utfall.entries)) state.utfall.entries = [];
         // Migrera gamla roller utan enabled/unit till nytt schema
         if (Array.isArray(state.roles)) {
           state.roles.forEach(r => {
@@ -2190,6 +2243,145 @@
     }, 50);
   }
 
+  // === UTFALL ===
+  function formatUtfallPeriod(dateStr, gran) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '—';
+    if (gran === 'månad') {
+      const monthNames = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+      return monthNames[d.getMonth()] + ' ' + d.getFullYear();
+    }
+    if (gran === 'vecka') {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = (date.getUTCDay() + 6) % 7;
+      date.setUTCDate(date.getUTCDate() - dayNum + 3);
+      const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+      const week = 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+      return 'V' + week + ' ' + d.getFullYear();
+    }
+    return d.toLocaleDateString('sv-SE');
+  }
+
+  function setUtfallGranularity(gran) {
+    if (!state.utfall) state.utfall = { granularity: 'vecka', entries: [] };
+    state.utfall.granularity = gran;
+    saveState();
+    renderUtfallTable();
+    ['dag', 'vecka', 'månad'].forEach(g => {
+      const btn = document.getElementById('utfall-gran-' + g);
+      if (btn) btn.classList.toggle('active', g === gran);
+    });
+  }
+
+  function addUtfallEntry() {
+    if (!state.utfall) state.utfall = { granularity: 'vecka', entries: [] };
+    const today = new Date();
+    const id = 'u' + Date.now();
+    const entry = { id, period: today.toISOString().slice(0, 10), tf1: 0, tf2: 0, tf3: 0, perRole: {} };
+    state.roles.forEach(r => { entry.perRole[r.id] = 0; });
+    state.utfall.entries.push(entry);
+    saveState();
+    renderUtfallTable();
+    setTimeout(() => {
+      const inp = document.querySelector('.utfall-table input[type=date][data-id="' + id + '"]');
+      if (inp) inp.focus();
+    }, 50);
+  }
+
+  function updateUtfallEntry(id, field, value) {
+    const entry = state.utfall.entries.find(e => e.id === id);
+    if (!entry) return;
+    if (field === 'period') entry.period = value;
+    else if (field === 'tf1' || field === 'tf2' || field === 'tf3') entry[field] = +value || 0;
+    else if (field.startsWith('role-')) {
+      const roleId = field.substring(5);
+      if (!entry.perRole) entry.perRole = {};
+      entry.perRole[roleId] = +value || 0;
+    }
+    saveState();
+    renderUtfallTable();
+  }
+
+  function deleteUtfallEntry(id) {
+    if (!confirm('Ta bort denna utfalls-period?')) return;
+    state.utfall.entries = state.utfall.entries.filter(e => e.id !== id);
+    saveState();
+    renderUtfallTable();
+  }
+
+  function utfallEntryTotal(entry) {
+    return (+entry.tf1 || 0) + (+entry.tf2 || 0) + (+entry.tf3 || 0);
+  }
+
+  function renderUtfallTable() {
+    const wrap = document.getElementById('utfall-table-wrap');
+    const summary = document.getElementById('utfall-summary');
+    if (!wrap) return;
+    if (!state.utfall) state.utfall = { granularity: 'vecka', entries: [] };
+    const gran = state.utfall.granularity || 'vecka';
+    const entries = state.utfall.entries || [];
+    if (entries.length === 0) {
+      wrap.innerHTML = '<div class="utfall-empty">Inga rapporterade utfall ännu. Klicka på "+ Rapportera ny period" för att börja.</div>';
+      if (summary) summary.innerHTML = '';
+      return;
+    }
+    const sorted = [...entries].sort((a, b) => (a.period || '').localeCompare(b.period || ''));
+    const activeRoleList = state.roles;
+
+    let html = '<table class="utfall-table"><thead><tr>';
+    html += '<th>Period</th>';
+    html += '<th class="num tf-col">TF1</th><th class="num tf-col">TF2</th><th class="num tf-col">TF3</th>';
+    html += '<th class="num">Klart</th>';
+    activeRoleList.forEach(r => { html += '<th class="num">' + escapeHtml(r.name) + '</th>'; });
+    html += '<th></th></tr></thead><tbody>';
+
+    sorted.forEach(e => {
+      const total = utfallEntryTotal(e);
+      const periodLabel = formatUtfallPeriod(e.period, gran);
+      html += '<tr>';
+      html += '<td class="period-cell"><input type="date" value="' + escapeHtml(e.period || '') +
+              '" data-id="' + e.id + '" data-field="period"> <span style="font-size:11px;color:#6b6b66;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
+      ['tf1','tf2','tf3'].forEach(tf => {
+        html += '<td class="num"><input type="number" min="0" step="1" value="' + (+e[tf] || 0) +
+                '" data-id="' + e.id + '" data-field="' + tf + '"></td>';
+      });
+      html += '<td class="num util-total">' + total + '</td>';
+      activeRoleList.forEach(r => {
+        const v = (e.perRole && e.perRole[r.id]) ? e.perRole[r.id] : 0;
+        html += '<td class="num"><input type="number" min="0" step="1" value="' + v +
+                '" data-id="' + e.id + '" data-field="role-' + r.id + '"></td>';
+      });
+      html += '<td><button class="util-remove" onclick="deleteUtfallEntry(\'' + e.id + '\')" title="Ta bort">×</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll('input[data-id]').forEach(inp => {
+      inp.addEventListener('input', (ev) => {
+        const id = ev.target.dataset.id;
+        const field = ev.target.dataset.field;
+        updateUtfallEntry(id, field, ev.target.value);
+      });
+    });
+
+    if (summary) {
+      const totalKlart = entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+      const periods = entries.length;
+      const avg = periods > 0 ? (totalKlart / periods) : 0;
+      const granLabel = gran === 'dag' ? 'dag' : gran === 'månad' ? 'månad' : 'vecka';
+      let h = '<strong>' + totalKlart + ' st</strong> rapporterade över <strong>' + periods + '</strong> period' + (periods === 1 ? '' : 'er') +
+        ' · snitt <strong>' + avg.toFixed(1) + '</strong> per ' + granLabel + '.';
+      if (state.onskadVolym > 0) {
+        const remaining = Math.max(0, state.onskadVolym - totalKlart);
+        if (remaining > 0) h += ' Kvar till mål: <strong>' + remaining + '</strong> st.';
+        else h += ' <strong style="color:#1d6e35">Målet uppnått!</strong>';
+      }
+      summary.innerHTML = h;
+    }
+  }
+
   // === CHECKLIST FÖR BEGRÄNSNINGAR ===
 
   function renderConstraints() {
@@ -2472,6 +2664,12 @@
     document.getElementById('rampMonths').value = state.rampMonths;
     document.getElementById('deadline').value = state.deadline;
     document.getElementById('projektStart').value = state.projektStart || '';
+    if (state.utfall && state.utfall.granularity) {
+      ['dag', 'vecka', 'månad'].forEach(g => {
+        const btn = document.getElementById('utfall-gran-' + g);
+        if (btn) btn.classList.toggle('active', g === state.utfall.granularity);
+      });
+    }
     document.getElementById('onskad-volym').value = state.onskadVolym;
     document.getElementById('margin').value = state.margin;
     document.getElementById('notes').value = state.notes;
@@ -2565,6 +2763,7 @@
     state.typfallMix = { tf1: 0, tf2: 0, tf3: 390 };
     state.notes = '';
     state.activities = {};
+    state.utfall = { granularity: 'vecka', entries: [] };
     // Rensa localStorage — alla versioner för säkerhets skull
     try {
       for (let i = 1; i <= 10; i++) {
@@ -2633,6 +2832,9 @@
         if (state.leadtimeDays === undefined) state.leadtimeDays = 10;
         if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
         if (!state.activities) state.activities = {};
+        if (!state.utfall || typeof state.utfall !== 'object') state.utfall = { granularity: 'vecka', entries: [] };
+        if (!state.utfall.granularity) state.utfall.granularity = 'vecka';
+        if (!Array.isArray(state.utfall.entries)) state.utfall.entries = [];
         if (!Array.isArray(state.constraints)) state.constraints = [];
         if (!Array.isArray(state.scenarios)) state.scenarios = [];
         // Säkerställ enabled/unit på roller
@@ -4206,6 +4408,7 @@
   renderScenarios();
   renderActivities();
   renderConstraints();
+  renderUtfallTable();
   bindGlobalInputs();
   updateSnapshotUI();
   recalc();
