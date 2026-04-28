@@ -1963,8 +1963,8 @@
   <div class="section"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
 
   <div class="global-row">
-    <div class="role-name"><span class="tt" data-tip="Andel leveranser som lyckas på första försöket. Resten är 'bomkörningar' som måste göras om eller skrivas av — de kostar tid men ger ingen volym.">Hitrate</span>
-      <span class="hint">% leveranser som lyckas på första försöket</span>
+    <div class="role-name"><span class="tt" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
+      <span class="hint">% av total kapacitet som lyckas — appliceras ovanpå per-roll-värden</span>
     </div>
     <input type="range" id="hitrate" min="50" max="100" value="90" step="1">
     <div class="count" id="hitrate-v">90%</div>
@@ -2006,7 +2006,7 @@
     <div class="col-takt"><span class="tt" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
     <div class="col-takt">Enhet</div>
     <div class="col-tak"><span class="tt" data-tip="Hårt tak per roll i samma enhet som takt (dag/vecka/månad). Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak</span><span class="header-sub">per takt-enhet</span></div>
-    <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent. Lämna tomt = använd den globala hitraten.">Hit %</span></div>
+    <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent — hur realistiskt rollen hinner sin nominella takt. Tom = 100%. Global hitrate ovanför multipliceras alltid.">Hit %</span><span class="header-sub">tom = 100%</span></div>
     <div class="col-cap"><span class="tt" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
     <div class="col-tf"><span class="tt" data-tip="Klicka pillerna för att markera vilka typfall rollen deltar i. Roller utan markering för aktivt typfall räknas inte med.">Typfall</span><span class="header-sub">klicka pill</span></div>
     <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span><span class="header-sub">min – max</span></div>
@@ -2388,7 +2388,7 @@
           <option value="månad" ${role.unit === 'månad' ? 'selected' : ''}>/månad</option>
         </select>
         <input type="number" class="role-cap-input" value="${capVal}" min="0" step="0.5" placeholder="—" data-id="${role.id}" data-field="cap" title="Hårt tak i ${role.unit === 'vecka' ? '/vecka' : role.unit === 'månad' ? '/månad' : '/dag'} (lämna tomt = inget tak)">
-        <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="${state.hitrate}" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent (lämna tomt = global)">
+        <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="100" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent — hur realistiskt rollen hinner sin takt. Tom = 100% (rollen hinner sin nominella takt). Den globala hitraten i parametrar-sektionen multipliceras alltid ovanpå.">
         <div class="cap" id="cap-${role.id}">—</div>
         <div class="role-tf-group">${tfPill('tf1', 'TF1')}${tfPill('tf2', 'TF2')}${tfPill('tf3', 'TF3')}</div>
         <div class="role-spann">
@@ -3213,17 +3213,28 @@
     }
     return raw;
   }
-  // Returnerar hitrate (0-1) för en roll — per-roll om satt, annars global
+  // Returnerar per-roll hitrate (0-1).
+  // Default 100% — rollen levererar enligt sin nominella takt om inget annat satt.
   function roleHitrate(role) {
     if (role.hitrate !== null && role.hitrate !== undefined && role.hitrate !== '') {
       const v = +role.hitrate;
       if (!isNaN(v) && v > 0) return v / 100;
     }
-    return state.hitrate / 100;
+    return 1.0; // Default: rollen hinner 100% av sin takt
   }
-  // Returnerar effektiv leverans per dag (kap × hitrate) — det som faktiskt landar
+
+  // Global hitrate (0-1) — projektets snitt-loss-faktor.
+  // Appliceras MULTIPLIKATIVT ovanpå per-roll-värdet.
+  function globalHitrate() {
+    const v = +state.hitrate;
+    if (!isNaN(v) && v > 0) return v / 100;
+    return 1.0;
+  }
+
+  // Effektiv leverans per dag = kap × per-roll-hitrate × global-hitrate.
+  // Båda hitrate-skikten multipliceras: rollens kapacitet × projektets loss-faktor.
   function roleEffectivePerDay(role) {
-    return roleCapPerDay(role) * roleHitrate(role);
+    return roleCapPerDay(role) * roleHitrate(role) * globalHitrate();
   }
   // Returnerar kapacitet per dag givet ett alternativt antal personer (för min/max-scenarier)
   function roleCapPerDayWithCount(role, alternativeCount) {
@@ -3235,7 +3246,7 @@
     return raw;
   }
   function roleEffectivePerDayWithCount(role, alternativeCount) {
-    return roleCapPerDayWithCount(role, alternativeCount) * roleHitrate(role);
+    return roleCapPerDayWithCount(role, alternativeCount) * roleHitrate(role) * globalHitrate();
   }
   // Snitt-bemanning per roll = (min + max) / 2
   function roleAvgCount(role) {
@@ -3566,7 +3577,7 @@
       document.getElementById('banner-takt-sub').innerHTML =
         effDay.toFixed(1) + '/dag · spann ' + lowEffDay.toFixed(1) + '–' + highEffDay.toFixed(1);
     } else {
-      document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · vid ' + state.hitrate + '% hitrate';
+      document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · global loss-faktor ' + state.hitrate + '%';
     }
     document.getElementById('banner-bottleneck').textContent = bottleneck.name;
     document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.val.toFixed(0) + '/dag — sätter taket';
