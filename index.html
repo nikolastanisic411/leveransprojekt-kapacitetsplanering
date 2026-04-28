@@ -2750,6 +2750,24 @@
     }
   }
 
+  // Returnerar lista av aktiva subsets (typfall med volym > 0)
+  // Varje subset: { tf: 'tf1'|'tf2'|'tf3', name: 'Typfall 1', volume, leadtimeDays }
+  function getActiveSubsets() {
+    const subsets = [];
+    if (state.leadtimeDays === 'mix') {
+      [['tf1', 10, 'Typfall 1'], ['tf2', 60, 'Typfall 2'], ['tf3', 100, 'Typfall 3']].forEach(([tf, ld, name]) => {
+        const v = +state.typfallMix[tf] || 0;
+        if (v > 0) subsets.push({ tf, name, volume: v, leadtimeDays: ld });
+      });
+    } else {
+      const ld = +state.leadtimeDays || 10;
+      const tf = (ld === 10) ? 'tf1' : (ld === 60) ? 'tf2' : (ld === 100) ? 'tf3' : 'tf1';
+      const name = (ld === 10) ? 'Typfall 1' : (ld === 60) ? 'Typfall 2' : (ld === 100) ? 'Typfall 3' : 'Typfall 1';
+      subsets.push({ tf, name, volume: +state.onskadVolym || 0, leadtimeDays: ld });
+    }
+    return subsets;
+  }
+
   // Beräknar viktad ledtid baserat på antal per typfall
   function getEffectiveLeadtime() {
     if (state.leadtimeDays !== 'mix') return state.leadtimeDays;
@@ -2771,11 +2789,17 @@
     const effLt = getEffectiveLeadtime();
     const target = +state.onskadVolym || 0;
 
+    // Per-subset breakdown
+    const breakdown = [];
+    if (t1 > 0) breakdown.push('<span style="color:#5C0E92">TF1: ' + t1 + ' st × 10 dgr</span>');
+    if (t2 > 0) breakdown.push('<span style="color:#5C0E92">TF2: ' + t2 + ' st × 60 dgr</span>');
+    if (t3 > 0) breakdown.push('<span style="color:#5C0E92">TF3: ' + t3 + ' st × 100 dgr</span>');
+    const breakdownStr = breakdown.length > 0 ? ' · ' + breakdown.join(' · ') : '';
+
     if (target <= 0) {
-      // Inget mål satt — visa bara summan utan varning
       summary.classList.remove('warning');
-      summary.innerHTML = 'summa: <strong>' + sum + '</strong>' +
-        ' · viktad ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>' +
+      summary.innerHTML = 'summa: <strong>' + sum + '</strong>' + breakdownStr +
+        ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>' +
         ' <span style="color:#a8a8a3">(sätt mål-volym ovan för att jämföra)</span>';
       return;
     }
@@ -2783,8 +2807,8 @@
     const matches = sum === target;
     summary.classList.toggle('warning', !matches);
     summary.innerHTML = 'summa: <strong>' + sum + '</strong> / ' + target +
-      (matches ? '' : ' (måste vara ' + target + ')') +
-      ' · viktad ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
+      (matches ? '' : ' (måste vara ' + target + ')') + breakdownStr +
+      ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
   }
 
   function resetAll() {
@@ -3660,20 +3684,29 @@
     const tbody = document.createElement('tbody');
     const fmt = d => d.toLocaleDateString('sv-SE');
 
-    // Sista beställningsdatum för Nätarkitekt:
-    // = deadline − typfall-ledtid (kalenderdagar) − 1/Nätarkitekt-takt_per_dag (kalenderdagar)
-    // Rundas bakåt till början av Nätarkitektens takt-enhet (vecka/månad/dag).
-    // Visas bara när Nätarkitekt deltar i aktuellt typfall (annars är hen redan filtrerad).
+    // Sista beställningsdatum för Nätarkitekt — beräknas PER SUBSET (per aktivt typfall).
+    // Varje TF har sin egen ledtid → sin egen sista beställning. Visas alla applicerade
+    // tillsammans i kolumnen 'Sista beställning'.
     const archRole = data.find(x => /arkitekt/i.test(x.role.name));
-    let archLastOrderDate = null;
+    const archSubsetDates = []; // [{ tfName, date, leadtimeDays }]
     if (archRole) {
-      const effLtWorkdays = getEffectiveLeadtime();
-      const ltCalDays = effLtWorkdays * 7 / 5; // konvertera arbetsdagar till kalenderdagar
-      const archDailyRaw = roleCapPerDay(archRole.role); // egen kap/dag (ej hitrate)
+      const subsets = getActiveSubsets();
+      const archDailyRaw = roleCapPerDay(archRole.role);
       const archProcDays = archDailyRaw > 0 ? 1 / archDailyRaw : 0;
-      const last = new Date(deadline);
-      last.setDate(last.getDate() - Math.ceil(ltCalDays) - Math.ceil(archProcDays));
-      archLastOrderDate = roundBackwardToUnit(last, archRole.role.unit);
+      subsets.forEach(s => {
+        // Bara TFs där Nätarkitekt deltar är relevanta
+        if (!archRole.role.typfalls || !archRole.role.typfalls[s.tf]) return;
+        const ltCalDays = s.leadtimeDays * 7 / 5;
+        const last = new Date(deadline);
+        last.setDate(last.getDate() - Math.ceil(ltCalDays) - Math.ceil(archProcDays));
+        const rounded = roundBackwardToUnit(last, archRole.role.unit);
+        archSubsetDates.push({ tfName: s.name, date: rounded, leadtimeDays: s.leadtimeDays, volume: s.volume });
+      });
+    }
+    // Tidigast (= mest pressade) datum för matriscellen + sammanfattning
+    let archLastOrderDate = null;
+    if (archSubsetDates.length > 0) {
+      archLastOrderDate = archSubsetDates.reduce((earliest, x) => x.date < earliest ? x.date : earliest, archSubsetDates[0].date);
     }
 
     data.forEach((d, i) => {
@@ -3687,9 +3720,18 @@
       const barPct = isFinite(d.daysNeeded) ? Math.min(100, (d.daysNeeded / maxDays) * 100) : 0;
 
       const isArch = (d === archRole);
-      const sistaCell = (isArch && archLastOrderDate)
-        ? '<td class="last-order-cell">' + fmt(archLastOrderDate) + '</td>'
-        : '<td class="last-order-cell muted">—</td>';
+      let sistaCell;
+      if (isArch && archSubsetDates.length > 1) {
+        // Mix med flera TFs där Nätarkitekt deltar — visa alla
+        const lines = archSubsetDates.map(s =>
+          '<div style="font-size:11px;line-height:1.3"><strong>' + s.tfName + ':</strong> ' + fmt(s.date) + '</div>'
+        ).join('');
+        sistaCell = '<td class="last-order-cell">' + lines + '</td>';
+      } else if (isArch && archLastOrderDate) {
+        sistaCell = '<td class="last-order-cell">' + fmt(archLastOrderDate) + '</td>';
+      } else {
+        sistaCell = '<td class="last-order-cell muted">—</td>';
+      }
       tr.innerHTML = `
         <td class="num">${i + 1}</td>
         <td class="role-cell">${escapeHtml(d.role.name)}${d.isBottleneck ? ' ⚑' : ''}</td>
@@ -3721,10 +3763,14 @@
         bottleneck.effectiveRate.toFixed(1) + '/dag och måste börja senast <strong>' +
         fmt(bottleneck.mastBorjaSenast) + '</strong> för att hinna med ' + Math.round(V) + ' st.';
     }
-    if (archLastOrderDate && archRole) {
+    if (archSubsetDates.length === 1 && archRole) {
+      const s = archSubsetDates[0];
       const unitWord = archRole.role.unit === 'månad' ? 'månadsstart' : (archRole.role.unit === 'vecka' ? 'måndag' : 'dag');
       summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> måste lägga sin sista beställning senast <strong>' +
-        fmt(archLastOrderDate) + '</strong> (rundat till ' + unitWord + ' utifrån takt-enhet ' + archRole.role.unit + ').';
+        fmt(s.date) + '</strong> för ' + s.tfName + ' (' + s.leadtimeDays + ' dgr ledtid, rundat till ' + unitWord + ').';
+    } else if (archSubsetDates.length > 1 && archRole) {
+      const parts = archSubsetDates.map(s => '<strong>' + s.tfName + ':</strong> ' + fmt(s.date) + ' (' + s.volume + ' st, ' + s.leadtimeDays + ' dgr)');
+      summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> sista beställning per typfall: ' + parts.join(' · ') + '.';
     }
     if (overshooters.length > 0) {
       summaryHtml += ' <span class="matrix-warning">⚠ ' + overshooters.length + ' roll' +
