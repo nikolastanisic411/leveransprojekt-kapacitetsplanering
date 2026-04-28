@@ -88,6 +88,107 @@
     justify-content: space-between;
     align-items: baseline;
   }
+  .next-step-row {
+    display: flex;
+    justify-content: flex-end;
+    margin: 14px 0 8px;
+  }
+  .next-step-btn {
+    background: #ffffff;
+    border: 0.5px solid #5C0E92;
+    color: #5C0E92;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .next-step-btn:hover {
+    background: #5C0E92;
+    color: #ffffff;
+  }
+  .step-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 24px;
+    padding: 12px 14px;
+    background: #fdfcf8;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 10px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .step-progress .sp-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    cursor: pointer;
+    font-size: 12px;
+    color: #6b6b66;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .step-progress .sp-step:hover {
+    border-color: #5C0E92;
+    color: #1a1a1a;
+  }
+  .step-progress .sp-step .sp-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #c8c6bf;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .step-progress .sp-step .sp-label { font-size: 11px; font-weight: 500; }
+  .step-progress .sp-step.done {
+    background: #DDF0E0;
+    border-color: #b6dabc;
+    color: #1d6e35;
+  }
+  .step-progress .sp-step.done .sp-num {
+    background: #1d6e35;
+  }
+  .step-progress .sp-step.done .sp-num::before {
+    content: "✓";
+    font-size: 12px;
+  }
+  .step-progress .sp-step.done .sp-num span { display: none; }
+  .step-progress .sp-step.current {
+    background: #5C0E92;
+    border-color: #5C0E92;
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(92, 14, 146, 0.15);
+  }
+  .step-progress .sp-step.current .sp-num {
+    background: #ffffff;
+    color: #5C0E92;
+  }
+  .step-progress .sp-step.upcoming { opacity: 0.6; }
+  .step-progress .sp-step.upcoming:hover { opacity: 1; }
+
+  /* Highlight current section subtly */
+  .section.is-current {
+    background: linear-gradient(180deg, rgba(92,14,146,0.04) 0%, transparent 100%);
+    border-left: 3px solid #5C0E92;
+    padding-left: 12px;
+    margin-left: -12px;
+  }
+  .section.is-current .step-num {
+    box-shadow: 0 0 0 3px rgba(92,14,146,0.18);
+  }
+
   .step-num {
     display: inline-flex;
     align-items: center;
@@ -1711,7 +1812,7 @@
     .page { padding: 0; max-width: none; width: 100%; }
 
     /* === DÖLJ UI-ELEMENT === */
-    .toolbar, .add-role-row, .scen.add-scenario, .actions, .remove-btn,
+    .toolbar, .step-progress, .next-step-row, .add-role-row, .scen.add-scenario, .actions, .remove-btn,
     .scen-remove-btn, .drag-handle, .activity-handle, .cl-remove,
     .add-checklist-item, input[type=range],
     .role-checkbox, .unit-select,
@@ -1869,6 +1970,17 @@
     <span class="snapshot-info" id="snapshot-info">inget nuläge markerat</span>
   </div>
 
+  <div class="step-progress" id="step-progress" role="navigation" aria-label="Steg-navigering">
+    <div class="sp-step" data-step="1" onclick="scrollToStep(1)"><span class="sp-num">1</span><span class="sp-label">Mål</span></div>
+    <div class="sp-step" data-step="2" onclick="scrollToStep(2)"><span class="sp-num">2</span><span class="sp-label">Parametrar</span></div>
+    <div class="sp-step" data-step="3" onclick="scrollToStep(3)"><span class="sp-num">3</span><span class="sp-label">Förslag</span></div>
+    <div class="sp-step" data-step="4" onclick="scrollToStep(4)"><span class="sp-num">4</span><span class="sp-label">Bemanning</span></div>
+    <div class="sp-step" data-step="5" onclick="scrollToStep(5)"><span class="sp-num">5</span><span class="sp-label">Resultat</span></div>
+    <div class="sp-step" data-step="6" onclick="scrollToStep(6)"><span class="sp-num">6</span><span class="sp-label">Sammanfattning</span></div>
+    <div class="sp-step" data-step="7" onclick="scrollToStep(7)"><span class="sp-num">7</span><span class="sp-label">Scenarier</span></div>
+    <div class="sp-step" data-step="8" onclick="scrollToStep(8)"><span class="sp-num">8</span><span class="sp-label">Utfall</span></div>
+  </div>
+
   <div class="summary-banner" id="summary-banner">
     <div class="banner-headline" id="banner-headline">—</div>
     <div class="banner-grid">
@@ -1897,7 +2009,7 @@
   <div class="per-subset-row" id="per-subset-row" style="display:none"></div>
   <div class="klart-per-roll" id="klart-per-roll" style="display:none"></div>
 
-  <div class="section"><span class="step-num">1</span>Mål &amp; behov <span class="section-hint">— vad ska levereras och hur lång ledtid har varje typfall?</span></div>
+  <div class="section" id="step-1"><span class="step-num">1</span>Mål &amp; behov <span class="section-hint">— vad ska levereras och hur lång ledtid har varje typfall?</span></div>
 
   <div class="target-cell">
     <label>Mål — total volym<span class="required-mark" title="Sätt ditt projekts målvolym — annars är jämförelsen mot mål meningslös">*</span>
@@ -1939,7 +2051,11 @@
     </div>
   </div>
 
-  <div class="section"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
+  <div class="next-step-row">
+    <button class="next-step-btn" onclick="scrollToStep(2)">Nästa steg: Parametrar →</button>
+  </div>
+
+  <div class="section" id="step-2"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
 
   <div class="global-row">
     <div class="role-name"><span class="tt" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
@@ -1970,7 +2086,11 @@
     <input type="date" id="deadline" value="">
   </div>
 
-  <div class="section"><span class="step-num">3</span>Förslag på setup <span class="section-hint">— verktyget räknar fram en föreslagen bemanning baserat på mål och parametrar; använd den som utgångspunkt eller justera själv i nästa steg</span></div>
+  <div class="next-step-row">
+    <button class="next-step-btn" onclick="scrollToStep(3)">Nästa steg: Förslag på setup →</button>
+  </div>
+
+  <div class="section" id="step-3"><span class="step-num">3</span>Förslag på setup <span class="section-hint">— verktyget räknar fram en föreslagen bemanning baserat på mål och parametrar; använd den som utgångspunkt eller justera själv i nästa steg</span></div>
 
   <div class="suggest-card" id="suggest-card">
     <div class="head">
@@ -1992,7 +2112,11 @@
     <div class="outcome" id="suggest-outcome">—</div>
   </div>
 
-  <div class="section">
+  <div class="next-step-row">
+    <button class="next-step-btn" onclick="scrollToStep(4)">Nästa steg: Bemanning & kapacitet →</button>
+  </div>
+
+  <div class="section" id="step-4">
     <span><span class="step-num">4</span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— justera själv eller använd förslaget ovan som utgångspunkt</span></span>
     <span class="saved-indicator" id="saved-indicator">sparat</span>
   </div>
@@ -2026,7 +2150,7 @@
     <div class="pf-row" id="pf-row"></div>
   </div>
 
-  <div class="section"><span class="step-num">5</span>Resultat — aktuell takt <span class="section-hint">— vad ger din setup för utfall?</span></div>
+  <div class="section" id="step-5"><span class="step-num">5</span>Resultat — aktuell takt <span class="section-hint">— vad ger din setup för utfall?</span></div>
 
   <div class="summary">
     <div class="stat">
@@ -2072,7 +2196,7 @@
     <div id="roles-matrix"></div>
   </div>
 
-  <div class="section"><span class="step-num">6</span>Sammanfattning <span class="section-hint">— nyckelinsikter och resursplan, pekar på vad som driver utfallet och vad som behöver justeras</span></div>
+  <div class="section" id="step-6"><span class="step-num">6</span>Sammanfattning <span class="section-hint">— nyckelinsikter och resursplan, pekar på vad som driver utfallet och vad som behöver justeras</span></div>
 
   <div class="handover-card" id="handover-card">
     <div class="handover-header">
@@ -2083,11 +2207,11 @@
     <div class="handover-footer" id="handover-footer"></div>
   </div>
 
-  <div class="section"><span class="step-num">7</span>Scenario-output mot mål <span class="section-hint">— testa olika mål-scenarier mot din nuvarande takt</span></div>
+  <div class="section" id="step-7"><span class="step-num">7</span>Scenario-output mot mål <span class="section-hint">— testa olika mål-scenarier mot din nuvarande takt</span></div>
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
-    <div class="section"><span class="step-num">8</span>Utfall — uppföljning <span class="section-hint">— rapportera in vad ni faktiskt hinner per period så vi kan jämföra mot planen</span></div>
+    <div class="section" id="step-8"><span class="step-num">8</span>Utfall — uppföljning <span class="section-hint">— rapportera in vad ni faktiskt hinner per period så vi kan jämföra mot planen</span></div>
 
   <div class="utfall-card">
     <div class="utfall-controls">
@@ -3456,6 +3580,7 @@
       updateHandoverPanel();
       updatePerSubsetRow(0, 0, 0);
       updateKlartPerRoll();
+      updateStepProgress();
       return;
     }
     const today = new Date();
@@ -3724,6 +3849,7 @@
     updatePerSubsetRow(monthsAvailable, minEff, effectiveRamp);
     updateKlartPerRoll();
     updateHandoverPanel();
+    updateStepProgress();
     updateActivityLabels();
   }
 
@@ -3871,6 +3997,50 @@
     }
     el.innerHTML = html;
     el.style.display = '';
+  }
+
+  // === GUIDAD STEG-INDIKATOR ===
+  function updateStepProgress() {
+    const hasGoal = +state.onskadVolym > 0;
+    const hasDeadline = !!(state.deadline && state.deadline.length >= 8 && !isNaN(new Date(state.deadline).getTime()));
+    const hasRoles = state.roles && state.roles.length > 0;
+    const hasUtfall = state.utfall && Array.isArray(state.utfall.entries) && state.utfall.entries.length > 0;
+
+    // Definiera vilket steg är 'done' / första incomplete = 'current'
+    const stepDone = {
+      1: hasGoal,
+      2: hasDeadline,
+      3: hasGoal && hasDeadline,
+      4: hasRoles,
+      5: hasGoal && hasDeadline && hasRoles,
+      6: hasGoal && hasDeadline && hasRoles,
+      7: hasGoal && hasDeadline && hasRoles,
+      8: hasUtfall,
+    };
+    let currentStep = null;
+    for (let i = 1; i <= 8; i++) {
+      if (!stepDone[i]) { currentStep = i; break; }
+    }
+    if (currentStep === null) currentStep = 8; // allt klart — håll Utfall som "current" för uppföljning
+
+    document.querySelectorAll('.step-progress .sp-step').forEach(el => {
+      const step = +el.dataset.step;
+      el.classList.remove('done', 'current', 'upcoming');
+      if (stepDone[step]) el.classList.add('done');
+      else if (step === currentStep) el.classList.add('current');
+      else el.classList.add('upcoming');
+    });
+
+    // Highlight current section
+    document.querySelectorAll('.section.is-current').forEach(el => el.classList.remove('is-current'));
+    const currentEl = document.getElementById('step-' + currentStep);
+    if (currentEl) currentEl.classList.add('is-current');
+  }
+
+  // Scrolla mjukt till ett steg
+  function scrollToStep(n) {
+    const el = document.getElementById('step-' + n);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function updateHandoverPanel() {
@@ -5049,6 +5219,7 @@
   renderUtfallTable();
   bindGlobalInputs();
   updateHandoverPanel();
+  updateStepProgress();
   updateSnapshotUI();
   recalc();
 </script>
