@@ -1056,6 +1056,36 @@
   .suggest-card.show { display: block; }
   /* Visa suggest-card alltid efter steg 3 — innehållet visar pedagogiskt tomstate när data saknas */
   #suggest-card { display: block; }
+  .suggest-card button.suggest {
+    background: #5C0E92;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    box-shadow: 0 2px 8px rgba(92,14,146,0.25);
+  }
+  .suggest-card button.suggest:hover {
+    background: #6B0FA8;
+    box-shadow: 0 4px 12px rgba(92,14,146,0.35);
+    transform: translateY(-1px);
+  }
+  .suggest-card button.suggest:active { transform: translateY(0); }
+  .suggest-card.no-data button.suggest {
+    opacity: 0.45;
+    pointer-events: none;
+    box-shadow: none;
+    transform: none;
+  }
+  .suggest-card.no-data .body {
+    color: #8a8a85;
+    font-style: italic;
+    font-size: 12px;
+  }
   .suggest-card .head {
     display: flex;
     justify-content: space-between;
@@ -2176,9 +2206,9 @@
   <div class="suggest-card" id="suggest-card">
     <div class="head">
       <div class="title" id="suggest-title">Förslag på bemanning</div>
-      <button class="suggest" onclick="applySuggestion()">Använd förslaget</button>
+      <button class="suggest" onclick="applySuggestion()">⚡ Använd förslaget</button>
     </div>
-    <div class="body" id="suggest-body">—</div>
+    <div class="body" id="suggest-body">Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.</div>
 
     <div class="margin-row">
       <label><span class="tt" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
@@ -2345,9 +2375,9 @@
   const STORAGE_KEY = 'maxtakt-state-v7';
 
   const defaultRoles = [
-    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
-    { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r3', name: 'Tekniker', count: 1, countMin: 1, countMax: 1, takt: 1, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+    { id: 'r3', name: 'Tekniker', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
   ];
   const defaultScenarios = [
     { id: 's1', name: 'Scenario 1', target: 0, unit: 'månad' },
@@ -4014,8 +4044,15 @@
   function updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp) {
     if (effectiveRamp === undefined) effectiveRamp = state.rampMonths;
     if (targetMonthly <= 0 || hitrate <= 0 || state.roles.length === 0) {
-      document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
+      const card = document.getElementById('suggest-card');
+      if (card) card.classList.add('no-data');
+      const body = document.getElementById('suggest-body');
+      if (body) body.innerHTML = 'Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.';
+      const rolesEl = document.getElementById('suggest-roles');
+      if (rolesEl) rolesEl.innerHTML = '';
+      const outcomeEl = document.getElementById('suggest-outcome');
+      if (outcomeEl) outcomeEl.innerHTML = '';
       return;
     }
     const targetWithMargin = targetMonthly * (1 + margin);
@@ -4080,17 +4117,29 @@
 
     document.getElementById('suggest-outcome').innerHTML = outcomeText;
     document.getElementById('suggest-card').classList.add('show');
+    document.getElementById('suggest-card').classList.remove('no-data');
   }
 
   function applySuggestion() {
-    if (!currentSuggestion) return;
+    if (!currentSuggestion) {
+      alert('Förslaget kan inte beräknas än. Sätt mål-volym och deadline först.');
+      return;
+    }
     state.roles.forEach(r => {
       const sug = currentSuggestion[r.id];
-      if (sug !== undefined) r.count = Math.min(sug, r.max);
+      if (sug !== undefined) {
+        const newCount = Math.min(Math.max(1, sug), r.max);
+        r.count = newCount;
+        r.countMin = newCount;
+        r.countMax = newCount;
+      }
     });
     saveState();
+    applyStateToInputs();
     renderRoles();
     recalc();
+    const target = document.getElementById('step-4');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function updatePerSubsetRow(monthsAvailable, bottleneckEffDay, effectiveRamp) {
