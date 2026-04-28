@@ -2283,6 +2283,7 @@
     state.utfall.entries.push(entry);
     saveState();
     renderUtfallTable();
+    recalc();
     setTimeout(() => {
       const inp = document.querySelector('.utfall-table input[type=date][data-id="' + id + '"]');
       if (inp) inp.focus();
@@ -2301,6 +2302,7 @@
     }
     saveState();
     renderUtfallTable();
+    recalc();
   }
 
   function deleteUtfallEntry(id) {
@@ -2308,10 +2310,25 @@
     state.utfall.entries = state.utfall.entries.filter(e => e.id !== id);
     saveState();
     renderUtfallTable();
+    recalc();
   }
 
   function utfallEntryTotal(entry) {
     return (+entry.tf1 || 0) + (+entry.tf2 || 0) + (+entry.tf3 || 0);
+  }
+
+  // Returnerar kumulativ utfalls-array sorterad efter period:
+  // [{ date: Date, cumulative: total_klara_t.o.m_perioden }, ...]
+  function getCumulativeUtfall() {
+    if (!state.utfall || !Array.isArray(state.utfall.entries)) return [];
+    const sorted = [...state.utfall.entries]
+      .filter(e => e.period)
+      .sort((a, b) => a.period.localeCompare(b.period));
+    let acc = 0;
+    return sorted.map(e => {
+      acc += utfallEntryTotal(e);
+      return { date: new Date(e.period), cumulative: acc };
+    });
   }
 
   function renderUtfallTable() {
@@ -3070,6 +3087,7 @@
     const lowEffMonth = lowEffDay * 21;
     const highEffMonth = highEffDay * 21;
     const hasSpread = (lowEffMonth !== effMonth) || (highEffMonth !== effMonth);
+    const hasUtfall = state.utfall && Array.isArray(state.utfall.entries) && state.utfall.entries.length > 0;
     // Snitt-bemanning aggregerat över aktiva roller (för sammanfattning / banner)
     const totalSnittPersonal = active.reduce((sum, r) => sum + roleAvgCount(r), 0);
 
@@ -3273,7 +3291,7 @@
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths, lowEffMonth, highEffMonth);
       drawRolesMatrix(potentialVolym, projektStartDate, deadline);
-      updateChartLegend(snapshotMonth !== null, false, false, hasSpread);
+      updateChartLegend(snapshotMonth !== null, false, false, hasSpread, hasUtfall);
       return;
     }
     if (effectiveStartMonths <= 0) {
@@ -3281,7 +3299,7 @@
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths, lowEffMonth, highEffMonth);
       drawRolesMatrix(potentialVolym, projektStartDate, deadline);
-      updateChartLegend(snapshotMonth !== null, false, false, hasSpread);
+      updateChartLegend(snapshotMonth !== null, false, false, hasSpread, hasUtfall);
       return;
     }
     // Räkna baklänges med hänsyn till ramp OCH ledtid:
@@ -3310,7 +3328,7 @@
     }
 
     drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, effectiveRamp, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths, lowEffMonth, highEffMonth);
-    updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft), hasSpread);
+    updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft), hasSpread, hasUtfall);
 
     // Uppdatera prognostext under grafen
     const forecastEl = document.getElementById('forecast-text');
@@ -3342,13 +3360,16 @@
     updateActivityLabels();
   }
 
-  function updateChartLegend(hasSnapshot, hasTarget, hasForecast, hasSpread) {
+  function updateChartLegend(hasSnapshot, hasTarget, hasForecast, hasSpread, hasUtfall) {
     const legend = document.getElementById('chart-legend');
     let html = `
       <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
       <div class="legend-item"><span class="legend-line deadline"></span> Deadline</div>
       <div class="legend-item"><span class="legend-dot"></span> Volym vid deadline</div>
     `;
+    if (hasUtfall) {
+      html += `<div class="legend-item"><span class="legend-line" style="background:#1d6e35;height:2px"></span> Faktiskt utfall (rapporterat)</div>`;
+    }
     if (hasSpread) {
       html += `<div class="legend-item"><span class="legend-line" style="border-top:1.5px dashed #9a2424;background:none"></span> Lägsta scenario (min-bemanning)</div>`;
       html += `<div class="legend-item"><span class="legend-line" style="border-top:1.5px dashed #1d6e35;background:none"></span> Högsta scenario (max-bemanning)</div>`;
@@ -3997,6 +4018,65 @@
       path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#1a1a1a');
       path.setAttribute('stroke-width', '2.5'); path.setAttribute('stroke-linejoin', 'round');
       svg.appendChild(path);
+    }
+
+    // === UTFALLS-LINJE (faktiskt levererat) ===
+    const utfallData = (typeof getCumulativeUtfall === 'function') ? getCumulativeUtfall() : [];
+    if (utfallData.length > 0) {
+      const today = new Date();
+      // Konvertera varje datapunkt till månader-från-idag på chartens tidsaxel
+      const utfallPoints = [];
+      utfallData.forEach(d => {
+        const monthsFromToday = (d.date.getFullYear() - today.getFullYear()) * 12
+          + (d.date.getMonth() - today.getMonth())
+          + (d.date.getDate() - today.getDate()) / 30;
+        // Bara visa punkter som är inom chartens x-omfång (ej för långt i framtiden)
+        if (monthsFromToday > xMax) return;
+        const x = xScale(monthsFromToday);
+        const y = yScale(d.cumulative);
+        utfallPoints.push({ x, y, monthsFromToday, cumulative: d.cumulative });
+      });
+
+      if (utfallPoints.length > 0) {
+        // Linje mellan punkterna
+        if (utfallPoints.length > 1) {
+          const upath = document.createElementNS(ns, 'path');
+          let upathD = `M ${utfallPoints[0].x} ${utfallPoints[0].y} `;
+          for (let i = 1; i < utfallPoints.length; i++) {
+            upathD += `L ${utfallPoints[i].x} ${utfallPoints[i].y} `;
+          }
+          upath.setAttribute('d', upathD);
+          upath.setAttribute('fill', 'none');
+          upath.setAttribute('stroke', '#1d6e35');
+          upath.setAttribute('stroke-width', '2.2');
+          upath.setAttribute('stroke-linejoin', 'round');
+          svg.appendChild(upath);
+        }
+
+        // Punkter (ringade markörer)
+        utfallPoints.forEach(p => {
+          const dot = document.createElementNS(ns, 'circle');
+          dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
+          dot.setAttribute('r', 4);
+          dot.setAttribute('fill', '#1d6e35');
+          dot.setAttribute('stroke', '#fff');
+          dot.setAttribute('stroke-width', '1.5');
+          svg.appendChild(dot);
+        });
+
+        // Etikett vid sista punkten
+        const last = utfallPoints[utfallPoints.length - 1];
+        const lastLbl = document.createElementNS(ns, 'text');
+        lastLbl.setAttribute('x', last.x + 8);
+        lastLbl.setAttribute('y', last.y + 4);
+        lastLbl.setAttribute('font-size', '10');
+        lastLbl.setAttribute('fill', '#1d6e35');
+        lastLbl.setAttribute('font-weight', '600');
+        lastLbl.setAttribute('font-family', 'inherit');
+        lastLbl.setAttribute('font-variant-numeric', 'tabular-nums');
+        lastLbl.textContent = 'Utfall: ' + last.cumulative + ' st';
+        svg.appendChild(lastLbl);
+      }
     }
 
     // === FÖRLÄNGNING (PROGNOS) ===
