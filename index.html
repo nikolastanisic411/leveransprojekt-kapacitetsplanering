@@ -492,6 +492,64 @@
     pointer-events: none;
   }
 
+  .ui-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0 14px;
+    padding: 10px 14px;
+    background: #fdfcf8;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 8px;
+  }
+  .ui-mode-toggle button {
+    background: #ffffff;
+    border: 0.5px solid #c8c6bf;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    color: #4a4a45;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .ui-mode-toggle button:hover { border-color: #5C0E92; color: #5C0E92; }
+  .ui-mode-toggle button.advanced-on {
+    background: #5C0E92;
+    color: #ffffff;
+    border-color: #5C0E92;
+  }
+  .ui-mode-toggle .ui-mode-hint {
+    font-size: 11px;
+    color: #8a8a85;
+    line-height: 1.4;
+  }
+
+  /* STANDARD-MODE: enklare layout, dölj cap/hit/spann och takt-input */
+  body.ui-mode-standard .role-header {
+    grid-template-columns: 22px 22px 24px 1fr 90px 70px 80px 112px 22px !important;
+  }
+  body.ui-mode-standard .role-row {
+    grid-template-columns: 22px 22px 24px 1fr 90px 70px 80px 112px 22px !important;
+  }
+  body.ui-mode-standard .role-header .col-takt:nth-of-type(1),
+  body.ui-mode-standard .role-header .col-takt:nth-of-type(2),
+  body.ui-mode-standard .role-header .col-tak,
+  body.ui-mode-standard .role-header .col-hit,
+  body.ui-mode-standard .role-header .col-spann {
+    display: none !important;
+  }
+  body.ui-mode-standard .role-row > input[type=number]:not(.role-cap-input):not(.role-hitrate-input),
+  body.ui-mode-standard .role-row > .unit-select,
+  body.ui-mode-standard .role-row > .role-cap-input,
+  body.ui-mode-standard .role-row > .role-hitrate-input,
+  body.ui-mode-standard .role-row > .role-spann {
+    display: none !important;
+  }
+
   .role-header {
     display: grid;
     grid-template-columns: 22px 22px 24px 1fr 46px 30px 56px 56px 52px 52px 60px 112px 100px 22px;
@@ -1900,7 +1958,7 @@
     .page { padding: 0; max-width: none; width: 100%; }
 
     /* === DÖLJ UI-ELEMENT === */
-    .toolbar, .step-progress, .next-step-row, .add-role-row, .scen.add-scenario, .actions, .remove-btn,
+    .toolbar, .step-progress, .next-step-row, .ui-mode-toggle, .add-role-row, .scen.add-scenario, .actions, .remove-btn,
     .handover-fields,
     .scen-remove-btn, .drag-handle, .activity-handle, .cl-remove,
     .add-checklist-item, input[type=range],
@@ -2232,6 +2290,14 @@
     <span class="saved-indicator" id="saved-indicator">sparat</span>
   </div>
 
+  <div class="ui-mode-toggle">
+    <button id="ui-mode-btn" onclick="toggleUiMode()" title="Visa eller dölj avancerade fält (cap, hit %, spann)">
+      <span id="ui-mode-icon">⚙</span>
+      <span id="ui-mode-label">Visa avancerat</span>
+    </button>
+    <span class="ui-mode-hint">Standardvyn fokuserar på antal personer per roll. Avancerat visar tak, hitrate, spann och typfall för fininställning.</span>
+  </div>
+
   <div class="role-header">
     <div></div>
     <div></div>
@@ -2403,6 +2469,7 @@
     leadtimeDays: 10,
     typfallMix: { tf1: 0, tf2: 0, tf3: 0 }, // används bara när typfall är 'mix'
     handover: { orderHandover: 3, archHandover: 5, tekStartup: 10 }, // standard handover-tider mellan roller (dagar)
+    uiMode: 'standard', // 'standard' eller 'advanced' — styr om alla rollfält visas
     notes: '',
     activities: {},
     snapshot: null,
@@ -2449,6 +2516,7 @@
         if (state.handover.orderHandover === undefined) state.handover.orderHandover = 3;
         if (state.handover.archHandover === undefined) state.handover.archHandover = 5;
         if (state.handover.tekStartup === undefined) state.handover.tekStartup = 10;
+        if (state.uiMode === undefined) state.uiMode = 'standard';
         // Migrera gamla roller utan enabled/unit till nytt schema
         if (Array.isArray(state.roles)) {
           state.roles.forEach(r => {
@@ -4180,6 +4248,24 @@
     el.style.display = '';
   }
 
+  function applyUiMode() {
+    const mode = state.uiMode || 'standard';
+    document.body.classList.toggle('ui-mode-standard', mode === 'standard');
+    document.body.classList.toggle('ui-mode-advanced', mode === 'advanced');
+    const btn = document.getElementById('ui-mode-btn');
+    const icon = document.getElementById('ui-mode-icon');
+    const label = document.getElementById('ui-mode-label');
+    if (btn) btn.classList.toggle('advanced-on', mode === 'advanced');
+    if (icon) icon.textContent = mode === 'advanced' ? '⚙' : '⚙';
+    if (label) label.textContent = mode === 'advanced' ? 'Dölj avancerat' : 'Visa avancerat';
+  }
+
+  function toggleUiMode() {
+    state.uiMode = (state.uiMode === 'advanced') ? 'standard' : 'advanced';
+    saveState();
+    applyUiMode();
+  }
+
   function updateHandoverSummary() {
     const el = document.getElementById('handover-summary');
     if (!el) return;
@@ -5412,6 +5498,7 @@
   renderConstraints();
   renderUtfallTable();
   bindGlobalInputs();
+  applyUiMode();
   updateHandoverPanel();
   updateHandoverSummary();
   updateStepProgress();
