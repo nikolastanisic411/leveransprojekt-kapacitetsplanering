@@ -4456,17 +4456,26 @@
     const hasGoal = +state.onskadVolym > 0;
     const hasDeadline = !!(state.deadline && state.deadline.length >= 8 && !isNaN(new Date(state.deadline).getTime()));
     const hasRoles = state.roles && state.roles.length > 0;
+    // För mix-typfall: mål är 'klart' bara om mix-summan matchar mål-volymen
+    let mixMatches = true;
+    if (state.leadtimeDays === 'mix' && hasGoal) {
+      const t1 = +state.typfallMix.tf1 || 0;
+      const t2 = +state.typfallMix.tf2 || 0;
+      const t3 = +state.typfallMix.tf3 || 0;
+      mixMatches = (t1 + t2 + t3) === +state.onskadVolym;
+    }
+    const goalComplete = hasGoal && mixMatches;
     const hasUtfall = state.utfall && Array.isArray(state.utfall.entries) && state.utfall.entries.length > 0;
 
     // Definiera vilket steg är 'done' / första incomplete = 'current'
     const stepDone = {
-      1: hasGoal,
+      1: goalComplete,
       2: hasDeadline,
-      3: hasGoal && hasDeadline,
+      3: goalComplete && hasDeadline,
       4: hasRoles,
-      5: hasGoal && hasDeadline && hasRoles,
-      6: hasGoal && hasDeadline && hasRoles,
-      7: hasGoal && hasDeadline && hasRoles,
+      5: goalComplete && hasDeadline && hasRoles,
+      6: goalComplete && hasDeadline && hasRoles,
+      7: goalComplete && hasDeadline && hasRoles,
       8: hasUtfall,
     };
     let currentStep = null;
