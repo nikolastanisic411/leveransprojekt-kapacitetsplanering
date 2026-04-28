@@ -967,6 +967,18 @@
     print-color-adjust: exact;
   }
   .planning-matrix tr.bottleneck .timebar-fill { background: #5C0E92; }
+  .planning-matrix .last-order-cell {
+    font-variant-numeric: tabular-nums;
+    color: #1a1a1a;
+  }
+  .planning-matrix .last-order-cell.muted {
+    color: #c8c6bf;
+    font-style: italic;
+  }
+  .planning-matrix tr.bottleneck .last-order-cell {
+    color: #5C0E92;
+    font-weight: 600;
+  }
   .planning-matrix tr.overshoots .timebar-fill { background: #9a2424; }
   .planning-matrix tr.overshoots .timebar-track {
     box-shadow: 0 0 0 1px #9a2424 inset;
@@ -2613,6 +2625,24 @@
   function roleEffectivePerDay(role) {
     return roleCapPerDay(role) * roleHitrate(role);
   }
+  // Rundar ett datum bakåt till början av rollens takt-enhet
+  // - 'dag': ingen rundning
+  // - 'vecka': bakåt till måndag i den veckan
+  // - 'månad': bakåt till 1:a i den månaden
+  function roundBackwardToUnit(date, unit) {
+    const d = new Date(date);
+    if (unit === 'månad') {
+      d.setDate(1);
+    } else if (unit === 'vecka') {
+      // getDay: 0=söndag, 1=måndag, ..., 6=lördag
+      const day = d.getDay();
+      // Antal dagar att gå tillbaka för att hamna på måndag (1)
+      const back = day === 0 ? 6 : day - 1;
+      d.setDate(d.getDate() - back);
+    }
+    return d;
+  }
+
   // Aktuella typfall: vilka tf:s är aktuella givet vald typfall (eller mix)
   function currentTypfalls() {
     if (state.leadtimeDays === 'mix') {
@@ -3226,6 +3256,7 @@
         <th>Effektiv takt</th>
         <th>Måste börja senast</th>
         <th>Klar senast</th>
+        <th>Sista beställning</th>
         <th class="timebar-cell">Tidsspann ↔ deadline</th>
       </tr>
     `;
@@ -3233,6 +3264,22 @@
 
     const tbody = document.createElement('tbody');
     const fmt = d => d.toLocaleDateString('sv-SE');
+
+    // Sista beställningsdatum för Nätarkitekt:
+    // = deadline − typfall-ledtid (kalenderdagar) − 1/Nätarkitekt-takt_per_dag (kalenderdagar)
+    // Rundas bakåt till början av Nätarkitektens takt-enhet (vecka/månad/dag).
+    // Visas bara när Nätarkitekt deltar i aktuellt typfall (annars är hen redan filtrerad).
+    const archRole = data.find(x => /arkitekt/i.test(x.role.name));
+    let archLastOrderDate = null;
+    if (archRole) {
+      const effLtWorkdays = getEffectiveLeadtime();
+      const ltCalDays = effLtWorkdays * 7 / 5; // konvertera arbetsdagar till kalenderdagar
+      const archDailyRaw = roleCapPerDay(archRole.role); // egen kap/dag (ej hitrate)
+      const archProcDays = archDailyRaw > 0 ? 1 / archDailyRaw : 0;
+      const last = new Date(deadline);
+      last.setDate(last.getDate() - Math.ceil(ltCalDays) - Math.ceil(archProcDays));
+      archLastOrderDate = roundBackwardToUnit(last, archRole.role.unit);
+    }
 
     data.forEach((d, i) => {
       const tr = document.createElement('tr');
@@ -3244,6 +3291,10 @@
         : d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' <span class="takt-detail">(flaskhals)</span>' : '');
       const barPct = isFinite(d.daysNeeded) ? Math.min(100, (d.daysNeeded / maxDays) * 100) : 0;
 
+      const isArch = (d === archRole);
+      const sistaCell = (isArch && archLastOrderDate)
+        ? '<td class="last-order-cell">' + fmt(archLastOrderDate) + '</td>'
+        : '<td class="last-order-cell muted">—</td>';
       tr.innerHTML = `
         <td class="num">${i + 1}</td>
         <td class="role-cell">${escapeHtml(d.role.name)}${d.isBottleneck ? ' ⚑' : ''}</td>
@@ -3252,6 +3303,7 @@
         <td>${effLabel}</td>
         <td>${fmt(d.mastBorjaSenast)}</td>
         <td>${fmt(d.klarSenast)}</td>
+        ${sistaCell}
         <td class="timebar-cell">
           <div class="timebar-track" title="${Math.round(d.daysNeeded)} dagar">
             <div class="timebar-fill" style="width: ${barPct.toFixed(1)}%;"></div>
@@ -3273,6 +3325,11 @@
       summaryHtml += 'Flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> taktar ut hela kedjan på ' +
         bottleneck.effectiveRate.toFixed(1) + '/dag och måste börja senast <strong>' +
         fmt(bottleneck.mastBorjaSenast) + '</strong> för att hinna med ' + Math.round(V) + ' st.';
+    }
+    if (archLastOrderDate && archRole) {
+      const unitWord = archRole.role.unit === 'månad' ? 'månadsstart' : (archRole.role.unit === 'vecka' ? 'måndag' : 'dag');
+      summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> måste lägga sin sista beställning senast <strong>' +
+        fmt(archLastOrderDate) + '</strong> (rundat till ' + unitWord + ' utifrån takt-enhet ' + archRole.role.unit + ').';
     }
     if (overshooters.length > 0) {
       summaryHtml += ' <span class="matrix-warning">⚠ ' + overshooters.length + ' roll' +
