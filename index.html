@@ -4331,7 +4331,11 @@
     const el = document.getElementById('per-subset-row');
     if (!el) return;
     if (state.leadtimeDays !== 'mix') {
-      // Single TF — ingen poäng att visa breakdown
+      el.style.display = 'none';
+      return;
+    }
+    // Visa inte falska 0/50-siffror om vi inte har giltiga indata att räkna på
+    if (!monthsAvailable || monthsAvailable <= 0 || !bottleneckEffDay || bottleneckEffDay <= 0) {
       el.style.display = 'none';
       return;
     }
