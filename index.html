@@ -377,7 +377,7 @@
 
   .role-header {
     display: grid;
-    grid-template-columns: 22px 22px 24px 1fr 46px 30px 56px 56px 52px 52px 60px 56px 84px 22px;
+    grid-template-columns: 22px 22px 24px 1fr 46px 30px 56px 56px 52px 52px 60px 112px 100px 22px;
     gap: 4px;
     align-items: center;
     padding: 8px 0;
@@ -391,12 +391,21 @@
   .role-header .col-takt { text-align: center; }
   .role-header .col-cap { text-align: right; }
   .role-header .col-tak, .role-header .col-hit { text-align: right; }
-  .role-header .col-tf { text-align: center; }
+  .role-header .col-tf, .role-header .col-spann { text-align: center; }
+  .role-header .header-sub {
+    display: block;
+    font-size: 9px;
+    color: #c8c6bf;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-top: 1px;
+  }
   .role-header .col-spann { text-align: center; }
 
   .role-row {
     display: grid;
-    grid-template-columns: 22px 22px 24px 1fr 46px 30px 56px 56px 52px 52px 60px 56px 84px 22px;
+    grid-template-columns: 22px 22px 24px 1fr 46px 30px 56px 56px 52px 52px 60px 112px 100px 22px;
     gap: 4px;
     align-items: center;
     padding: 10px 0;
@@ -509,10 +518,19 @@
   }
 
   .role-row .role-spann {
-    display: flex;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 4px;
+    row-gap: 1px;
     align-items: center;
-    justify-content: center;
+  }
+  .role-row .role-spann .spann-sublabel {
+    font-size: 9px;
+    color: #a8a8a3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1;
   }
   .role-row .role-spann input {
     width: 100%;
@@ -520,18 +538,15 @@
     padding: 4px 6px;
     border: 0.5px solid #d8d6cf;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 12px;
     text-align: center;
     font-variant-numeric: tabular-nums;
     background: #ffffff;
-    color: #4a4a45;
+    color: #1a1a1a;
+    font-weight: 500;
     font-family: inherit;
   }
   .role-row .role-spann input:focus { outline: none; border-color: #1a1a1a; }
-  .role-row .role-spann .spann-sep {
-    color: #a8a8a3;
-    font-size: 10px;
-  }
   .role-row .count-with-snitt {
     display: flex;
     flex-direction: column;
@@ -546,30 +561,36 @@
   }
   .role-row .role-tf-group {
     display: flex;
-    gap: 2px;
+    gap: 4px;
     align-items: center;
     justify-content: center;
   }
-  .role-row .role-tf-group label {
+  .role-row .role-tf-pill {
     display: inline-flex;
     align-items: center;
-    gap: 1px;
-    font-size: 10px;
-    color: #6b6b66;
+    justify-content: center;
+    min-width: 30px;
+    padding: 4px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 0.5px solid #d8d6cf;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #a8a8a3;
     cursor: pointer;
-    padding: 2px 3px;
-    border-radius: 3px;
-    transition: background 0.1s;
+    user-select: none;
+    transition: all 0.12s;
+    font-family: inherit;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  .role-row .role-tf-group label:hover { background: #f4f2eb; }
-  .role-row .role-tf-group input[type=checkbox] {
-    width: 11px;
-    height: 11px;
-    margin: 0;
-    cursor: pointer;
-    accent-color: #5C0E92;
+  .role-row .role-tf-pill:hover { border-color: #5C0E92; color: #5C0E92; }
+  .role-row .role-tf-pill.active {
+    background: #5C0E92;
+    color: #ffffff;
+    border-color: #5C0E92;
   }
-  .role-row .role-tf-group label.checked { color: #5C0E92; font-weight: 500; }
+  .role-row .role-tf-pill.active:hover { background: #6B0FA8; border-color: #6B0FA8; }
   .role-row.not-in-typfall {
     opacity: 0.4;
   }
@@ -619,6 +640,17 @@
   .role-row .unit-select:focus { outline: none; border-color: #1a1a1a; }
   .role-row .unit-select:hover { border-color: #a8a6a0; }
 
+  .roles-empty-state {
+    margin-top: 12px;
+    padding: 16px 20px;
+    background: #FFF8E5;
+    border: 0.5px solid #F4D78A;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #6B5A1F;
+    line-height: 1.5;
+  }
+  .roles-empty-state strong { color: #1a1a1a; }
   .add-role-row {
     margin-top: 12px;
     display: flex;
@@ -1589,7 +1621,9 @@
     .tt::after, .tt::before { display: none !important; }
 
     /* === ROLLISTA: 5 kolumner (num, namn, antal, takt, kap/dag) === */
-    .role-cap-input, .role-hitrate-input, .role-tf-group, .role-spann { display: none !important; }
+    .role-cap-input, .role-hitrate-input, .role-spann { display: none !important; }
+    .role-tf-group { display: flex !important; gap: 2px; }
+    .role-tf-pill { font-size: 9px !important; padding: 1px 3px !important; min-width: 0 !important; }
     .klart-per-roll { background: transparent !important; border: none !important; padding: 0 !important; margin: 0 0 12px !important; }
     .per-subset-row { background: transparent !important; border: none !important; padding: 0 !important; margin: 0 0 12px !important; }
     .utfall-card .utfall-controls,
@@ -1858,15 +1892,16 @@
     <div></div>
     <div class="col-takt"><span class="tt" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
     <div class="col-takt">Enhet</div>
-    <div class="col-tak"><span class="tt" data-tip="Hårt tak per dag. Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak/dag</span></div>
+    <div class="col-tak"><span class="tt" data-tip="Hårt tak per roll i samma enhet som takt (dag/vecka/månad). Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak</span><span class="header-sub">per takt-enhet</span></div>
     <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent. Lämna tomt = använd den globala hitraten.">Hit %</span></div>
     <div class="col-cap"><span class="tt" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
-    <div class="col-tf"><span class="tt" data-tip="Vilka typfall denna roll deltar i. Roller utan markering för aktivt typfall exkluderas från flaskhalsberäkningen.">Typfall</span></div>
-    <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span></div>
+    <div class="col-tf"><span class="tt" data-tip="Klicka pillerna för att markera vilka typfall rollen deltar i. Roller utan markering för aktivt typfall räknas inte med.">Typfall</span><span class="header-sub">klicka pill</span></div>
+    <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span><span class="header-sub">min – max</span></div>
     <div></div>
   </div>
 
   <div id="roles-container"></div>
+  <div class="roles-empty-state" id="roles-empty-state" style="display:none"></div>
 
   <div class="add-role-row">
     <button class="add-row" onclick="addRole()">+ Lägg till roll</button>
@@ -2184,6 +2219,18 @@
     });
   }
 
+  function updateRolesEmptyState() {
+    const el = document.getElementById('roles-empty-state');
+    if (!el) return;
+    if (state.roles.length === 0) { el.style.display = 'none'; return; }
+    const active = activeRoles();
+    if (active.length > 0) { el.style.display = 'none'; return; }
+    const tfNames = currentTypfalls().map(tf => tf.toUpperCase()).join(', ');
+    el.innerHTML = '<strong>⚠ Inga roller deltar i aktuellt typfall (' + tfNames + ').</strong> ' +
+      'Klicka på TF-pillerna i någon rollrad för att aktivera den i detta typfall, eller välj annat typfall ovanför.';
+    el.style.display = '';
+  }
+
   function renderRoles() {
     const container = document.getElementById('roles-container');
     container.innerHTML = '';
@@ -2197,10 +2244,8 @@
       const capVal = (role.cap !== null && role.cap !== undefined && role.cap !== '') ? role.cap : '';
       const hitrateVal = (role.hitrate !== null && role.hitrate !== undefined && role.hitrate !== '') ? role.hitrate : '';
       const tf = role.typfalls || { tf1: true, tf2: true, tf3: true };
-      const tfBox = (k, label) => `
-        <label class="${tf[k] ? 'checked' : ''}" title="Deltar i Typfall ${label}">
-          <input type="checkbox" data-id="${role.id}" data-field="tf-${k}" ${tf[k] ? 'checked' : ''}>${label}
-        </label>`;
+      const tfPill = (k, label) => `
+        <button type="button" class="role-tf-pill ${tf[k] ? 'active' : ''}" data-id="${role.id}" data-field="tf-${k}" title="Klicka för att togglade — ${tf[k] ? 'avmarkera' : 'aktivera'} rollen i Typfall ${label}">${label}</button>`;
       row.innerHTML = `
         <input type="checkbox" class="role-checkbox" ${role.enabled !== false ? 'checked' : ''} data-id="${role.id}" data-field="enabled" title="Räkna med rollen i kalkylen">
         <div class="drag-handle" title="Dra för att sortera om">⋮⋮</div>
@@ -2217,13 +2262,14 @@
           <option value="vecka" ${role.unit === 'vecka' ? 'selected' : ''}>/vecka</option>
           <option value="månad" ${role.unit === 'månad' ? 'selected' : ''}>/månad</option>
         </select>
-        <input type="number" class="role-cap-input" value="${capVal}" min="0" step="0.5" placeholder="—" data-id="${role.id}" data-field="cap" title="Hårt tak per dag (lämna tomt = inget tak)">
+        <input type="number" class="role-cap-input" value="${capVal}" min="0" step="0.5" placeholder="—" data-id="${role.id}" data-field="cap" title="Hårt tak i ${role.unit === 'vecka' ? '/vecka' : role.unit === 'månad' ? '/månad' : '/dag'} (lämna tomt = inget tak)">
         <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="${state.hitrate}" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent (lämna tomt = global)">
         <div class="cap" id="cap-${role.id}">—</div>
-        <div class="role-tf-group">${tfBox('tf1', '1')}${tfBox('tf2', '2')}${tfBox('tf3', '3')}</div>
+        <div class="role-tf-group">${tfPill('tf1', 'TF1')}${tfPill('tf2', 'TF2')}${tfPill('tf3', 'TF3')}</div>
         <div class="role-spann">
+          <span class="spann-sublabel">min</span>
+          <span class="spann-sublabel">max</span>
           <input type="number" min="0" max="${role.max}" step="1" value="${role.countMin !== undefined && role.countMin !== null ? role.countMin : role.count}" data-id="${role.id}" data-field="countMin" title="Min antal personer (lägsta-scenario)">
-          <span class="spann-sep">–</span>
           <input type="number" min="0" max="${role.max}" step="1" value="${role.countMax !== undefined && role.countMax !== null ? role.countMax : role.count}" data-id="${role.id}" data-field="countMax" title="Max antal personer (högsta-scenario)">
         </div>
         <button class="remove-btn" data-id="${role.id}" title="Ta bort roll">×</button>
@@ -2232,6 +2278,22 @@
       attachDragHandlers(row, role.id);
       row.querySelectorAll('input, button, select').forEach(el => {
         el.addEventListener('mousedown', (e) => e.stopPropagation());
+      });
+    });
+
+    // TF-pill click toggle
+    container.querySelectorAll('button.role-tf-pill[data-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        const field = e.currentTarget.dataset.field;
+        const role = state.roles.find(r => r.id === id);
+        if (!role) return;
+        if (!role.typfalls) role.typfalls = { tf1: true, tf2: true, tf3: true };
+        const tfKey = field.substring(3);
+        role.typfalls[tfKey] = !role.typfalls[tfKey];
+        saveState();
+        renderRoles();
+        recalc();
       });
     });
 
@@ -2281,6 +2343,8 @@
         renderActivities();
       });
     });
+
+    updateRolesEmptyState();
 
     container.querySelectorAll('.remove-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -3009,12 +3073,18 @@
     if (role.unit === 'månad') return t / 21;
     return t;
   }
-  // Returnerar kapacitet per dag (count × takt/dag, begränsad av ev. cap)
+  // Returnerar kapacitet per dag (count × takt/dag, begränsad av ev. cap).
+  // Cap tolkas i ROLLENS takt-enhet — så 5 i 'Tak' med unit='vecka' betyder 5/vecka (= 1/dag).
   function roleCapPerDay(role) {
     const raw = role.count * rolePerDay(role);
-    const cap = +role.cap;
-    if (role.cap !== null && role.cap !== undefined && role.cap !== '' && cap > 0) {
-      return Math.min(raw, cap);
+    const capRaw = +role.cap;
+    if (role.cap !== null && role.cap !== undefined && role.cap !== '' && capRaw > 0) {
+      // Konvertera cap till per-dag baserat på rollens unit
+      let capPerDay;
+      if (role.unit === 'vecka') capPerDay = capRaw / 5;
+      else if (role.unit === 'månad') capPerDay = capRaw / 21;
+      else capPerDay = capRaw; // 'dag' default
+      return Math.min(raw, capPerDay);
     }
     return raw;
   }
