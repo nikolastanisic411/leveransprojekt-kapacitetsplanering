@@ -81,12 +81,28 @@
   .section {
     font-size: 13px;
     color: #8a8a85;
-    margin: 28px 0 12px;
+    margin: 32px 0 14px;
     padding-bottom: 6px;
     border-bottom: 0.5px solid #d8d6cf;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+  }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #5C0E92;
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 10px;
+    vertical-align: middle;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .section .saved-indicator {
     font-size: 11px;
@@ -1056,6 +1072,103 @@
   .utfall-summary { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid #e5e3dc; font-size: 12px; color: #4a4a45; line-height: 1.5; }
   .utfall-summary strong { color: #1a1a1a; }
   .utfall-empty { color: #a8a8a3; font-style: italic; padding: 20px 8px; font-size: 12px; }
+  .handover-card {
+    background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin: 32px 0 24px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .handover-card .handover-header {
+    border-bottom: 0.5px solid rgba(255,255,255,0.18);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+  .handover-card .handover-title {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .handover-card .handover-icon { font-size: 22px; }
+  .handover-card .handover-subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.4;
+  }
+  .handover-card .handover-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .handover-card .ho-role {
+    background: rgba(255,255,255,0.10);
+    border: 0.5px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .handover-card .ho-role.bottleneck {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.4);
+  }
+  .handover-card .ho-role .ho-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .handover-card .ho-role .ho-flag {
+    font-size: 10px;
+    background: rgba(255,255,255,0.25);
+    padding: 2px 7px;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .handover-card .ho-role .ho-stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin: 4px 0;
+    color: rgba(255,255,255,0.85);
+  }
+  .handover-card .ho-role .ho-stat strong {
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .handover-card .ho-role .ho-period {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 0.5px solid rgba(255,255,255,0.18);
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.45;
+  }
+  .handover-card .ho-role .ho-period strong { color: #ffffff; }
+  .handover-card .handover-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 0.5px solid rgba(255,255,255,0.18);
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.5;
+  }
+  .handover-card.empty .handover-content {
+    color: rgba(255,255,255,0.7);
+    font-style: italic;
+    font-size: 12px;
+    padding: 20px 0;
+    text-align: center;
+    display: block;
+  }
   .pipeline-flow-line {
     font-size: 12px;
     color: #4a4a45;
@@ -1785,7 +1898,7 @@
   <div class="per-subset-row" id="per-subset-row" style="display:none"></div>
   <div class="klart-per-roll" id="klart-per-roll" style="display:none"></div>
 
-  <div class="section">Mål &amp; behov</div>
+  <div class="section"><span class="step-num">1</span>Mål &amp; behov <span class="section-hint">— vad ska levereras och hur lång ledtid har varje typfall?</span></div>
 
   <div class="target-cell">
     <label>Mål — total volym<span class="required-mark" title="Sätt ditt projekts målvolym — annars är jämförelsen mot mål meningslös">*</span>
@@ -1847,7 +1960,7 @@
     <div class="outcome" id="suggest-outcome">—</div>
   </div>
 
-  <div class="section">Parametrar</div>
+  <div class="section"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
 
   <div class="global-row">
     <div class="role-name"><span class="tt" data-tip="Andel leveranser som lyckas på första försöket. Resten är 'bomkörningar' som måste göras om eller skrivas av — de kostar tid men ger ingen volym.">Hitrate</span>
@@ -1879,7 +1992,7 @@
   </div>
 
   <div class="section">
-    <span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— dra ⋮⋮ för att sortera om</span></span>
+    <span><span class="step-num">3</span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— justera roller, takter och vilka typfall de deltar i</span></span>
     <span class="saved-indicator" id="saved-indicator">sparat</span>
   </div>
 
@@ -1912,7 +2025,7 @@
     <div class="pf-row" id="pf-row"></div>
   </div>
 
-  <div class="section">Aktuell takt <span class="section-hint">— med nuvarande bemanning</span></div>
+  <div class="section"><span class="step-num">4</span>Resultat — aktuell takt <span class="section-hint">— vad ger din setup för utfall?</span></div>
 
   <div class="summary">
     <div class="stat">
@@ -1958,7 +2071,19 @@
     <div id="roles-matrix"></div>
   </div>
 
-  <div class="section">Utfall <span class="section-hint">— rapportera faktiskt antal klara leveranser per period och jämför mot plan</span></div>
+  <div class="handover-card" id="handover-card">
+    <div class="handover-header">
+      <div class="handover-title">
+        <span class="handover-icon">📋</span>
+        Översikt — för resursägare
+      </div>
+      <div class="handover-subtitle">Sammanfattning per roll: vad ska levereras, från när till när, i vilken takt</div>
+    </div>
+    <div class="handover-content" id="handover-content"></div>
+    <div class="handover-footer" id="handover-footer"></div>
+  </div>
+
+  <div class="section"><span class="step-num">5</span>Utfall — uppföljning <span class="section-hint">— rapportera in vad ni faktiskt hinner per period så vi kan jämföra mot planen</span></div>
 
   <div class="utfall-card">
     <div class="utfall-controls">
@@ -1976,7 +2101,7 @@
     <div class="utfall-summary" id="utfall-summary"></div>
   </div>
 
-  <div class="section">Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
+  <div class="section"><span class="step-num">6</span>Scenario-output mot mål <span class="section-hint">— klarar setupen ovan respektive scenario? Klicka i fälten för att ändra.</span></div>
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
@@ -3298,8 +3423,6 @@
     const deadline = new Date(state.deadline);
     if (!state.deadline || isNaN(deadline.getTime())) {
       // Ingen deadline satt — visa neutralt tomt läge för deadline-baserade fält.
-      // Men process-flow + scenarios-beräkning ska fortfarande köra eftersom de
-      // bara beror på role-data (inte tid).
       const tEl = document.getElementById('timeline');
       if (tEl) tEl.innerHTML = '<strong>Ingen deadline satt.</strong> Sätt deadline för att se beräkningar mot tid.';
       const volEl = document.getElementById('vol-out');
@@ -3308,6 +3431,10 @@
       if (volSubEl) volSubEl.textContent = 'sätt deadline för att räkna fram volym';
       recalcScenarios();
       renderProcessFlow();
+      // Töm chart och matris med pedagogiska tomstate-meddelanden
+      drawChartEmptyState('Sätt deadline ovan för att se kumulativ volym över tid.');
+      drawMatrixEmptyState('Sätt deadline för att se backward-schemaläggning per roll.');
+      updateHandoverPanel();
       return;
     }
     const today = new Date();
@@ -3505,6 +3632,7 @@
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths, lowEffMonth, highEffMonth);
       drawRolesMatrix(potentialVolym, projektStartDate, deadline);
+      updateHandoverPanel();
       updateChartLegend(snapshotMonth !== null, false, false, hasSpread, hasUtfall);
       return;
     }
@@ -3513,6 +3641,7 @@
       currentSuggestion = null;
       drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths, lowEffMonth, highEffMonth);
       drawRolesMatrix(potentialVolym, projektStartDate, deadline);
+      updateHandoverPanel();
       updateChartLegend(snapshotMonth !== null, false, false, hasSpread, hasUtfall);
       return;
     }
@@ -3573,6 +3702,7 @@
     drawRolesMatrix(potentialVolym, projektStartDate, deadline);
     updatePerSubsetRow(monthsAvailable, minEff, effectiveRamp);
     updateKlartPerRoll();
+    updateHandoverPanel();
     updateActivityLabels();
   }
 
@@ -3720,6 +3850,77 @@
     }
     el.innerHTML = html;
     el.style.display = '';
+  }
+
+  function updateHandoverPanel() {
+    const card = document.getElementById('handover-card');
+    const content = document.getElementById('handover-content');
+    const footer = document.getElementById('handover-footer');
+    if (!card || !content || !footer) return;
+
+    const active = activeRoles();
+    const V = (state.onskadVolym && state.onskadVolym > 0) ? state.onskadVolym : 0;
+    const deadline = state.deadline ? new Date(state.deadline) : null;
+
+    if (active.length === 0 || V <= 0 || !deadline || isNaN(deadline.getTime())) {
+      card.classList.add('empty');
+      content.innerHTML = 'Sätt mål, deadline och bemanning för att se översikten för resursägare.';
+      footer.innerHTML = '';
+      return;
+    }
+
+    card.classList.remove('empty');
+    const dayMs = 1000 * 60 * 60 * 24;
+    const projektStartDate = (state.projektStart && state.projektStart.length >= 8) ? new Date(state.projektStart) : new Date();
+    const fmt = d => d.toLocaleDateString('sv-SE');
+
+    // Räkna pipeline-data per roll (samma logik som matrisen)
+    const minCap = Math.min(...active.map(r => roleCapPerDay(r)));
+    let cumulativeMin = Infinity;
+    const data = active.map((role, idx) => {
+      const ownRate = roleEffectivePerDay(role);
+      cumulativeMin = Math.min(cumulativeMin, ownRate);
+      const isBottleneck = Math.abs(roleCapPerDay(role) - minCap) < 1e-9;
+      return { role, idx, ownRate, effectiveRate: cumulativeMin, isBottleneck };
+    });
+
+    // Backward-schemalägg klart-datum per roll
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (i === data.length - 1) {
+        data[i].klarSenast = new Date(deadline);
+      } else {
+        const downstream = data[i+1];
+        const offsetDays = downstream.ownRate > 0 ? 1 / downstream.ownRate : 0;
+        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - offsetDays * dayMs);
+      }
+      const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
+      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * dayMs);
+    }
+
+    // Bygg roll-cards
+    let html = '';
+    data.forEach((d, i) => {
+      const roleClass = d.isBottleneck ? 'ho-role bottleneck' : 'ho-role';
+      const flag = d.isBottleneck ? '<span class="ho-flag">⚑ Flaskhals</span>' : '';
+      const dailyRate = d.ownRate.toFixed(1);
+      const unitDisplay = d.role.unit === 'vecka' ? '/vecka' : d.role.unit === 'månad' ? '/månad' : '/dag';
+      const ownRateInUnit = d.role.unit === 'vecka' ? (d.ownRate * 5).toFixed(1) : d.role.unit === 'månad' ? (d.ownRate * 21).toFixed(1) : d.ownRate.toFixed(1);
+      html += '<div class="' + roleClass + '">';
+      html += '<div class="ho-name">' + (i+1) + '. ' + escapeHtml(d.role.name) + flag + '</div>';
+      html += '<div class="ho-stat"><span>Antal att leverera</span><strong>' + Math.round(V) + ' st</strong></div>';
+      html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
+      html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + '</strong></div>';
+      html += '<div class="ho-period">';
+      html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + '<br>';
+      html += '<strong>Måste vara klar senast:</strong> ' + fmt(d.klarSenast);
+      html += '</div>';
+      html += '</div>';
+    });
+    content.innerHTML = html;
+
+    const bottleneck = data.find(d => d.isBottleneck);
+    footer.innerHTML = 'Total volym: <strong style="color:#fff">' + Math.round(V) + ' st</strong> till deadline <strong style="color:#fff">' + fmt(deadline) +
+      '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '');
   }
 
   function updateKlartPerRoll() {
@@ -3976,7 +4177,37 @@
     container.appendChild(summary);
   }
 
-    function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths, lowRate, highRate) {
+    // Visar pedagogiskt tomstate-meddelande i chart-card när data saknas
+  function drawChartEmptyState(message) {
+    const svg = document.getElementById('chart');
+    if (!svg) return;
+    svg.innerHTML = '';
+    const ns = 'http://www.w3.org/2000/svg';
+    svg.setAttribute('viewBox', '0 0 800 240');
+    const bg = document.createElementNS(ns, 'rect');
+    bg.setAttribute('x', 0); bg.setAttribute('y', 0);
+    bg.setAttribute('width', 800); bg.setAttribute('height', 240);
+    bg.setAttribute('fill', '#f8f6f0');
+    bg.setAttribute('rx', 8);
+    svg.appendChild(bg);
+    const txt = document.createElementNS(ns, 'text');
+    txt.setAttribute('x', 400); txt.setAttribute('y', 120);
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('font-size', '14');
+    txt.setAttribute('fill', '#8a8a85');
+    txt.setAttribute('font-family', 'inherit');
+    txt.textContent = message || 'Ingen data att visa.';
+    svg.appendChild(txt);
+  }
+
+  function drawMatrixEmptyState(message) {
+    const c = document.getElementById('roles-matrix');
+    if (!c) return;
+    c.innerHTML = '<div style="padding: 30px 16px; text-align:center; color:#8a8a85; font-size:13px; background:#f8f6f0; border-radius:8px;">' +
+      (message || 'Ingen data att visa.') + '</div>';
+  }
+
+  function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths, lowRate, highRate) {
     startDelayMonths = startDelayMonths || 0;
     lowRate = lowRate || rate;
     highRate = highRate || rate;
@@ -4796,6 +5027,7 @@
   renderConstraints();
   renderUtfallTable();
   bindGlobalInputs();
+  updateHandoverPanel();
   updateSnapshotUI();
   recalc();
 </script>
