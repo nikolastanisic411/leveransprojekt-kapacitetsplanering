@@ -3297,13 +3297,17 @@
 
     const deadline = new Date(state.deadline);
     if (!state.deadline || isNaN(deadline.getTime())) {
-      // Ingen deadline satt — visa neutralt tomt läge för deadline-baserade fält
+      // Ingen deadline satt — visa neutralt tomt läge för deadline-baserade fält.
+      // Men process-flow + scenarios-beräkning ska fortfarande köra eftersom de
+      // bara beror på role-data (inte tid).
       const tEl = document.getElementById('timeline');
       if (tEl) tEl.innerHTML = '<strong>Ingen deadline satt.</strong> Sätt deadline för att se beräkningar mot tid.';
       const volEl = document.getElementById('vol-out');
       if (volEl) volEl.textContent = '—';
       const volSubEl = document.getElementById('vol-sub');
       if (volSubEl) volSubEl.textContent = 'sätt deadline för att räkna fram volym';
+      recalcScenarios();
+      renderProcessFlow();
       return;
     }
     const today = new Date();
