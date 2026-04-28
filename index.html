@@ -4151,25 +4151,26 @@
   function updateSuggestion(targetMonthly, hitrate, margin, monthsLeft, titleText, bodyPrefix, comparisonRoles, effectiveStartMonths, leadtimeMonths, effectiveRamp) {
     if (effectiveRamp === undefined) effectiveRamp = state.rampMonths;
     if (targetMonthly <= 0 || hitrate <= 0 || state.roles.length === 0) {
-      // Försök ändå räkna ut en suggestion — den kanske kan baseras på basala tal
       const fallback = computeSuggestion();
-      currentSuggestion = fallback || null;
       const card = document.getElementById('suggest-card');
       const body = document.getElementById('suggest-body');
       const rolesEl = document.getElementById('suggest-roles');
       const outcomeEl = document.getElementById('suggest-outcome');
-      if (!fallback) {
-        if (card) card.classList.add('no-data');
-        if (body) body.innerHTML = 'Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.';
-        if (rolesEl) rolesEl.innerHTML = '';
-        if (outcomeEl) outcomeEl.innerHTML = '';
-      } else {
+      if (fallback && fallback.needed) {
+        currentSuggestion = fallback.needed;
         if (card) card.classList.remove('no-data');
         if (body) body.innerHTML = 'Förslaget bygger på basala värden — klicka för att applicera.';
         if (rolesEl) {
           const active = activeRoles();
-          rolesEl.innerHTML = active.map(r => '<div class="role-suggest"><div class="nm">' + escapeHtml(r.name) + '</div><div class="vl">' + (fallback[r.id] || 1) + ' st</div><div class="delta">förslag</div></div>').join('');
+          rolesEl.innerHTML = active.map(r => '<div class="role-suggest"><div class="nm">' + escapeHtml(r.name) + '</div><div class="vl">' + (fallback.needed[r.id] || 1) + ' st</div><div class="delta">förslag</div></div>').join('');
         }
+        if (outcomeEl) outcomeEl.innerHTML = '';
+      } else {
+        currentSuggestion = null;
+        if (card) card.classList.add('no-data');
+        const errMsg = (fallback && fallback.error) ? fallback.message : 'Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.';
+        if (body) body.innerHTML = errMsg;
+        if (rolesEl) rolesEl.innerHTML = '';
         if (outcomeEl) outcomeEl.innerHTML = '';
       }
       return;
@@ -4240,12 +4241,18 @@
   }
 
   // Beräknar en bemanningssuggestion självständigt — beror INTE på recalc-state.
-  // Returnerar { roleId: count } eller null om data saknas.
+  // Returnerar { needed: { roleId: count } } vid framgång, eller { error: 'kod', message: 'text' } vid fel.
   function computeSuggestion() {
-    if (!(+state.onskadVolym > 0)) return null;
-    if (!state.deadline) return null;
+    if (!(+state.onskadVolym > 0)) {
+      return { error: 'no_goal', message: 'Sätt målvolym i steg 1.' };
+    }
+    if (!state.deadline) {
+      return { error: 'no_deadline', message: 'Sätt deadline i steg 2.' };
+    }
     const deadline = new Date(state.deadline);
-    if (isNaN(deadline.getTime())) return null;
+    if (isNaN(deadline.getTime())) {
+      return { error: 'invalid_deadline', message: 'Deadline-datumet är ogiltigt — fyll i ett giltigt datum.' };
+    }
 
     const today = new Date();
     const projektStartDate = (state.projektStart && state.projektStart.length >= 8 && !isNaN(new Date(state.projektStart).getTime()))
@@ -4253,7 +4260,9 @@
     const monthsAvailable = (deadline.getFullYear() - projektStartDate.getFullYear()) * 12
       + (deadline.getMonth() - projektStartDate.getMonth())
       + (deadline.getDate() - projektStartDate.getDate()) / 30;
-    if (monthsAvailable <= 0) return null;
+    if (monthsAvailable <= 0) {
+      return { error: 'no_time', message: 'Deadline ligger före projektstart — välj senare deadline.' };
+    }
 
     const effLeadtimeDays = getEffectiveLeadtime();
     const leadtimeMonths = effLeadtimeDays / 21;
@@ -4264,7 +4273,9 @@
       ? (effectiveStartMonths - 0.5 * effectiveRamp)
       : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(effectiveRamp, 0.001));
     const tm = effectiveMonths > 0 ? +state.onskadVolym / effectiveMonths : +state.onskadVolym;
-    if (tm <= 0) return null;
+    if (tm <= 0) {
+      return { error: 'no_capacity', message: 'Ingen positiv kapacitet kan beräknas — kontrollera mål, deadline och ledtid.' };
+    }
 
     const hitrate = (+state.hitrate || 90) / 100;
     const margin = (+state.margin || 0) / 100;
@@ -4272,28 +4283,34 @@
     const requiredDay = targetWithMargin / hitrate / 21;
 
     const active = activeRoles();
-    if (active.length === 0) return null;
+    if (active.length === 0) {
+      return { error: 'no_active_roles', message: 'Inga roller är aktiva i valt typfall — markera TF-pillerna eller välj annat typfall.' };
+    }
 
     const needed = {};
     active.forEach(r => {
       const perDay = rolePerDay(r);
       needed[r.id] = perDay > 0 ? Math.ceil(requiredDay / perDay) : 1;
     });
-    return needed;
+    return { needed };
   }
 
   function applySuggestion() {
-    let suggestion = currentSuggestion;
-    if (!suggestion) {
-      // Räkna om standalone — så förslaget funkar oavsett recalc-tillstånd
-      suggestion = computeSuggestion();
+    let needed = currentSuggestion;
+    if (!needed || typeof needed !== 'object' || !Object.keys(needed).length) {
+      const result = computeSuggestion();
+      if (result && result.error) {
+        alert('Kan inte räkna förslag: ' + result.message);
+        return;
+      }
+      if (result && result.needed) needed = result.needed;
     }
-    if (!suggestion) {
-      alert('Förslaget kan inte beräknas. Säkerställ att mål-volym, deadline och minst en roll finns.');
+    if (!needed) {
+      alert('Förslaget kan inte beräknas. Kontrollera mål, deadline och roller.');
       return;
     }
     state.roles.forEach(r => {
-      const sug = suggestion[r.id];
+      const sug = needed[r.id];
       if (sug !== undefined) {
         const newCount = Math.min(Math.max(1, sug), r.max);
         r.count = newCount;
@@ -4301,7 +4318,7 @@
         r.countMax = newCount;
       }
     });
-    currentSuggestion = suggestion;
+    currentSuggestion = needed;
     saveState();
     applyStateToInputs();
     renderRoles();
