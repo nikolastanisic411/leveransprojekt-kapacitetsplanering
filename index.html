@@ -61,6 +61,11 @@
     border-color: #1a1a1a;
   }
   .toolbar button.primary:hover { background: #333; }
+  /* Focus styles för bättre tangentbordsnavigation */
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid #5C0E92;
+    outline-offset: 2px;
+  }
   .toolbar button.toolbar-reset {
     color: #9a2424;
     border-color: #f0c0c0;
