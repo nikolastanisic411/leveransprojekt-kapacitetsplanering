@@ -289,8 +289,8 @@
 
   .role-header {
     display: grid;
-    grid-template-columns: 22px 22px 24px 1fr 50px 46px 50px 54px 50px 50px 64px 64px 24px;
-    gap: 5px;
+    grid-template-columns: 22px 22px 24px 1fr 46px 38px 46px 50px 46px 46px 60px 64px 60px 22px;
+    gap: 4px;
     align-items: center;
     padding: 8px 0;
     font-size: 11px;
@@ -304,11 +304,12 @@
   .role-header .col-cap { text-align: right; }
   .role-header .col-tak, .role-header .col-hit { text-align: right; }
   .role-header .col-tf { text-align: center; }
+  .role-header .col-spann { text-align: center; }
 
   .role-row {
     display: grid;
-    grid-template-columns: 22px 22px 24px 1fr 50px 46px 50px 54px 50px 50px 64px 64px 24px;
-    gap: 5px;
+    grid-template-columns: 22px 22px 24px 1fr 46px 38px 46px 50px 46px 46px 60px 64px 60px 22px;
+    gap: 4px;
     align-items: center;
     padding: 10px 0;
     border-bottom: 0.5px solid #f0eee7;
@@ -418,6 +419,42 @@
     justify-self: center;
   }
 
+  .role-row .role-spann {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+  }
+  .role-row .role-spann input {
+    width: 100%;
+    min-width: 0;
+    padding: 4px 2px;
+    border: 0.5px solid #d8d6cf;
+    border-radius: 4px;
+    font-size: 11px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    background: #ffffff;
+    color: #4a4a45;
+    font-family: inherit;
+  }
+  .role-row .role-spann input:focus { outline: none; border-color: #1a1a1a; }
+  .role-row .role-spann .spann-sep {
+    color: #a8a8a3;
+    font-size: 10px;
+  }
+  .role-row .count-with-snitt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+  }
+  .role-row .count-with-snitt .snitt {
+    font-size: 9px;
+    color: #5C0E92;
+    font-weight: 500;
+    margin-top: 1px;
+  }
   .role-row .role-tf-group {
     display: flex;
     gap: 2px;
@@ -1435,7 +1472,7 @@
     .tt::after, .tt::before { display: none !important; }
 
     /* === ROLLISTA: 5 kolumner (num, namn, antal, takt, kap/dag) === */
-    .role-cap-input, .role-hitrate-input, .role-tf-group { display: none !important; }
+    .role-cap-input, .role-hitrate-input, .role-tf-group, .role-spann { display: none !important; }
     .role-row {
       grid-template-columns: 30px 1fr 50px 80px 80px;
       border-bottom: 0.5px solid #d8d6cf;
@@ -1604,6 +1641,7 @@
     <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent. Lämna tomt = använd den globala hitraten.">Hit %</span></div>
     <div class="col-cap"><span class="tt" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
     <div class="col-tf"><span class="tt" data-tip="Vilka typfall denna roll deltar i. Roller utan markering för aktivt typfall exkluderas från flaskhalsberäkningen.">Typfall</span></div>
+    <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span></div>
     <div></div>
   </div>
 
@@ -1798,11 +1836,11 @@
   const STORAGE_KEY = 'maxtakt-state-v7';
 
   const defaultRoles = [
-    { id: 'r1', name: 'Orderläggare', count: 2, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
-    { id: 'r2', name: 'Leveranskoordinator', count: 1, takt: 5, unit: 'dag', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
-    { id: 'r3', name: 'Nätarkitekt', count: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r4', name: 'Tekniker', count: 4, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r5', name: 'NOC', count: 1, takt: 4, unit: 'dag', enabled: true, max: 20, cap: 4, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+    { id: 'r1', name: 'Orderläggare', count: 2, countMin: 2, countMax: 2, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r2', name: 'Leveranskoordinator', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'dag', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r3', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+    { id: 'r4', name: 'Tekniker', count: 4, countMin: 4, countMax: 4, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
+    { id: 'r5', name: 'NOC', count: 1, countMin: 1, countMax: 1, takt: 4, unit: 'dag', enabled: true, max: 20, cap: 4, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
   ];
   const defaultScenarios = [
     { id: 's1', name: 'Scenario 1 — baseline', target: 25, unit: 'månad' },
@@ -1873,6 +1911,8 @@
             if (r.cap === undefined) r.cap = null;
             if (r.hitrate === undefined) r.hitrate = null;
             if (!r.typfalls) r.typfalls = { tf1: true, tf2: true, tf3: true };
+            if (r.countMin === undefined || r.countMin === null) r.countMin = r.count;
+            if (r.countMax === undefined || r.countMax === null) r.countMax = r.count;
           });
           // Om Nätarkitekt saknas i sparad state, lägg till den (en gång)
           const hasArkitekt = state.roles.some(r =>
@@ -2042,7 +2082,10 @@
         <div class="role-num">${idx + 1}</div>
         <input type="text" class="role-name-input" value="${escapeHtml(role.name)}" data-id="${role.id}" data-field="name">
         <input type="range" min="1" max="${role.max}" value="${role.count}" step="1" data-id="${role.id}" data-field="count">
-        <div class="count" id="count-${role.id}">${role.count}</div>
+        <div class="count count-with-snitt">
+          <span id="count-${role.id}">${role.count}</span>
+          <span class="snitt" id="snitt-${role.id}" style="display:none">—</span>
+        </div>
         <input type="number" value="${role.takt}" min="0" step="0.5" data-id="${role.id}" data-field="takt">
         <select class="unit-select" data-id="${role.id}" data-field="unit">
           <option value="dag" ${role.unit === 'dag' ? 'selected' : ''}>/dag</option>
@@ -2053,6 +2096,11 @@
         <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="${state.hitrate}" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent (lämna tomt = global)">
         <div class="cap" id="cap-${role.id}">—</div>
         <div class="role-tf-group">${tfBox('tf1', '1')}${tfBox('tf2', '2')}${tfBox('tf3', '3')}</div>
+        <div class="role-spann">
+          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMin !== undefined && role.countMin !== null ? role.countMin : role.count}" data-id="${role.id}" data-field="countMin" title="Min antal personer (lägsta-scenario)">
+          <span class="spann-sep">–</span>
+          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMax !== undefined && role.countMax !== null ? role.countMax : role.count}" data-id="${role.id}" data-field="countMax" title="Max antal personer (högsta-scenario)">
+        </div>
         <button class="remove-btn" data-id="${role.id}" title="Ta bort roll">×</button>
       `;
       container.appendChild(row);
@@ -2072,6 +2120,14 @@
         else if (field === 'count') role.count = +e.target.value;
         else if (field === 'takt') role.takt = +e.target.value;
         else if (field === 'unit') role.unit = e.target.value;
+        else if (field === 'countMin') {
+          const v = +e.target.value;
+          role.countMin = isNaN(v) ? role.count : Math.max(0, Math.min(role.max, v));
+        }
+        else if (field === 'countMax') {
+          const v = +e.target.value;
+          role.countMax = isNaN(v) ? role.count : Math.max(0, Math.min(role.max, v));
+        }
         else if (field === 'cap') {
           const v = e.target.value.trim();
           role.cap = (v === '' || +v <= 0) ? null : +v;
@@ -2123,7 +2179,7 @@
 
   function addRole() {
     const newId = 'r' + Date.now();
-    state.roles.push({ id: newId, name: 'Ny roll', count: 1, takt: 5, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } });
+    state.roles.push({ id: newId, name: 'Ny roll', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } });
     saveState();
     renderRoles();
     renderActivities();
@@ -2625,6 +2681,24 @@
   function roleEffectivePerDay(role) {
     return roleCapPerDay(role) * roleHitrate(role);
   }
+  // Returnerar kapacitet per dag givet ett alternativt antal personer (för min/max-scenarier)
+  function roleCapPerDayWithCount(role, alternativeCount) {
+    const raw = (+alternativeCount || 0) * rolePerDay(role);
+    const cap = +role.cap;
+    if (role.cap !== null && role.cap !== undefined && role.cap !== '' && cap > 0) {
+      return Math.min(raw, cap);
+    }
+    return raw;
+  }
+  function roleEffectivePerDayWithCount(role, alternativeCount) {
+    return roleCapPerDayWithCount(role, alternativeCount) * roleHitrate(role);
+  }
+  // Snitt-bemanning per roll = (min + max) / 2
+  function roleAvgCount(role) {
+    const mn = (role.countMin === undefined || role.countMin === null) ? role.count : +role.countMin;
+    const mx = (role.countMax === undefined || role.countMax === null) ? role.count : +role.countMax;
+    return (mn + mx) / 2;
+  }
   // Rundar ett datum bakåt till början av rollens takt-enhet
   // - 'dag': ingen rundning
   // - 'vecka': bakåt till måndag i den veckan
@@ -2718,8 +2792,21 @@
       const eff = roleEffectivePerDay(role);
       const capEl = document.getElementById('cap-' + role.id);
       const countEl = document.getElementById('count-' + role.id);
+      const snittEl = document.getElementById('snitt-' + role.id);
       if (capEl) capEl.textContent = eff.toFixed(1) + ' /dag';
       if (countEl) countEl.textContent = role.count;
+      // Snitt visas bara när spannet är icke-noll
+      if (snittEl) {
+        const mn = (role.countMin === undefined || role.countMin === null) ? role.count : +role.countMin;
+        const mx = (role.countMax === undefined || role.countMax === null) ? role.count : +role.countMax;
+        if (mn !== mx) {
+          const avg = ((mn + mx) / 2);
+          snittEl.textContent = '⌀ ' + (Number.isInteger(avg) ? avg : avg.toFixed(1));
+          snittEl.style.display = '';
+        } else {
+          snittEl.style.display = 'none';
+        }
+      }
     });
 
     document.getElementById('hitrate-v').textContent = state.hitrate + '%';
@@ -2772,6 +2859,17 @@
 
     const effDay = minEff;
     const effMonth = effDay * 21;
+
+    // Min/max-scenarier: räkna effDay/effMonth med countMin respektive countMax
+    const lowEffs = active.map(r => roleEffectivePerDayWithCount(r, r.countMin !== undefined && r.countMin !== null ? r.countMin : r.count));
+    const highEffs = active.map(r => roleEffectivePerDayWithCount(r, r.countMax !== undefined && r.countMax !== null ? r.countMax : r.count));
+    const lowEffDay = Math.min(...lowEffs);
+    const highEffDay = Math.min(...highEffs);
+    const lowEffMonth = lowEffDay * 21;
+    const highEffMonth = highEffDay * 21;
+    const hasSpread = (lowEffMonth !== effMonth) || (highEffMonth !== effMonth);
+    // Snitt-bemanning aggregerat över aktiva roller (för sammanfattning / banner)
+    const totalSnittPersonal = active.reduce((sum, r) => sum + roleAvgCount(r), 0);
 
     document.getElementById('day-out').textContent = effDay.toFixed(1);
     document.getElementById('month-out').textContent = Math.round(effMonth);
@@ -2903,7 +3001,12 @@
 
     const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
     document.getElementById('banner-takt').textContent = Math.round(effMonth) + '/mån';
-    document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · vid ' + state.hitrate + '% hitrate';
+    if (hasSpread) {
+      document.getElementById('banner-takt-sub').innerHTML =
+        effDay.toFixed(1) + '/dag · spann ' + lowEffDay.toFixed(1) + '–' + highEffDay.toFixed(1);
+    } else {
+      document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · vid ' + state.hitrate + '% hitrate';
+    }
     document.getElementById('banner-bottleneck').textContent = bottleneck.name;
     document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.val.toFixed(0) + '/dag — sätter taket';
     if (state.onskadVolym > 0) {
@@ -2966,17 +3069,17 @@
     if (monthsLeft <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
-      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths, lowEffMonth, highEffMonth);
       drawRolesMatrix(potentialVolym, projektStartDate, deadline);
-      updateChartLegend(snapshotMonth !== null, false, false);
+      updateChartLegend(snapshotMonth !== null, false, false, hasSpread);
       return;
     }
     if (effectiveStartMonths <= 0) {
       document.getElementById('suggest-card').classList.remove('show');
       currentSuggestion = null;
-      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths);
+      drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, null, effectiveRamp, leadtimeMonths, null, false, startDelayMonths, lowEffMonth, highEffMonth);
       drawRolesMatrix(potentialVolym, projektStartDate, deadline);
-      updateChartLegend(snapshotMonth !== null, false, false);
+      updateChartLegend(snapshotMonth !== null, false, false, hasSpread);
       return;
     }
     // Räkna baklänges med hänsyn till ramp OCH ledtid:
@@ -3004,8 +3107,8 @@
       }
     }
 
-    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, effectiveRamp, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths);
-    updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft));
+    drawChart(effMonth, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, effectiveRamp, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths, lowEffMonth, highEffMonth);
+    updateChartLegend(snapshotMonth !== null, targetMonthly > 0, !!(forecastMonths && !forecastTooFar && forecastMonths > monthsLeft), hasSpread);
 
     // Uppdatera prognostext under grafen
     const forecastEl = document.getElementById('forecast-text');
@@ -3037,13 +3140,17 @@
     updateActivityLabels();
   }
 
-  function updateChartLegend(hasSnapshot, hasTarget, hasForecast) {
+  function updateChartLegend(hasSnapshot, hasTarget, hasForecast, hasSpread) {
     const legend = document.getElementById('chart-legend');
     let html = `
       <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
       <div class="legend-item"><span class="legend-line deadline"></span> Deadline</div>
       <div class="legend-item"><span class="legend-dot"></span> Volym vid deadline</div>
     `;
+    if (hasSpread) {
+      html += `<div class="legend-item"><span class="legend-line" style="border-top:1.5px dashed #9a2424;background:none"></span> Lägsta scenario (min-bemanning)</div>`;
+      html += `<div class="legend-item"><span class="legend-line" style="border-top:1.5px dashed #1d6e35;background:none"></span> Högsta scenario (max-bemanning)</div>`;
+    }
     if (hasTarget) {
       html += `<div class="legend-item"><span class="legend-line target"></span> Vad som krävs (mål)</div>`;
     }
@@ -3340,8 +3447,10 @@
     container.appendChild(summary);
   }
 
-    function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths) {
+    function drawChart(rate, monthsLeft, potentialVolym, snapshotMonth, targetMonthly, rampMonths, leadtimeMonths, forecastMonths, forecastTooFar, startDelayMonths, lowRate, highRate) {
     startDelayMonths = startDelayMonths || 0;
+    lowRate = lowRate || rate;
+    highRate = highRate || rate;
     const svg = document.getElementById('chart');
     svg.innerHTML = '';
     const W = 800, H = 340;
@@ -3596,6 +3705,58 @@
     fillPath.setAttribute('d', fillD);
     fillPath.setAttribute('fill', 'url(#volume-gradient)');
     svg.appendChild(fillPath);
+
+    // === SPANN-KURVOR (lägsta/högsta scenario) ===
+    if ((lowRate !== rate || highRate !== rate) && (lowRate > 0 || highRate > 0)) {
+      const cumAtRate = (t, r) => {
+        const startT = t - lt - startDelayMonths;
+        if (startT <= 0 || r <= 0) return 0;
+        if (!rampMonths || rampMonths <= 0) return r * startT;
+        if (startT <= rampMonths) return 0.5 * r * startT * startT / rampMonths;
+        return 0.5 * r * rampMonths + (startT - rampMonths) * r;
+      };
+      // Fyllt område mellan låg och hög
+      const lowPoints = [];
+      const highPoints = [];
+      for (let i = 0; i <= numPoints; i++) {
+        const m = (monthsLeft * i) / numPoints;
+        lowPoints.push({ x: xScale(m), y: yScale(cumAtRate(m, lowRate)) });
+        highPoints.push({ x: xScale(m), y: yScale(cumAtRate(m, highRate)) });
+      }
+      const spreadPath = document.createElementNS(ns, 'path');
+      let spreadD = `M ${lowPoints[0].x} ${lowPoints[0].y} `;
+      lowPoints.forEach(p => { spreadD += `L ${p.x} ${p.y} `; });
+      for (let i = highPoints.length - 1; i >= 0; i--) {
+        spreadD += `L ${highPoints[i].x} ${highPoints[i].y} `;
+      }
+      spreadD += 'Z';
+      spreadPath.setAttribute('d', spreadD);
+      spreadPath.setAttribute('fill', '#5C0E92');
+      spreadPath.setAttribute('opacity', '0.08');
+      svg.appendChild(spreadPath);
+      // Streckad linje för låg-scenariot
+      const lowPath = document.createElementNS(ns, 'path');
+      let lowD = `M ${lowPoints[0].x} ${lowPoints[0].y} `;
+      for (let i = 1; i < lowPoints.length; i++) lowD += `L ${lowPoints[i].x} ${lowPoints[i].y} `;
+      lowPath.setAttribute('d', lowD);
+      lowPath.setAttribute('fill', 'none');
+      lowPath.setAttribute('stroke', '#9a2424');
+      lowPath.setAttribute('stroke-width', '1.2');
+      lowPath.setAttribute('stroke-dasharray', '3 3');
+      lowPath.setAttribute('opacity', '0.7');
+      svg.appendChild(lowPath);
+      // Streckad linje för hög-scenariot
+      const highPath = document.createElementNS(ns, 'path');
+      let highD = `M ${highPoints[0].x} ${highPoints[0].y} `;
+      for (let i = 1; i < highPoints.length; i++) highD += `L ${highPoints[i].x} ${highPoints[i].y} `;
+      highPath.setAttribute('d', highD);
+      highPath.setAttribute('fill', 'none');
+      highPath.setAttribute('stroke', '#1d6e35');
+      highPath.setAttribute('stroke-width', '1.2');
+      highPath.setAttribute('stroke-dasharray', '3 3');
+      highPath.setAttribute('opacity', '0.7');
+      svg.appendChild(highPath);
+    }
 
     // === HUVUDLINJEN — splittra vid projektstart om det finns ett glapp från idag ===
     const splitT = startDelayMonths > 0 && startDelayMonths < monthsLeft ? startDelayMonths : 0;
