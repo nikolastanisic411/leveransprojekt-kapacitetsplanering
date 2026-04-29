@@ -4133,6 +4133,18 @@
     document.getElementById('rampMonths').addEventListener('input', (e) => {
       state.rampMonths = +e.target.value; const v = document.getElementById('rampMonths-v'); if (v) v.textContent = state.rampMonths + ' mån'; saveState(); updateApplyCtaState(); recalc();
     });
+    const reworkEl = document.getElementById('reworkRate');
+    if (reworkEl) {
+      reworkEl.addEventListener('input', (e) => {
+        const v = +e.target.value;
+        state.reworkRate = isNaN(v) || v < 0 ? 0 : Math.min(100, v);
+        const vEl = document.getElementById('reworkRate-v');
+        if (vEl) vEl.textContent = state.reworkRate + '%';
+        saveState();
+        updateApplyCtaState();
+        recalc();
+      });
+    }
     // Centraliserad refresh efter datum-ändringar
     const refreshAfterDateChange = () => {
       // Datum-ändring gör att tidigare suggestion kan vara inaktuell
@@ -4281,6 +4293,10 @@
       if (lt2) lt2.value = state.typfallLedtider.tf2 ?? 60;
       if (lt3) lt3.value = state.typfallLedtider.tf3 ?? 100;
     }
+    const rwEl = document.getElementById('reworkRate');
+    const rwV = document.getElementById('reworkRate-v');
+    if (rwEl) rwEl.value = state.reworkRate || 0;
+    if (rwV) rwV.textContent = (state.reworkRate || 0) + '%';
     if (state.utfall && state.utfall.granularity) {
       ['dag', 'vecka', 'månad'].forEach(g => {
         const btn = document.getElementById('utfall-gran-' + g);
