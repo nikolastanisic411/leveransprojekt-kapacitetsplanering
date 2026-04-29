@@ -4739,6 +4739,13 @@
           if (typeof r.takt !== 'number' || !isFinite(r.takt) || r.takt < 0) r.takt = 1;
           if (!r.max || r.max < 1) r.max = 50;
           if (!r.typfalls) r.typfalls = { tf1: true, tf2: true, tf3: true };
+          // Migration: handoverToNext per roll (var tidigare global state.handover)
+          if (typeof r.handoverToNext !== 'number') {
+            const n = (r.name || '').toLowerCase();
+            if (/order/.test(n)) r.handoverToNext = (state.handover && state.handover.orderHandover) || 3;
+            else if (/arkitekt/.test(n)) r.handoverToNext = ((state.handover && state.handover.archHandover) || 5) + ((state.handover && state.handover.tekStartup) || 10);
+            else r.handoverToNext = 0;
+          }
         });
         saveState();
         try { sessionStorage.removeItem('maxtakt-scroll-y'); } catch (_) {}
