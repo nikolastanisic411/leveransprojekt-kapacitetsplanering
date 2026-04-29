@@ -4597,6 +4597,7 @@
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
     // Ladda om sidan
+    try { sessionStorage.removeItem('maxtakt-scroll-y'); } catch (_) {}
     location.reload();
   }
 
@@ -4701,7 +4702,8 @@
           if (!r.typfalls) r.typfalls = { tf1: true, tf2: true, tf3: true };
         });
         saveState();
-        location.reload();
+        try { sessionStorage.removeItem('maxtakt-scroll-y'); } catch (_) {}
+    location.reload();
       } catch (err) {
         alert('Kunde inte läsa filen: ' + err.message);
       }
