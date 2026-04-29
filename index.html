@@ -4676,6 +4676,9 @@
     saveState();
     applyStateToInputs();
     renderRoles();
+    updateApplyCtaState();
+    updateNextActionBanner();
+    updateStepProgress();
     recalc();
     const target = document.getElementById('step-4');
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
