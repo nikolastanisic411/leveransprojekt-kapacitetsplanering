@@ -3514,9 +3514,6 @@
     document.getElementById('rampMonths').addEventListener('input', (e) => {
       state.rampMonths = +e.target.value; saveState(); recalc();
     });
-    document.getElementById('projektStart').addEventListener('input', (e) => {
-      state.projektStart = e.target.value; saveState(); recalc();
-    });
     // Centraliserad refresh efter datum-ändringar
     const refreshAfterDateChange = () => {
       saveState();
