@@ -6087,25 +6087,22 @@
       el.style.display = 'none';
       return;
     }
-    // Summera perRole över alla utfalls-perioder
-    const sums = {};
-    state.utfall.entries.forEach(e => {
-      if (!e.perRole) return;
-      Object.keys(e.perRole).forEach(roleId => {
-        sums[roleId] = (sums[roleId] || 0) + (+e.perRole[roleId] || 0);
-      });
-    });
-    const roles = state.roles.filter(r => r.enabled !== false);
-    if (roles.length === 0) { el.style.display = 'none'; return; }
-    let html = '<span class="klart-label">Klart per roll:</span>';
-    roles.forEach((r, i) => {
-      const n = sums[r.id] || 0;
-      html += '<span class="klart-role">';
-      html += '<span class="klart-role-name">' + escapeHtml(r.name) + '</span>';
-      html += '<span class="klart-role-num">' + n + '</span>';
-      html += '</span>';
-      if (i < roles.length - 1) html += '<span class="klart-sep">·</span>';
-    });
+    // Nya formatet (utlagt+levererat): visa total levererat istället för per-roll
+    const totalLevererat = state.utfall.entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+    const totalUtlagt = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+    const hitrate = totalUtlagt > 0 ? Math.round((totalLevererat / totalUtlagt) * 100) : 0;
+    if (totalLevererat === 0 && totalUtlagt === 0) {
+      el.style.display = 'none';
+      return;
+    }
+    let html = '<span class="klart-label">Rapporterat utfall:</span>';
+    html += '<span class="klart-role"><span class="klart-role-name">Utlagt</span><span class="klart-role-num">' + fmtNum(totalUtlagt) + '</span></span>';
+    html += '<span class="klart-sep">·</span>';
+    html += '<span class="klart-role"><span class="klart-role-name">Levererat</span><span class="klart-role-num">' + fmtNum(totalLevererat) + '</span></span>';
+    if (totalUtlagt > 0) {
+      html += '<span class="klart-sep">·</span>';
+      html += '<span class="klart-role"><span class="klart-role-name">Hitrate</span><span class="klart-role-num">' + hitrate + '%</span></span>';
+    }
     el.innerHTML = html;
     el.style.display = '';
   }
