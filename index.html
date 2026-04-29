@@ -4514,6 +4514,7 @@
     const t = +role.takt || 0;
     if (role.unit === 'vecka') return t / 5;
     if (role.unit === 'månad') return t / 21;
+    if (role.unit === 'år') return t / 252;
     return t;
   }
   // Returnerar kapacitet per dag (count × takt/dag, begränsad av ev. cap).
