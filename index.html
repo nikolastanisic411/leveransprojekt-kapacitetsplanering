@@ -3428,9 +3428,9 @@
       const item = document.createElement('div');
       item.className = 'checklist-item' + (c.done ? ' checked' : '');
       item.innerHTML = `
-        <input type="checkbox" data-id="${c.id}" ${c.done ? 'checked' : ''}>
-        <input type="text" data-id="${c.id}" value="${escapeHtml(c.text)}" placeholder="t.ex. NOC klarar bara 4 klarrapporter/dag">
-        <button class="cl-remove" data-id="${c.id}" title="Ta bort">×</button>
+        <input type="checkbox" data-id="${c.id}" ${c.done ? 'checked' : ''} aria-label="Markera begränsning som åtgärdad">
+        <input type="text" data-id="${c.id}" value="${escapeHtml(c.text)}" placeholder="t.ex. NOC klarar bara 4 klarrapporter/dag" aria-label="Beskriv begränsning">
+        <button class="cl-remove" data-id="${c.id}" title="Ta bort" aria-label="Ta bort begränsning">×</button>
       `;
       container.appendChild(item);
     });
