@@ -2510,17 +2510,17 @@
   <p class="required-legend">Fält märkta med <span class="required-mark" aria-hidden="true">*</span> påverkar resultatet — fyll i ditt projekts värden.</p>
 
   <div class="toolbar">
-    <button onclick="window.print()" aria-label="Skriv ut eller spara som PDF" title="Skriv ut eller spara som PDF">🖨 Skriv ut / PDF</button>
+    <button onclick="window.print()" aria-label="Skriv ut eller spara som PDF" title="Skriv ut eller spara som PDF">Skriv ut / PDF</button>
     <span class="toolbar-sep"></span>
-    <button id="snapshot-btn" onclick="markSnapshot()" title="Spara setupen som referens — den blir streckad linje i grafen att jämföra mot">📌 Markera som nuläge</button>
-    <button id="revert-btn" onclick="revertToSnapshot()" title="Gå tillbaka till markerat nuläge" style="display: none;">↩ Återgå till nuläge</button>
-    <button id="clear-snapshot-btn" onclick="clearSnapshot()" title="Ta bort markerat nuläge" style="display: none;">✕ Ta bort nuläge</button>
+    <button id="snapshot-btn" onclick="markSnapshot()" title="Spara setupen som referens — den blir streckad linje i grafen att jämföra mot">Markera som nuläge</button>
+    <button id="revert-btn" onclick="revertToSnapshot()" title="Gå tillbaka till markerat nuläge" style="display: none;">Återgå till nuläge</button>
+    <button id="clear-snapshot-btn" onclick="clearSnapshot()" title="Ta bort markerat nuläge" style="display: none;">Ta bort nuläge</button>
     <span class="toolbar-sep"></span>
-    <button onclick="exportJson()" aria-label="Exportera setup som JSON-fil" title="Spara hela setupen + utfall som JSON-fil för backup eller att dela med kollegor">💾 Exportera</button>
-    <button onclick="document.getElementById('json-import-input').click()" aria-label="Importera setup från JSON-fil" title="Ladda in en tidigare exporterad setup">📂 Importera</button>
+    <button onclick="exportJson()" aria-label="Exportera setup som JSON-fil" title="Spara hela setupen + utfall som JSON-fil för backup eller att dela med kollegor">Exportera</button>
+    <button onclick="document.getElementById('json-import-input').click()" aria-label="Importera setup från JSON-fil" title="Ladda in en tidigare exporterad setup">Importera</button>
     <input type="file" id="json-import-input" accept=".json,application/json" style="display: none;" onchange="importJson(event)">
     <span class="toolbar-sep"></span>
-    <button class="toolbar-reset" onclick="resetAll()" aria-label="Återställ allt — rensa alla värden" title="Rensa alla värden, roller och rapporterade utfall — börja på blank planering">🗑 Återställ allt</button>
+    <button class="toolbar-reset" onclick="resetAll()" aria-label="Återställ allt — rensa alla värden" title="Rensa alla värden, roller och rapporterade utfall — börja på blank planering">Återställ allt</button>
 
     <span class="snapshot-info" id="snapshot-info" role="status" aria-live="polite">inget nuläge markerat</span>
   </div>
