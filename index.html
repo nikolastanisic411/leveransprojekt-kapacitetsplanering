@@ -294,8 +294,11 @@
   .next-action-banner button:active { transform: scale(0.98); }
   .next-action-banner button:hover { background: #6B0FA8; }
   @media print {
-    .plan-status-pill { display: flex !important; break-inside: avoid; }
+    .plan-status-pill { display: flex !important; break-inside: avoid; animation: none !important; box-shadow: none !important; }
     .plan-status-pill .psp-arrow { display: none; }
+    .handover-card { break-inside: avoid; page-break-inside: avoid; }
+    .handover-card .ho-role { break-inside: avoid; }
+    .ho-apply-all-btn, .ho-apply-btn, .ho-copy-btn { display: none !important; }
   }
   /* G1.16: Plan-status-pill — proaktiv early warning högst upp */
   .plan-status-pill {
@@ -2959,7 +2962,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.36-ALT-KEYS" aria-busy="true">
+<body data-build="2026-04-29-G1.37-PRINT-INSIGHT" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3386,7 +3389,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.36-ALT-KEYS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.37-PRINT-INSIGHT</span>
   </div>
 
 </div>
