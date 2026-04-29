@@ -6204,8 +6204,13 @@
         else handoverDays = 1; // generisk handover-fallback
         data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
       }
-      const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
+      // Nätarkitekt får extra volym från TF1-rework om reworkRate > 0
+      const isArch = /arkitekt/i.test(data[i].role.name || '');
+      const rwVol = isArch ? getReworkVolume() : 0;
+      const effV = V + rwVol;
+      const daysNeeded = data[i].effectiveRate > 0 ? effV / data[i].effectiveRate : Infinity;
       data[i].daysNeeded = daysNeeded;
+      data[i].reworkVolume = rwVol;
       data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
       data[i].overshoots = data[i].mastBorjaSenast < projStart;
     }
