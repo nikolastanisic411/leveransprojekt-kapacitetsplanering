@@ -4396,6 +4396,9 @@
     state.activities = {};
     state.utfall = { granularity: 'vecka', entries: [] };
     state.handover = { orderHandover: 3, archHandover: 5, tekStartup: 10 };
+    state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
+    state.suggestionApplied = false;
+    state.uiMode = 'standard';
     // Rensa localStorage — alla versioner för säkerhets skull
     try {
       for (let i = 1; i <= 10; i++) {
