@@ -6163,8 +6163,11 @@
     // Bygg roll-cards
     let html = '';
     data.forEach((d, i) => {
-      const roleClass = d.isBottleneck ? 'ho-role bottleneck' : 'ho-role';
-      const flag = d.isBottleneck ? '<span class="ho-flag">⚑ Flaskhals</span>' : '';
+      const classes = ['ho-role'];
+      if (d.isBottleneck) classes.push('bottleneck');
+      if (d.overshoots) classes.push('overshoots');
+      const roleClass = classes.join(' ');
+      const flag = (d.overshoots ? '<span class="ho-flag warn">⚠ Hinner inte</span> ' : '') + (d.isBottleneck ? '<span class="ho-flag">⚑ Flaskhals</span>' : '');
       const dailyRate = d.ownRate.toFixed(1);
       const unitDisplay = d.role.unit === 'vecka' ? '/vecka' : d.role.unit === 'månad' ? '/månad' : '/dag';
       const ownRateInUnit = d.role.unit === 'vecka' ? (d.ownRate * 5).toFixed(1) : d.role.unit === 'månad' ? (d.ownRate * 21).toFixed(1) : d.ownRate.toFixed(1);
@@ -6174,7 +6177,8 @@
       html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
       html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + '</strong></div>';
       html += '<div class="ho-period">';
-      html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + '<br>';
+      const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(omöjligt — datum passerat)</span>' : '';
+      html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + startWarn + '<br>';
       html += '<strong>Måste vara klar senast:</strong> ' + fmt(d.klarSenast);
       html += '</div>';
       html += '</div>';
