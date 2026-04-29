@@ -3496,7 +3496,7 @@
         <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target" inputmode="numeric" aria-label="Scenario-måltakt">
         <div class="target-suffix">
           <span>leveranser /</span>
-          <select class="scen-unit-select" data-id="${scen.id}" data-field="unit">
+          <select class="scen-unit-select" data-id="${scen.id}" data-field="unit" aria-label="Scenario tidsenhet">
             <option value="dag" ${u === 'dag' ? 'selected' : ''}>dag</option>
             <option value="vecka" ${u === 'vecka' ? 'selected' : ''}>vecka</option>
             <option value="månad" ${u === 'månad' ? 'selected' : ''}>månad</option>
