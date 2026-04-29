@@ -4807,6 +4807,8 @@
   }
 
   function applySuggestion() {
+    document.body.style.cursor = 'wait';
+    setTimeout(() => { document.body.style.cursor = ''; }, 600);
     let needed = currentSuggestion;
     if (!needed || typeof needed !== 'object' || !Object.keys(needed).length) {
       const result = computeSuggestion();
