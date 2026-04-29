@@ -2742,19 +2742,19 @@
 
   <div class="target-cell mix-row" id="mix-row" style="display: none;">
     <label>Antal per typfall
-      <span class="hint">summan ska matcha total volym</span>
+      <span class="hint">justera mix — total volym uppdateras automatiskt</span>
     </label>
     <div class="mix-fields">
       <div class="mix-field">
-        <span class="mix-lbl">Typfall 1<small>10 dagar</small></span>
+        <span class="mix-lbl">Typfall 1<small id="mix-lbl-tf1">10 dagar</small></span>
         <input type="number" id="mix-tf1" min="0" step="1" value="0" inputmode="numeric" aria-label="Antal Typfall 1-leveranser i mixen">
       </div>
       <div class="mix-field">
-        <span class="mix-lbl">Typfall 2<small>60 dagar</small></span>
+        <span class="mix-lbl">Typfall 2<small id="mix-lbl-tf2">60 dagar</small></span>
         <input type="number" id="mix-tf2" min="0" step="1" value="0" inputmode="numeric" aria-label="Antal Typfall 2-leveranser i mixen">
       </div>
       <div class="mix-field">
-        <span class="mix-lbl">Typfall 3<small>100 dagar</small></span>
+        <span class="mix-lbl">Typfall 3<small id="mix-lbl-tf3">100 dagar</small></span>
         <input type="number" id="mix-tf3" min="0" step="1" value="0" inputmode="numeric" aria-label="Antal Typfall 3-leveranser i mixen">
       </div>
       <div class="mix-summary" id="mix-summary">summa: 0 / 0 · viktad ledtid: — dagar</div>
@@ -4193,6 +4193,13 @@
     if (b1) b1.setAttribute('aria-label', 'Typfall 1 — ' + lt.tf1 + ' dagar ledtid');
     if (b2) b2.setAttribute('aria-label', 'Typfall 2 — ' + lt.tf2 + ' dagar ledtid');
     if (b3) b3.setAttribute('aria-label', 'Typfall 3 — ' + lt.tf3 + ' dagar ledtid');
+    // Mix-row labels
+    const ml1 = document.getElementById('mix-lbl-tf1');
+    const ml2 = document.getElementById('mix-lbl-tf2');
+    const ml3 = document.getElementById('mix-lbl-tf3');
+    if (ml1) ml1.textContent = lt.tf1 + ' dagar';
+    if (ml2) ml2.textContent = lt.tf2 + ' dagar';
+    if (ml3) ml3.textContent = lt.tf3 + ' dagar';
   }
 
     function updateTypfallButtons() {
