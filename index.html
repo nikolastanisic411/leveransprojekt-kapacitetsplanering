@@ -5151,14 +5151,15 @@
     const el = document.getElementById('handover-summary');
     if (!el) return;
     const h = getHandover();
-    const tf1 = h.orderHandover + 10;
-    const tf2 = h.orderHandover + h.archHandover + h.tekStartup + 60;
-    const tf3 = h.orderHandover + h.archHandover + h.tekStartup + 100;
+    const lt = getTypfallLedtider();
+    const tf1 = h.orderHandover + lt.tf1;
+    const tf2 = h.orderHandover + h.archHandover + h.tekStartup + lt.tf2;
+    const tf3 = h.orderHandover + h.archHandover + h.tekStartup + lt.tf3;
     el.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + h.orderHandover + ' + 10 = <strong>' + tf1 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + 60 = <strong>' + tf2 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + 100 = <strong>' + tf3 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + h.orderHandover + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
       '</div>';
   }
 
