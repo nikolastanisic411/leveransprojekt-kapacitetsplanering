@@ -2331,10 +2331,10 @@
       <span class="hint">tid per leverans från start till klar</span>
     </label>
     <div class="typfall-toggle">
-      <button id="tf-1" class="tf-btn active" onclick="setTypfall(10)">Typfall 1<span>10 dagar</span></button>
-      <button id="tf-2" class="tf-btn" onclick="setTypfall(60)">Typfall 2<span>60 dagar</span></button>
-      <button id="tf-3" class="tf-btn" onclick="setTypfall(100)">Typfall 3<span>100 dagar</span></button>
-      <button id="tf-mix" class="tf-btn" onclick="setTypfall('mix')">Blandat<span>viktad ledtid</span></button>
+      <button id="tf-1" class="tf-btn active" onclick="setTypfall(10)" aria-label="Typfall 1 — 10 dagar ledtid">Typfall 1<span>10 dagar</span></button>
+      <button id="tf-2" class="tf-btn" onclick="setTypfall(60)" aria-label="Typfall 2 — 60 dagar ledtid">Typfall 2<span>60 dagar</span></button>
+      <button id="tf-3" class="tf-btn" onclick="setTypfall(100)" aria-label="Typfall 3 — 100 dagar ledtid">Typfall 3<span>100 dagar</span></button>
+      <button id="tf-mix" class="tf-btn" onclick="setTypfall('mix')" aria-label="Blandat typfall — viktad ledtid">Blandat<span>viktad ledtid</span></button>
     </div>
   </div>
 
@@ -2560,8 +2560,8 @@
     <div class="utfall-controls">
       <div class="utfall-gran">
         <span class="utfall-gran-label">Granularitet:</span>
-        <button id="utfall-gran-dag" class="utfall-gran-btn" onclick="setUtfallGranularity('dag')">Per dag</button>
-        <button id="utfall-gran-vecka" class="utfall-gran-btn active" onclick="setUtfallGranularity('vecka')">Per vecka</button>
+        <button id="utfall-gran-dag" class="utfall-gran-btn" onclick="setUtfallGranularity('dag')" aria-label="Visa utfall per dag">Per dag</button>
+        <button id="utfall-gran-vecka" class="utfall-gran-btn active" onclick="setUtfallGranularity('vecka')" aria-label="Visa utfall per vecka">Per vecka</button>
         <button id="utfall-gran-månad" class="utfall-gran-btn" onclick="setUtfallGranularity('månad')">Per månad</button>
       </div>
     </div>
