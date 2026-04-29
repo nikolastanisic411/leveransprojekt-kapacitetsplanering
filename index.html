@@ -3360,7 +3360,7 @@
     if (!state.utfall) state.utfall = { granularity: 'vecka', entries: [] };
     const today = new Date();
     const id = 'u' + Date.now();
-    const entry = { id, period: today.toISOString().slice(0, 10), tf1: 0, tf2: 0, tf3: 0, perRole: {} };
+    const entry = { id, period: today.toISOString().slice(0, 10), utlagt: 0, levererat: 0, tf1: 0, tf2: 0, tf3: 0, perRole: {} };
     state.roles.forEach(r => { entry.perRole[r.id] = 0; });
     state.utfall.entries.push(entry);
     saveState();
@@ -3376,6 +3376,8 @@
     const entry = state.utfall.entries.find(e => e.id === id);
     if (!entry) return;
     if (field === 'period') entry.period = value;
+    else if (field === 'utlagt') entry.utlagt = Math.max(0, +value || 0);
+    else if (field === 'levererat') entry.levererat = Math.max(0, +value || 0);
     else if (field === 'tf1' || field === 'tf2' || field === 'tf3') entry[field] = +value || 0;
     else if (field.startsWith('role-')) {
       const roleId = field.substring(5);
@@ -3396,7 +3398,16 @@
   }
 
   function utfallEntryTotal(entry) {
+    // Bakåtkompatibilitet: föredra nya formatet (levererat) men fall tillbaka till tf-summa
+    if (entry && (entry.levererat !== undefined || entry.utlagt !== undefined)) {
+      return +entry.levererat || 0;
+    }
     return (+entry.tf1 || 0) + (+entry.tf2 || 0) + (+entry.tf3 || 0);
+  }
+  function utfallEntryUtlagt(entry) {
+    if (entry && entry.utlagt !== undefined) return +entry.utlagt || 0;
+    // Migrera: gamla entries hade ingen utlagt — anta samma som levererat
+    return utfallEntryTotal(entry);
   }
 
   // Returnerar kumulativ utfalls-array sorterad efter period:
