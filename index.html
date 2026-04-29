@@ -7310,10 +7310,15 @@
   } catch (_) {}
 
     // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
+  // Ctrl/Cmd+. = toggla Avancerat-läget
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       applySuggestion();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+      e.preventDefault();
+      toggleUiMode();
     }
   });
   updateSnapshotUI();
