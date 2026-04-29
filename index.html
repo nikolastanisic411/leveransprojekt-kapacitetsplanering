@@ -2436,7 +2436,7 @@
 
   <h1>Leveransprojekt — Kapacitetsplanering</h1>
   <p class="subtitle">Justera antal och takt per roll. Allt sparas automatiskt. <span class="tt subtitle-help" tabindex="0" data-tip="Verktyget guidar dig genom 8 steg: 1) sätt mål, 2) parametrar och deadline, 3) be om förslag, 4) finjustera bemanning, 5–7) granska resultat och scenarier, 8) följ upp utfall. Alla värden sparas i din webbläsare.">Hur funkar det?</span></p>
-  <p class="required-legend">Fält märkta med <span class="required-mark">*</span> påverkar resultatet — fyll i ditt projekts värden.</p>
+  <p class="required-legend">Fält märkta med <span class="required-mark" aria-hidden="true">*</span> påverkar resultatet — fyll i ditt projekts värden.</p>
 
   <div class="toolbar">
     <button onclick="window.print()" aria-label="Skriv ut eller spara som PDF" title="Skriv ut eller spara som PDF">🖨 Skriv ut / PDF</button>
@@ -2497,14 +2497,14 @@
   <div class="section" id="step-1"><span class="step-num">1</span>Mål &amp; behov <span class="section-hint">— vad ska levereras och hur lång ledtid har varje typfall?</span></div>
 
   <div class="target-cell">
-    <label>Mål — total volym<span class="required-mark" title="Sätt ditt projekts målvolym — annars är jämförelsen mot mål meningslös">*</span>
+    <label>Mål — total volym<span class="required-mark" title="Sätt ditt projekts målvolym — annars är jämförelsen mot mål meningslös" aria-hidden="true">*</span>
       <span class="hint">antal som ska vara klara till deadline</span>
     </label>
     <input type="number" id="onskad-volym" value="0" min="0" step="1" placeholder="t.ex. 390" inputmode="numeric" aria-label="Mål — total volym leveranser" title="Antal leveranser som ska vara klara till deadline" oninvalid="this.setCustomValidity('Sätt en målvolym större än 0')" oninput="this.setCustomValidity('')">
   </div>
 
   <div class="target-cell">
-    <label><span class="tt" tabindex="0" data-tip="Hur lång tid varje enskild leverans tar från start till klar. Påverkar när första leveranserna är färdiga och senaste möjliga startdatum för att hinna till deadline. Välj Blandat om volymen består av en mix av typfall.">Typfall (ledtid)</span><span class="required-mark" title="Välj typfall som matchar din leveranslängd — påverkar tidslinjen direkt">*</span>
+    <label><span class="tt" tabindex="0" data-tip="Hur lång tid varje enskild leverans tar från start till klar. Påverkar när första leveranserna är färdiga och senaste möjliga startdatum för att hinna till deadline. Välj Blandat om volymen består av en mix av typfall.">Typfall (ledtid)</span><span class="required-mark" title="Välj typfall som matchar din leveranslängd — påverkar tidslinjen direkt" aria-hidden="true">*</span>
       <span class="hint">tid per leverans från start till klar</span>
     </label>
     <div class="typfall-toggle">
@@ -2590,7 +2590,7 @@
   </div>
 
   <div class="target-cell">
-    <label>Deadline<span class="required-mark" title="Sätt ditt projekts deadline — annars räknas tiden mot ett godtyckligt datum">*</span>
+    <label>Deadline<span class="required-mark" title="Sätt ditt projekts deadline — annars räknas tiden mot ett godtyckligt datum" aria-hidden="true">*</span>
       <span class="hint">datumet då all kvantitet ska vara klar — backas tillbaka per roll med handover-tider</span>
     </label>
     <input type="date" id="deadline" value="" min="2020-01-01" max="2099-12-31" aria-label="Projektets deadline" required oninvalid="this.setCustomValidity('Sätt deadline för ditt projekt')" oninput="this.setCustomValidity('')">
@@ -2629,7 +2629,7 @@
   </div>
 
   <div class="section" id="step-4">
-    <span><span class="step-num">4</span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt">*</span> <span class="section-hint">— justera själv eller använd förslaget ovan som utgångspunkt</span> <span id="active-roles-indicator" class="active-roles-indicator"></span></span>
+    <span><span class="step-num">4</span>Bemanning &amp; kapacitet<span class="required-mark" title="Anpassa roller, antal personer och takt till ditt projekt" aria-hidden="true">*</span> <span class="section-hint">— justera själv eller använd förslaget ovan som utgångspunkt</span> <span id="active-roles-indicator" class="active-roles-indicator"></span></span>
     <span class="saved-indicator" id="saved-indicator" role="status" aria-live="polite">sparat</span>
   </div>
 
