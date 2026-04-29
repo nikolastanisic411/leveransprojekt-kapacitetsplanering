@@ -5469,19 +5469,32 @@
     });
 
     // === BACKWARD: per roll, räkna "klar senast" och "måste börja senast" ===
-    // klar_N = deadline. klar_i = klar_(i+1) - 1 / own_takt_(i+1) (en items processtid nedströms)
+    // BURST-modell: Varje roll måste vara klar med sista item innan nästa roll börjar sin batch.
+    // Detta speglar verkligheten där roller arbetar i faser vid stora volymer (nätarkitekter
+    // ritar klart innan tekniker börjar bygga).
+    // klar_N = deadline. klar_i = klar_(i+1) - V/rate_(i+1) - handover_(i→i+1)
+    const h = getHandover();
     for (let i = data.length - 1; i >= 0; i--) {
       if (i === data.length - 1) {
+        // Sista rollen är klar exakt på deadline
         data[i].klarSenast = new Date(deadline);
       } else {
         const downstream = data[i+1];
-        const offsetDays = downstream.ownRate > 0 ? 1 / downstream.ownRate : 0;
-        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - offsetDays * dayMs);
+        // Kalenderdagar = arbetsdagar × 7/5 (5 arbetsdagar per vecka)
+        const downstreamDaysCal = downstream.effectiveRate > 0 ? (V / downstream.effectiveRate) * 7 / 5 : 0;
+        // Handover mellan rollerna — försök matcha mot rollnamn
+        let handoverDays = 0;
+        const downName = (downstream.role.name || '').toLowerCase();
+        const thisName = (data[i].role.name || '').toLowerCase();
+        if (/order/.test(thisName) && /arkitekt/.test(downName)) handoverDays = h.orderHandover;
+        else if (/order/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.orderHandover;
+        else if (/arkitekt/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.archHandover + h.tekStartup;
+        else handoverDays = 1; // generisk handover-fallback
+        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
       }
       const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
       data[i].daysNeeded = daysNeeded;
-      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * dayMs);
-      // Hinns med endast om "måste börja senast" är ≥ projektstart
+      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
       data[i].overshoots = data[i].mastBorjaSenast < projStart;
     }
 
