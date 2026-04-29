@@ -5362,10 +5362,20 @@
     }
   }
 
-  // Scrolla mjukt till ett steg
+  // Scrolla mjukt till ett steg och fokusera primärt fält så användaren kan börja skriva direkt
   function scrollToStep(n) {
     const el = document.getElementById('step-' + n);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Auto-fokus på primärt fält — väntar tills scrollen är klar
+    setTimeout(() => {
+      let target = null;
+      if (n === 1) target = document.getElementById('onskad-volym');
+      else if (n === 2) target = document.getElementById('deadline');
+      else if (n === 3) target = document.getElementById('apply-cta-btn');
+      else if (n === 4) target = document.querySelector('input[type=range][data-field="count"]');
+      else if (n === 8) target = document.querySelector('.utfall-table input[type=date]');
+      if (target && target.focus) try { target.focus({ preventScroll: true }); } catch (_) {}
+    }, 350);
   }
 
   function updateHandoverPanel() {
