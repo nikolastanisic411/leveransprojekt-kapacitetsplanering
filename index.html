@@ -2968,7 +2968,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.47-SCEN-DELTA" aria-busy="true">
+<body data-build="2026-04-29-G1.48-TF-INFO" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3395,7 +3395,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.47-SCEN-DELTA</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.48-TF-INFO</span>
   </div>
 
 </div>
@@ -6908,6 +6908,34 @@
       }
       footerHtml += '<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.2);font-size:13px">';
       footerHtml += '<strong style="color:#fff">Prognos med nuvarande bemanning:</strong> klart <strong style="color:#fff">' + fmtDateWithWeek(lastRole.actualFinish) + '</strong> (' + prognosText + ').';
+      // G1.48: Per-typfall-info när TF-mix är ojämn — visa volym, andel, och vilka roller som hanterar varje TF
+      if (state.leadtimeDays === 'mix' && state.typfallMix) {
+        const mixTotal = (+state.typfallMix.tf1 || 0) + (+state.typfallMix.tf2 || 0) + (+state.typfallMix.tf3 || 0);
+        if (mixTotal > 0) {
+          const tfRows = [];
+          ['tf1','tf2','tf3'].forEach(tfKey => {
+            const vol = +state.typfallMix[tfKey] || 0;
+            if (vol <= 0) return;
+            const rolesForTf = active.filter(r => (r.typfalls || {tf1:true,tf2:true,tf3:true})[tfKey] !== false);
+            if (rolesForTf.length === 0) return;
+            const pct = Math.round((vol / mixTotal) * 100);
+            const roleNames = rolesForTf.map(r => escapeHtml(r.name)).join(' · ');
+            // Per-TF flaskhals = min effective rate bland roller som hanterar TF
+            const tfEffs = rolesForTf.map(r => roleEffectivePerDay(r));
+            const tfBottleneck = tfEffs.length > 0 ? Math.min(...tfEffs) : 0;
+            const tfDaysCal = tfBottleneck > 0 ? Math.round((vol / tfBottleneck) * 7 / 5) : null;
+            const tfLabel = tfKey.toUpperCase();
+            let row = '<strong style="color:#fff">' + tfLabel + '</strong> ' + vol + ' st (' + pct + ' %) via ' + roleNames;
+            if (tfDaysCal !== null) {
+              row += ' <span style="opacity:0.85">— ≈ ' + tfDaysCal + ' kalenderdagar isolerat</span>';
+            }
+            tfRows.push(row);
+          });
+          if (tfRows.length > 0) {
+            footerHtml += '<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.06);border-radius:6px;font-size:12px;line-height:1.6"><strong style="color:#fff">TF-mix:</strong><br>' + tfRows.join('<br>') + '<br><span style="opacity:0.7;font-size:11px">Notera: TFs delar resurser i samma pipeline — isolerade dagar är endast vägledande.</span></div>';
+          }
+        }
+      }
       // G1.13: Robusthets-flagga — hur tight är planen?
       const marginalDays = -projectFinishDelta; // positivt = marginal, negativt = försening
       let robustEmoji, robustLabel, robustColor, pillVariant;
