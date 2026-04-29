@@ -3655,7 +3655,7 @@
       state.hitrate = +e.target.value; document.getElementById('hitrate-v').textContent = state.hitrate + '%'; saveState(); updateApplyCtaState(); recalc();
     });
     document.getElementById('rampMonths').addEventListener('input', (e) => {
-      state.rampMonths = +e.target.value; saveState(); updateApplyCtaState(); recalc();
+      state.rampMonths = +e.target.value; const v = document.getElementById('rampMonths-v'); if (v) v.textContent = state.rampMonths + ' mån'; saveState(); updateApplyCtaState(); recalc();
     });
     // Centraliserad refresh efter datum-ändringar
     const refreshAfterDateChange = () => {
@@ -3710,7 +3710,7 @@
     onskadEl.addEventListener('input', onskadHandler);
     onskadEl.addEventListener('change', onskadHandler);
     document.getElementById('margin').addEventListener('input', (e) => {
-      state.margin = +e.target.value; saveState(); updateApplyCtaState(); recalc();
+      state.margin = +e.target.value; const v = document.getElementById('margin-v'); if (v) v.textContent = state.margin + '%'; saveState(); updateApplyCtaState(); recalc();
     });
     document.getElementById('notes').addEventListener('input', (e) => {
       state.notes = e.target.value; saveState();
