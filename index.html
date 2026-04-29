@@ -2968,7 +2968,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.45-FINAL" aria-busy="true">
+<body data-build="2026-04-29-G1.46-REWORK-CONSISTENT" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3395,7 +3395,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.45-FINAL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.46-REWORK-CONSISTENT</span>
   </div>
 
 </div>
@@ -6724,7 +6724,13 @@
         const handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
         data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
       }
-      const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
+      // Task #29: Nätarkitekt får extra last från TF1-rework
+      const isArch = /arkitekt/i.test(data[i].role.name || '');
+      const rwVol = isArch ? getReworkVolume() : 0;
+      data[i].reworkVolume = rwVol;
+      const effV = V + rwVol;
+      data[i].effV = effV;
+      const daysNeeded = data[i].effectiveRate > 0 ? effV / data[i].effectiveRate : Infinity;
       data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
       // overshoots: mastBorjaSenast < projektStart (eller idag om ingen projektstart)
       const today0 = new Date(); today0.setHours(0,0,0,0);
@@ -6735,8 +6741,8 @@
       const availCalDays = Math.max(0, (data[i].klarSenast.getTime() - refStart.getTime()) / dayMs);
       const availWorkDays = availCalDays * 5 / 7;
       data[i].availWorkDays = availWorkDays;
-      // Krävd effektiv takt per dag för att hinna V items
-      const requiredEffDay = availWorkDays > 0 ? V / availWorkDays : Infinity;
+      // Krävd effektiv takt per dag för att hinna effV items (inkl. rework)
+      const requiredEffDay = availWorkDays > 0 ? effV / availWorkDays : Infinity;
       // Per-person effektiv takt = rollens nuvarande effektiva takt / antal personer
       const perPersonEff = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
       const reqHeadcount = (perPersonEff > 0 && isFinite(requiredEffDay)) ? Math.ceil(requiredEffDay / perPersonEff) : Infinity;
@@ -6758,7 +6764,8 @@
           chainStartMs = data[i-1].actualFinish.getTime() + ho * dayMs;
         }
         data[i].actualStart = new Date(chainStartMs);
-        const daysNeeded = data[i].ownRate > 0 ? (V / data[i].ownRate) * 7 / 5 : Infinity;
+        const effV_fwd = (data[i].effV !== undefined) ? data[i].effV : V;
+        const daysNeeded = data[i].ownRate > 0 ? (effV_fwd / data[i].ownRate) * 7 / 5 : Infinity;
         data[i].actualFinish = isFinite(daysNeeded)
           ? new Date(chainStartMs + daysNeeded * dayMs)
           : new Date(8.64e15);
@@ -6792,7 +6799,12 @@
       const ariaLabel = ariaParts.join(', ');
       html += '<div class="' + roleClass + '" role="group" aria-label="' + escapeHtml(ariaLabel) + '">';
       html += '<div class="ho-name">' + (i+1) + '. ' + escapeHtml(d.role.name) + flag + '</div>';
-      html += '<div class="ho-stat"><span>Antal att leverera</span><strong>' + Math.round(V) + ' st</strong></div>';
+      // Task #29: Visa rework-tillägg explicit för Nätarkitekt
+      if (d.reworkVolume > 0) {
+        html += '<div class="ho-stat"><span>Antal att leverera</span><strong title="Volym ' + Math.round(V) + ' + rework ' + d.reworkVolume + ' (TF1-eskalering)">' + Math.round(V) + ' + ' + d.reworkVolume + ' rework = <span style="color:#FFD6F0">' + (Math.round(V) + d.reworkVolume) + '</span> st</strong></div>';
+      } else {
+        html += '<div class="ho-stat"><span>Antal att leverera</span><strong>' + Math.round(V) + ' st</strong></div>';
+      }
       html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
       html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + '</strong></div>';
       html += '<div class="ho-period">';
