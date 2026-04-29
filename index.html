@@ -3615,9 +3615,9 @@
         if (btn) btn.classList.toggle('active', g === state.utfall.granularity);
       });
     }
-    document.getElementById('onskad-volym').value = state.onskadVolym;
-    document.getElementById('margin').value = state.margin;
-    document.getElementById('notes').value = state.notes;
+    document.getElementById('onskad-volym').value = (state.onskadVolym !== undefined && state.onskadVolym !== null) ? state.onskadVolym : 0;
+    document.getElementById('margin').value = state.margin !== undefined ? state.margin : 10;
+    document.getElementById('notes').value = state.notes || '';
     // Säkerställ att mix-inputs reflekterar state.typfallMix
     if (state.typfallMix) {
       const m1 = document.getElementById('mix-tf1');
