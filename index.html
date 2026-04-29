@@ -5753,19 +5753,36 @@
       const tickDate = new Date(today);
       tickDate.setMonth(tickDate.getMonth() + Math.round(m));
 
+      // Tick mark
+      const tick = document.createElementNS(ns, 'line');
+      tick.setAttribute('x1', x); tick.setAttribute('x2', x);
+      tick.setAttribute('y1', M.top + innerH); tick.setAttribute('y2', M.top + innerH + 4);
+      tick.setAttribute('stroke', '#d8d6cf'); tick.setAttribute('stroke-width', '0.5');
+      svg.appendChild(tick);
+
       const lbl = document.createElementNS(ns, 'text');
-      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top + innerH + 16);
-      lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '10');
-      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', M.top + innerH + 18);
+      lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '11');
+      lbl.setAttribute('fill', '#6b6b66'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('font-weight', '500');
       lbl.textContent = monthNames[tickDate.getMonth()];
       svg.appendChild(lbl);
 
       const yrLbl = document.createElementNS(ns, 'text');
-      yrLbl.setAttribute('x', x); yrLbl.setAttribute('y', M.top + innerH + 30);
+      yrLbl.setAttribute('x', x); yrLbl.setAttribute('y', M.top + innerH + 32);
       yrLbl.setAttribute('text-anchor', 'middle'); yrLbl.setAttribute('font-size', '9');
-      yrLbl.setAttribute('fill', '#c8c6bf'); yrLbl.setAttribute('font-family', 'inherit');
+      yrLbl.setAttribute('fill', '#a8a8a3'); yrLbl.setAttribute('font-family', 'inherit');
       yrLbl.textContent = tickDate.getFullYear();
       svg.appendChild(yrLbl);
+
+      // Vertikal grid-linje (subtil)
+      if (m > 0 && m < xMax) {
+        const grid = document.createElementNS(ns, 'line');
+        grid.setAttribute('x1', x); grid.setAttribute('x2', x);
+        grid.setAttribute('y1', M.top); grid.setAttribute('y2', M.top + innerH);
+        grid.setAttribute('stroke', '#f0eee7'); grid.setAttribute('stroke-width', '0.5');
+        svg.appendChild(grid);
+      }
     }
 
     // X-axel-linje
