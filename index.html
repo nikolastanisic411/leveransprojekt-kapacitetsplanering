@@ -2662,6 +2662,15 @@
   let saveTimer = null;
   let dragSrcId = null;
 
+  // Clampar nummer mellan min och max, defaultar till fallback om NaN
+  function clampNumber(val, min, max, fallback) {
+    const n = Number(val);
+    if (!isFinite(n)) return fallback;
+    if (n < min) return min;
+    if (n > max) return max;
+    return n;
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
