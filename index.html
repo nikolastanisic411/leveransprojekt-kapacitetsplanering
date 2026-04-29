@@ -3644,10 +3644,14 @@
       const el = document.getElementById('mix-' + key);
       if (el) {
         const handler = (e) => {
-          state.typfallMix[key] = +e.target.value || 0;
+          const v = +e.target.value;
+          state.typfallMix[key] = isNaN(v) || v < 0 ? 0 : v;
           saveState();
           updateMixSummary();
           renderRoles();
+          updateStepProgress();
+          updateApplyCtaState();
+          updateNextActionBanner();
           recalc();
         };
         el.addEventListener('input', handler);
