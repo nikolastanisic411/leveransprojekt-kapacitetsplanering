@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.66-PESSIMISTIC-PILL" aria-busy="true">
+<body data-build="2026-04-29-G1.67-PESSIMISTIC-TIPS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.66-PESSIMISTIC-PILL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.67-PESSIMISTIC-TIPS</span>
   </div>
 
 </div>
@@ -7451,24 +7451,26 @@
         }
       }
 
-      // G1.10: Smart sensitivitetsanalys — alternativ till mer bemanning
-      if (projectFinishDelta > 0) {
+      // G1.10/G1.67: Smart sensitivitetsanalys — använder pessimistisk delta så tipsen dyker upp 
+      // baserat på MIN(plan-marginal, faktisk-hitrate-marginal). Verklighet vinner.
+      const pessimisticDelta = -marginalDays; // marginalDays = min(plan, actual) från G1.66
+      if (pessimisticDelta > 0) {
         const tips = [];
         // Alt 1: korta total handover
         const totalHandover = data.slice(0, -1).reduce((s, d) => s + ((typeof d.role.handoverToNext === 'number') ? d.role.handoverToNext : 0), 0);
-        if (totalHandover >= projectFinishDelta && totalHandover > 0) {
-          tips.push('Korta handover-tider med totalt <strong style="color:#fff">' + projectFinishDelta + ' dagar</strong> (idag totalt ' + totalHandover + ' dagar) → klarar deadline utan extra bemanning.');
+        if (totalHandover >= pessimisticDelta && totalHandover > 0) {
+          tips.push('Korta handover-tider med totalt <strong style="color:#fff">' + pessimisticDelta + ' dagar</strong> (idag totalt ' + totalHandover + ' dagar) → klarar deadline utan extra bemanning.');
         } else if (totalHandover > 0) {
-          tips.push('Korta alla handover-tider till noll sparar <strong style="color:#fff">' + totalHandover + ' dagar</strong> (räcker inte hela vägen — försening kvarstår på ' + (projectFinishDelta - totalHandover) + ' dagar).');
+          tips.push('Korta alla handover-tider till noll sparar <strong style="color:#fff">' + totalHandover + ' dagar</strong> (räcker inte hela vägen — försening kvarstår på ' + (pessimisticDelta - totalHandover) + ' dagar).');
         } else {
           tips.push('Handover-tider är redan på <strong style="color:#fff">0 dagar</strong> mellan rollerna — ingen tidsvinst där att hämta.');
         }
         // Alt 2: tidigare projektstart
-        tips.push('Starta projektet <strong style="color:#fff">' + projectFinishDelta + ' dagar tidigare</strong> → klarar deadline med samma bemanning.');
+        tips.push('Starta projektet <strong style="color:#fff">' + pessimisticDelta + ' dagar tidigare</strong> → klarar deadline med samma bemanning.');
         // Alt 3: höj global hitrate
         const currentHitrate = (typeof state.hitrate === 'number') ? state.hitrate : 100;
         const totalWorkDaysCal = data.reduce((s, d) => s + (d.ownRate > 0 ? (V / d.ownRate) * 7 / 5 : 0), 0);
-        const targetWorkDaysCal = totalWorkDaysCal - projectFinishDelta;
+        const targetWorkDaysCal = totalWorkDaysCal - pessimisticDelta;
         if (targetWorkDaysCal > 0 && currentHitrate > 0 && currentHitrate < 100) {
           const factor = totalWorkDaysCal / targetWorkDaysCal;
           const newHitrate = Math.min(100, Math.round(currentHitrate * factor));
@@ -7486,10 +7488,10 @@
         if (leverages.length > 0) {
           const best = leverages[0];
           let leverageText = 'Bäst hävstång per extra person: <strong style="color:#fff">+1 till ' + escapeHtml(best.name) + '</strong> sparar <strong style="color:#fff">' + best.saved + ' dagar</strong>';
-          if (best.saved >= projectFinishDelta) {
+          if (best.saved >= pessimisticDelta) {
             leverageText += ' — räcker för att klara deadline';
           } else {
-            leverageText += ' (täcker ' + Math.min(100, Math.round(best.saved / projectFinishDelta * 100)) + ' % av förseningen)';
+            leverageText += ' (täcker ' + Math.min(100, Math.round(best.saved / pessimisticDelta * 100)) + ' % av förseningen)';
           }
           leverageText += '.';
           // Ranking-rad om fler än 1 roll
@@ -7499,10 +7501,10 @@
           tips.push(leverageText);
         }
         // G1.12: Kombo-sökare — minsta-paket-lösningar när enskild åtgärd inte räcker
-        if (leverages.length > 0 && leverages[0].saved < projectFinishDelta) {
+        if (leverages.length > 0 && leverages[0].saved < pessimisticDelta) {
           const combos = [];
           const best = leverages[0];
-          const remaining = projectFinishDelta - best.saved;
+          const remaining = pessimisticDelta - best.saved;
           // Kombo A: +1 till best + korta handover
           if (totalHandover >= remaining) {
             combos.push('<strong>+1 till ' + escapeHtml(best.name) + '</strong> (sparar ' + best.saved + 'd) + <strong>korta handover med ' + remaining + ' dagar</strong> (av ' + totalHandover + ' tillgängliga) → klarar deadline.');
@@ -7512,8 +7514,8 @@
           // Kombo C: +1 till topp 2 om summan räcker
           if (leverages.length >= 2) {
             const top2Saved = leverages[0].saved + leverages[1].saved;
-            if (top2Saved >= projectFinishDelta) {
-              combos.push('<strong>+1 till ' + escapeHtml(leverages[0].name) + ' + +1 till ' + escapeHtml(leverages[1].name) + '</strong> → sparar ' + top2Saved + 'd (täcker hela förseningen på ' + projectFinishDelta + 'd).');
+            if (top2Saved >= pessimisticDelta) {
+              combos.push('<strong>+1 till ' + escapeHtml(leverages[0].name) + ' + +1 till ' + escapeHtml(leverages[1].name) + '</strong> → sparar ' + top2Saved + 'd (täcker hela förseningen på ' + pessimisticDelta + 'd).');
             }
           }
           if (combos.length > 0) {
