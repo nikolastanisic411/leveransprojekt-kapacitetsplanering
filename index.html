@@ -5170,7 +5170,7 @@
         else if (days < 30) txt = days + ' dagar kvar';
         else if (days < 365) txt = Math.round(days / 7) + ' veckor kvar (' + days + ' dagar)';
         else txt = (days / 365).toFixed(1) + ' år kvar (' + days + ' dagar)';
-        info.textContent = '⏱ ' + txt;
+        info.textContent = txt;
         info.style.display = 'block';
       } else if (info) {
         info.style.display = 'none';
@@ -5190,7 +5190,7 @@
         else if (days === 1) txt = 'startar imorgon';
         else if (days < 30) txt = 'startar om ' + days + ' dagar';
         else txt = 'startar om ca ' + Math.round(days / 7) + ' veckor';
-        psInfo.textContent = '🚀 ' + txt;
+        psInfo.textContent = txt;
         psInfo.style.display = 'block';
       } else {
         psInfo.style.display = 'none';
