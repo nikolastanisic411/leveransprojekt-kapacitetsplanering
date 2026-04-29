@@ -2846,6 +2846,8 @@
 
   function loadState() {
     try {
+      // Ifall localStorage inte är tillgängligt (privatläge etc), nöj dig med defaults
+      if (typeof localStorage === 'undefined') return;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const saved = JSON.parse(raw);
