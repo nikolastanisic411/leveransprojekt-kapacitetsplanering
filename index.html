@@ -2520,6 +2520,23 @@
       print-color-adjust: exact;
     }
   }
+  .exec-actions { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  .exec-print-btn {
+    background: #ffffff;
+    color: #5C0E92;
+    border: 0.5px solid #5C0E92;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .exec-print-btn:hover { background: #5C0E92; color: #ffffff; }
+  @media print {
+    .exec-actions { display: none !important; }
+  }
 
   @media (max-width: 700px) {
     .step-progress { padding: 8px; gap: 4px; }
@@ -3034,6 +3051,9 @@
 <div class="section" id="section-exec">Ledningsgruppsvy <span class="section-hint">— en sammanfattande dashboard för stakeholders</span></div>
 
   <div class="exec-view" id="exec-view">
+    <div class="exec-actions">
+      <button class="exec-print-btn" onclick="window.print()" aria-label="Skriv ut sidan eller spara som PDF">Skriv ut / Spara PDF</button>
+    </div>
     <div class="exec-grid">
       <div class="exec-kpi exec-kpi-primary">
         <div class="exec-kpi-label">Mål till deadline</div>
