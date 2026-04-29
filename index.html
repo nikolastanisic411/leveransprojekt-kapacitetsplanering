@@ -4046,7 +4046,7 @@
         // Stöd både nytt format med wrapper och rå state
         const importedState = data.state ? data.state : data;
         if (!importedState || typeof importedState !== 'object' || !Array.isArray(importedState.roles)) {
-          alert('Filen verkar inte vara en giltig kapacitetsplanering-export.');
+          alert('Filen verkar inte vara en giltig kapacitetsplanering-export.\n\nKontrollera att du valt en JSON-fil som exporterats från detta verktyg.');
           return;
         }
         if (!confirm('Importera värden från filen? Dina nuvarande värden skrivs över.')) {
