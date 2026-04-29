@@ -3981,6 +3981,8 @@
     });
     // Centraliserad refresh efter datum-ändringar
     const refreshAfterDateChange = () => {
+      // Datum-ändring gör att tidigare suggestion kan vara inaktuell
+      // Behåll dock applied-flaggan om count fortfarande är meningsfullt — annars nollställ
       saveState();
       updateNextActionBanner();
       updateApplyCtaState();
@@ -4041,6 +4043,8 @@
       const v = +e.target.value;
       const newVol = isNaN(v) ? 0 : Math.max(0, v);
       const oldVol = +state.onskadVolym || 0;
+      // Mål-ändring betyder att tidigare suggestion är inaktuell
+      if (newVol !== oldVol) state.suggestionApplied = false;
       state.onskadVolym = newVol;
       // I mix-läge: re-distribuera mix proportionellt så summan matchar nya målvolymen
       if (state.leadtimeDays === 'mix' && newVol > 0) {
