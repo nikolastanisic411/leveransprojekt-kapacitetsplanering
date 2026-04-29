@@ -6567,7 +6567,7 @@
       tr.innerHTML = `
         <td class="num">${i + 1}</td>
         <td class="role-cell">${escapeHtml(d.role.name)}${d.isBottleneck ? ' ⚑' : ''}</td>
-        <td class="num">${Math.round(V) + (d.reworkVolume > 0 ? ' + ' + d.reworkVolume + ' rework' : '')} st${d.reworkVolume > 0 ? ' <span style="color:#9a2424;font-size:10px">(+rework)</span>' : ''}</td>
+        <td class="num">${Math.round(V) + (d.reworkVolume > 0 ? ' + ' + d.reworkVolume + ' rework' : '')} st${d.reworkVolume > 0 ? ' <span style="color:#9a2424;font-size:10px">(+rework)</span>' : ''}${d.additionalNeeded > 0 && isFinite(d.requiredHeadcount) ? '<div style="font-size:10px;color:#9a2424;margin-top:2px;font-weight:500">→ ' + d.requiredHeadcount + ' pers behövs (+' + d.additionalNeeded + ')</div>' : ''}</td>
         <td>${d.ownRate.toFixed(1)}/dag</td>
         <td>${effLabel}</td>
         <td>${fmt(d.mastBorjaSenast)}</td>
