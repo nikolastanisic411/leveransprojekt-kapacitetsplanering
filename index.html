@@ -2563,17 +2563,17 @@
     <div class="handover-fields">
       <div class="handover-field">
         <label><span class="tt" tabindex="0" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
-        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3" inputmode="decimal">
+        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3" inputmode="decimal" aria-label="Order-handover i dagar">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
         <label><span class="tt" tabindex="0" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
-        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5" inputmode="decimal">
+        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5" inputmode="decimal" aria-label="Arkitekt-handover i dagar">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
         <label><span class="tt" tabindex="0" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
-        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10" inputmode="decimal">
+        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10" inputmode="decimal" aria-label="Tekniker-startup i dagar">
         <span class="handover-unit">dgr</span>
       </div>
     </div>
