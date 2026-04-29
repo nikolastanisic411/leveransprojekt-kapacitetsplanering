@@ -3844,7 +3844,10 @@
       btn.addEventListener('click', (e) => {
         const id = e.target.dataset.id;
         const scen = state.scenarios.find(s => s.id === id);
-        if (confirm(`Ta bort scenariot "${scen.name}"?`)) {
+        if (!scen) return;
+        // Auto-genererade scenarier behöver ingen bekräftelse
+        const isAuto = (scen.id || '').startsWith('auto-');
+        if (isAuto || confirm(`Ta bort scenariot "${scen.name}"?`)) {
           state.scenarios = state.scenarios.filter(s => s.id !== id);
           saveState();
           renderScenarios();
