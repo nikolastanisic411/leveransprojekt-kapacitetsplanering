@@ -2672,7 +2672,7 @@
 
   <div class="ui-mode-toggle">
     <button id="ui-mode-btn" onclick="toggleUiMode()" title="Visa eller dölj avancerade fält (cap, hit %, spann)" aria-pressed="false" aria-label="Växla avancerat läge">
-      <span id="ui-mode-icon">⚙</span>
+      <span id="ui-mode-icon" aria-hidden="true"></span>
       <span id="ui-mode-label">Visa avancerat</span>
     </button>
     <span class="ui-mode-hint">Standardvyn fokuserar på antal personer per roll. Avancerat visar tak, hit %, spann, typfall plus globala parametrar (hitrate, ramp, handover).</span>
@@ -3391,7 +3391,7 @@
     const entries = state.utfall.entries || [];
     if (entries.length === 0) {
       wrap.innerHTML = '<div class="utfall-empty">' +
-        '<div style="font-size:32px;margin-bottom:8px">📊</div>' +
+        
         '<strong style="display:block;margin-bottom:6px;color:#1a1a1a">Inga rapporterade utfall ännu</strong>' +
         'Klicka <em>+ Rapportera ny period</em> nedan när du vill registrera vad ni faktiskt levererat under en vecka eller månad.<br>' +
         '<span style="font-size:11px;color:#a8a8a3">Utfallsdata visualiseras som en grön linje i kumulativ-volym-grafen så du ser plan vs verklighet.</span>' +
@@ -5043,7 +5043,7 @@
       btn.classList.toggle('advanced-on', mode === 'advanced');
       btn.setAttribute('aria-pressed', mode === 'advanced' ? 'true' : 'false');
     }
-    if (icon) icon.textContent = mode === 'advanced' ? '⚙' : '⚙';
+    if (icon) icon.textContent = '';
     if (label) label.textContent = mode === 'advanced' ? 'Dölj avancerat' : 'Visa avancerat';
   }
 
