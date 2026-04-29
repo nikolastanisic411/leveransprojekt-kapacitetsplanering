@@ -2890,6 +2890,7 @@
     _saveDebounceTimer = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        _unsavedChanges = false;
         const ind = document.getElementById('saved-indicator');
         if (ind) {
           const now = new Date();
@@ -2899,7 +2900,14 @@
           clearTimeout(saveTimer);
           saveTimer = setTimeout(() => { ind.style.color = '#c8c6bf'; }, 2500);
         }
-      } catch (e) { console.warn('Kunde inte spara:', e); }
+      } catch (e) {
+        console.warn('Kunde inte spara:', e);
+        const ind = document.getElementById('saved-indicator');
+        if (ind) {
+          ind.textContent = '⚠ kunde inte spara';
+          ind.style.color = '#b8410e';
+        }
+      }
     }, 250);
   }
 
