@@ -2942,7 +2942,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.21-PROGRESSBAR" aria-busy="true">
+<body data-build="2026-04-29-G1.22-BUFFER-PILL" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3369,7 +3369,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.21-PROGRESSBAR</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.22-BUFFER-PILL</span>
   </div>
 
 </div>
@@ -6727,6 +6727,13 @@
       const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
       html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + startWarn + '<br>';
       html += '<strong>Måste vara klar senast:</strong> ' + fmt(d.klarSenast);
+      // G1.22: Buffer-rad alltid synlig per roll
+      if (d.actualFinish && isFinite(d.bufferDays)) {
+        const bufColor = d.bufferDays > 0 ? '#1A4A28' : (d.bufferDays === 0 ? '#5A3A10' : '#5A1530');
+        const bufBg = d.bufferDays > 0 ? '#E8F5EE' : (d.bufferDays === 0 ? '#FFF8E5' : '#FFE5EE');
+        const bufLabel = d.bufferDays > 0 ? d.bufferDays + ' dagars marginal' : (d.bufferDays === 0 ? 'precis i tid' : Math.abs(d.bufferDays) + ' dagars försening');
+        html += '<br><span style="display:inline-block;margin-top:4px;padding:2px 8px;background:' + bufBg + ';color:' + bufColor + ';border-radius:10px;font-size:11px;font-weight:600">' + bufLabel + '</span>';
+      }
       html += '</div>';
       // Action-rekommendation: vad krävs för att hinna med start från idag/projektstart
       const todayMid = new Date(); todayMid.setHours(0,0,0,0);
