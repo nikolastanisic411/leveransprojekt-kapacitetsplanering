@@ -2730,6 +2730,27 @@
     <div class="count" id="rampMonths-v">0 mån</div>
   </div>
 
+  <div class="handover-group" style="margin-bottom:14px">
+    <div class="handover-label">Typfall — ledtid per leverans <span class="hint">— från projektstart till klar leverans (kan justeras per typfall)</span></div>
+    <div class="handover-fields">
+      <div class="handover-field">
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från start till klar för Typfall 1 — standardvärde 10. Justera om er process avviker.">Typfall 1</span></label>
+        <input type="number" id="lt-tf1" min="1" max="500" step="1" value="10" inputmode="numeric" aria-label="Ledtid Typfall 1 i dagar">
+        <span class="handover-unit">dgr</span>
+      </div>
+      <div class="handover-field">
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från start till klar för Typfall 2 — standardvärde 60.">Typfall 2</span></label>
+        <input type="number" id="lt-tf2" min="1" max="500" step="1" value="60" inputmode="numeric" aria-label="Ledtid Typfall 2 i dagar">
+        <span class="handover-unit">dgr</span>
+      </div>
+      <div class="handover-field">
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från start till klar för Typfall 3 — standardvärde 100.">Typfall 3</span></label>
+        <input type="number" id="lt-tf3" min="1" max="500" step="1" value="100" inputmode="numeric" aria-label="Ledtid Typfall 3 i dagar">
+        <span class="handover-unit">dgr</span>
+      </div>
+    </div>
+  </div>
+
   <div class="handover-group">
     <div class="handover-label">Handover-tider mellan roller <span class="hint">— standardtider för varje övergång i pipelinen</span></div>
     <div class="handover-fields">
