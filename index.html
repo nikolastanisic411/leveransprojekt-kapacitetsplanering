@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.9-BUFFER" aria-busy="true">
+<body data-build="2026-04-29-G1.9-PROGNOS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.9-BUFFER</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.9-PROGNOS</span>
   </div>
 
 </div>
@@ -6304,6 +6304,20 @@
       const ppe = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
       data[i].requiredHeadcount = (ppe > 0 && isFinite(reqEff)) ? Math.ceil(reqEff / ppe) : Infinity;
     }
+    // G1.9: Forward-sim för prognos med nuvarande bemanning
+    {
+      let chainMs = refStart.getTime();
+      for (let i = 0; i < data.length; i++) {
+        if (i > 0) {
+          const ho = (typeof data[i-1].role.handoverToNext === 'number') ? data[i-1].role.handoverToNext : 0;
+          chainMs = data[i-1].actualFinish.getTime() + ho * dayMs;
+        }
+        const dn = data[i].ownRate > 0 ? (V / data[i].ownRate) * 7 / 5 : Infinity;
+        data[i].actualFinish = isFinite(dn) ? new Date(chainMs + dn * dayMs) : new Date(8.64e15);
+      }
+    }
+    const lastFinish = data[data.length - 1].actualFinish;
+    const projDelta = Math.round((lastFinish.getTime() - deadline.getTime()) / dayMs);
     
     let txt = 'ÅTGÄRDSPLAN — Leveransprojektet (deadline ' + fmt(deadline) + ', ' + V + ' st)\n';
     txt += '═══════════════════════════════════════════════════════\n\n';
@@ -6320,6 +6334,12 @@
     
     const totalAdd = data.reduce((s, d) => s + Math.max(0, (isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count) - d.role.count), 0);
     txt += '═══════════════════════════════════════════════════════\n';
+    // G1.9: Prognos-rad — visa konsekvensen av att INTE göra något
+    if (projDelta > 0) {
+      txt += 'PROGNOS UTAN ÅTGÄRD: klart ' + fmt(lastFinish) + ' (' + projDelta + ' dagar EFTER deadline).\n';
+    } else {
+      txt += 'PROGNOS UTAN ÅTGÄRD: klart ' + fmt(lastFinish) + ' (' + Math.abs(projDelta) + ' dagars marginal).\n';
+    }
     txt += 'TOTALT: +' + totalAdd + ' personer behövs för att hålla deadline ' + fmt(deadline) + '.\n';
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -6376,6 +6396,19 @@
       const ppe = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
       data[i].requiredHeadcount = (ppe > 0 && isFinite(reqEff)) ? Math.ceil(reqEff / ppe) : Infinity;
     }
+    // G1.9: Forward-sim för buffer per roll
+    {
+      let chainMs = refStart.getTime();
+      for (let i = 0; i < data.length; i++) {
+        if (i > 0) {
+          const ho = (typeof data[i-1].role.handoverToNext === 'number') ? data[i-1].role.handoverToNext : 0;
+          chainMs = data[i-1].actualFinish.getTime() + ho * dayMs;
+        }
+        const dn = data[i].ownRate > 0 ? (V / data[i].ownRate) * 7 / 5 : Infinity;
+        data[i].actualFinish = isFinite(dn) ? new Date(chainMs + dn * dayMs) : new Date(8.64e15);
+        data[i].bufferDays = Math.round((data[i].klarSenast.getTime() - data[i].actualFinish.getTime()) / dayMs);
+      }
+    }
     const d = data.find(x => x.role.id === roleId);
     if (!d) return;
 
@@ -6390,7 +6423,13 @@
       '  • Start senast: ' + startDateStr + '\n' +
       '  • Klar senast: ' + klarDateStr + '\n' +
       '  • Volym: ' + V + ' st att leverera\n' +
-      '  • Takt: ' + d.ownRate.toFixed(1) + '/dag (effektiv kapacitet)\n\n' +
+      '  • Takt: ' + d.ownRate.toFixed(1) + '/dag (effektiv kapacitet)\n' +
+      ((d.actualFinish && isFinite(d.bufferDays))
+        ? (d.bufferDays >= 0
+            ? '  • Prognos utan ändring: klar ' + fmt(d.actualFinish) + ' (' + d.bufferDays + ' dagars marginal)\n'
+            : '  • Prognos utan ändring: klar ' + fmt(d.actualFinish) + ' (' + Math.abs(d.bufferDays) + ' dagars FÖRSENING mot klar-senast)\n')
+        : '') +
+      '\n' +
       'Kan du bekräfta att vi har detta tillgängligt?\n\nMvh\nProjektledningen';
 
     // Försök kopiera via Clipboard API
