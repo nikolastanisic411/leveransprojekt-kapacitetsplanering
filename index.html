@@ -4016,10 +4016,29 @@
     const onskadEl = document.getElementById('onskad-volym');
     const onskadHandler = (e) => {
       const v = +e.target.value;
-      state.onskadVolym = isNaN(v) ? 0 : Math.max(0, v);
+      const newVol = isNaN(v) ? 0 : Math.max(0, v);
+      const oldVol = +state.onskadVolym || 0;
+      state.onskadVolym = newVol;
+      // I mix-läge: re-distribuera mix proportionellt så summan matchar nya målvolymen
+      if (state.leadtimeDays === 'mix' && newVol > 0) {
+        const mixSum = (+state.typfallMix.tf1 || 0) + (+state.typfallMix.tf2 || 0) + (+state.typfallMix.tf3 || 0);
+        if (mixSum > 0 && mixSum !== newVol) {
+          const ratio = newVol / mixSum;
+          state.typfallMix.tf1 = Math.round((+state.typfallMix.tf1 || 0) * ratio);
+          state.typfallMix.tf2 = Math.round((+state.typfallMix.tf2 || 0) * ratio);
+          state.typfallMix.tf3 = newVol - state.typfallMix.tf1 - state.typfallMix.tf2;
+          // Uppdatera input-fälten visuellt
+          const m1 = document.getElementById('mix-tf1'); if (m1) m1.value = state.typfallMix.tf1;
+          const m2 = document.getElementById('mix-tf2'); if (m2) m2.value = state.typfallMix.tf2;
+          const m3 = document.getElementById('mix-tf3'); if (m3) m3.value = state.typfallMix.tf3;
+        } else if (mixSum === 0) {
+          // Om ingen mix satts än — lägg allt i TF3 (vanligaste typen)
+          state.typfallMix.tf3 = newVol;
+          const m3 = document.getElementById('mix-tf3'); if (m3) m3.value = newVol;
+        }
+      }
       saveState();
       updateMixSummary();
-      // Säkerställ att next-action-banner och step-progress uppdateras direkt
       updateNextActionBanner();
       updateApplyCtaState();
       updateStepProgress();
