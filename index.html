@@ -99,6 +99,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    scroll-margin-top: 80px;
   }
   .next-step-row {
     display: flex;
@@ -5911,4 +5912,12 @@
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
-    
+      applySuggestion();
+    }
+  });
+  updateSnapshotUI();
+  recalc();
+</script>
+
+</body>
+</html>
