@@ -716,6 +716,11 @@
     background: linear-gradient(135deg, rgba(92,14,146,0.06) 0%, rgba(153,10,227,0.04) 100%);
     border: 0.5px solid #d8c5e8;
     border-radius: 10px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 700px) {
+    .apply-suggestion-cta { flex-direction: column; align-items: stretch; }
+    .apply-suggestion-cta .apply-suggestion-btn { width: 100%; }
   }
   .apply-suggestion-cta .apply-suggestion-btn {
     background: linear-gradient(135deg, #5C0E92 0%, #6B0FA8 100%);
