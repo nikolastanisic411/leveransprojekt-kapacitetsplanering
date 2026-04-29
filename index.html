@@ -2968,7 +2968,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.46-REWORK-CONSISTENT" aria-busy="true">
+<body data-build="2026-04-29-G1.47-SCEN-DELTA" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3395,7 +3395,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.46-REWORK-CONSISTENT</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.47-SCEN-DELTA</span>
   </div>
 
 </div>
@@ -4254,6 +4254,8 @@
     };
     const unitLabel = (u) => (u === 'dag' ? '/dag' : u === 'vecka' ? '/vecka' : u === 'år' ? '/år' : '/mån');
 
+    // G1.47: Total nuvarande bemanning för delta-beräkningar
+    const totalHeadcount = active.reduce((s, r) => s + (+r.count || 0), 0);
     state.scenarios.forEach(scen => {
       const verdict = document.getElementById('verdict-' + scen.id);
       const gap = document.getElementById('gap-' + scen.id);
@@ -4263,17 +4265,33 @@
       const lbl = unitLabel(u);
       const target = +scen.target || 0;
       const decimals = (u === 'dag') ? 1 : 0;
+      // G1.47: Skala-faktor och approximativ bemanning för att uppnå målet
+      const factor = (eff > 0 && target > 0) ? (target / eff) : null;
+      let deltaText = '';
+      if (factor !== null && totalHeadcount > 0) {
+        if (factor > 1) {
+          const requiredHC = Math.ceil(totalHeadcount * factor);
+          const extraHC = requiredHC - totalHeadcount;
+          deltaText = ' · skalfaktor ×' + factor.toFixed(2) + ' (≈ ' + requiredHC + ' personer, +' + extraHC + ')';
+        } else if (factor < 1) {
+          const minHC = Math.max(1, Math.ceil(totalHeadcount * factor));
+          const sparHC = totalHeadcount - minHC;
+          deltaText = ' · klarar med ' + Math.round(factor * 100) + ' % av bemanningen (≈ ' + minHC + ' personer' + (sparHC > 0 ? ', frigör ' + sparHC : '') + ')';
+        } else {
+          deltaText = ' · skalfaktor ×1.00 (precis i nivå)';
+        }
+      }
       if (eff >= target) {
         verdict.textContent = 'JA';
         verdict.className = 'verdict v-ok';
         const overshoot = eff - target;
-        gap.textContent = overshoot > 0
+        gap.textContent = (overshoot > 0
           ? '+' + overshoot.toFixed(decimals) + lbl + ' marginal'
-          : 'precis på gränsen';
+          : 'precis på gränsen') + deltaText;
       } else {
         verdict.textContent = 'NEJ';
         verdict.className = 'verdict v-fail';
-        gap.textContent = 'saknar ' + (target - eff).toFixed(decimals) + lbl;
+        gap.textContent = 'saknar ' + (target - eff).toFixed(decimals) + lbl + deltaText;
       }
     });
   }
