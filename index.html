@@ -4916,21 +4916,40 @@
     }
   }
 
-    // Visa varning om deadline ligger före projektstart
+    // Visa varning om deadline ligger före projektstart, samt info om hur långt borta deadline är
   function checkDateSanity() {
     const w = document.getElementById('deadline-warn');
+    const info = document.getElementById('deadline-info');
     if (!w) return;
     const ps = state.projektStart;
     const dl = state.deadline;
     if (ps && dl && new Date(dl) < new Date(ps)) {
       w.style.display = 'block';
       w.textContent = '⚠ Deadline ligger före projektstart. Kontrollera datumen.';
+      if (info) info.style.display = 'none';
     } else if (dl && new Date(dl) < new Date()) {
       w.style.display = 'block';
       w.textContent = '⚠ Deadline har passerat. Tiden är negativ — sätt ett framtida datum.';
+      if (info) info.style.display = 'none';
     } else {
       w.style.display = 'none';
       w.textContent = '';
+      // Visa info om hur långt borta deadline är
+      if (info && dl && !isNaN(new Date(dl).getTime())) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const dlDate = new Date(dl); dlDate.setHours(0,0,0,0);
+        const days = Math.round((dlDate - today) / (1000 * 60 * 60 * 24));
+        let txt = '';
+        if (days <= 0) txt = 'idag';
+        else if (days === 1) txt = 'imorgon';
+        else if (days < 30) txt = days + ' dagar kvar';
+        else if (days < 365) txt = Math.round(days / 7) + ' veckor kvar (' + days + ' dagar)';
+        else txt = (days / 365).toFixed(1) + ' år kvar (' + days + ' dagar)';
+        info.textContent = '⏱ ' + txt;
+        info.style.display = 'block';
+      } else if (info) {
+        info.style.display = 'none';
+      }
     }
   }
 
