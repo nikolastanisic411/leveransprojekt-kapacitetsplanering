@@ -55,6 +55,13 @@
     gap: 6px;
   }
   .toolbar button:hover { background: #f4f2eb; border-color: #a8a6a0; }
+  .toolbar-sep {
+    width: 1px;
+    height: 20px;
+    background: #e5e3dc;
+    margin: 0 4px;
+    align-self: center;
+  }
   .toolbar button.primary {
     background: #1a1a1a;
     color: #ffffff;
@@ -2247,12 +2254,15 @@
 
   <div class="toolbar">
     <button onclick="window.print()" title="Skriv ut eller spara som PDF">🖨 Skriv ut / PDF</button>
+    <span class="toolbar-sep"></span>
     <button id="snapshot-btn" onclick="markSnapshot()" title="Spara denna setup som referens. Den syns som streckad linje i grafen så du kan jämföra mot andra setups du testar.">📌 Markera som nuläge</button>
     <button id="revert-btn" onclick="revertToSnapshot()" title="Gå tillbaka till markerat nuläge" style="display: none;">↩ Återgå till nuläge</button>
     <button id="clear-snapshot-btn" onclick="clearSnapshot()" title="Ta bort markerat nuläge" style="display: none;">✕ Ta bort nuläge</button>
-    <button onclick="exportJson()" title="Spara hela setupen + utfall som JSON-fil för backup eller att dela med kollegor">💾 Exportera JSON</button>
-    <button onclick="document.getElementById('json-import-input').click()" title="Ladda in en tidigare exporterad setup">📂 Importera JSON</button>
+    <span class="toolbar-sep"></span>
+    <button onclick="exportJson()" title="Spara hela setupen + utfall som JSON-fil för backup eller att dela med kollegor">💾 Exportera</button>
+    <button onclick="document.getElementById('json-import-input').click()" title="Ladda in en tidigare exporterad setup">📂 Importera</button>
     <input type="file" id="json-import-input" accept=".json,application/json" style="display: none;" onchange="importJson(event)">
+    <span class="toolbar-sep"></span>
     <button class="toolbar-reset" onclick="resetAll()" title="Rensa alla värden, roller och rapporterade utfall — börja på blank planering">🗑 Återställ allt</button>
 
     <span class="snapshot-info" id="snapshot-info">inget nuläge markerat</span>
