@@ -6405,6 +6405,9 @@
     }
   });
 
+    // Debug-helper: window.__getState() returnerar nuvarande state
+  try { window.__getState = function() { return state; }; } catch (_) {}
+
     // Liten intro i konsolen för dev/support
   try {
     if (window && window.console && console.log) {
