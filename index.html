@@ -2228,6 +2228,34 @@
     background: #990AE3;
   }
 
+  /* G1.52: Scenarier-sammanfattningsrad */
+  .scenarios-summary {
+    margin: 0 0 14px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #F8F5FB 0%, #F1EBF6 100%);
+    border: 0.5px solid #E0D6EA;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #3A2A4A;
+  }
+  .scenarios-summary strong { color: #1A1A1F; }
+  .scenarios-summary .ss-cta {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 4px 12px;
+    background: #5C0E92;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .scenarios-summary .ss-cta:hover { background: #4a0a76; transform: translateY(-1px); }
+  .scenarios-summary .ss-cta:focus { outline: 2px solid rgba(92, 14, 146, 0.4); outline-offset: 2px; }
   /* G1.50: Apply-knapp i scenario-kort */
   .scen-apply-btn {
     display: inline-block;
@@ -3002,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.51-SCEN-COPY" aria-busy="true">
+<body data-build="2026-04-29-G1.53-SCEN-RANK" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3383,6 +3411,8 @@
 
   <div class="section" role="heading" aria-level="2" id="step-7"><span class="step-num">7</span>Scenarier <span class="section-hint">— testa olika måltakter mot din nuvarande setup</span></div>
 
+  <div class="scenarios-summary" id="scenarios-summary" role="status" aria-live="polite" style="display:none"></div>
+
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
     <div class="section" role="heading" aria-level="2" id="step-8"><span class="step-num">8</span>Uppföljning <span class="section-hint">— rapportera vad ni faktiskt levererat per period och jämför mot plan</span></div>
@@ -3429,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.51-SCEN-COPY</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.53-SCEN-RANK</span>
   </div>
 
 </div>
@@ -4351,6 +4381,60 @@
         gap.innerHTML = 'saknar ' + (target - eff).toFixed(decimals) + lbl + deltaText;
       }
     });
+
+    // G1.52-53: Sammanfattningsrad ovan scenarie-grid + applicera-billigaste
+    updateScenariosSummary(active, perUnit, unitLabel, bottleneckRole);
+  }
+
+  // G1.52-53: Beräkna ranking per scenario och uppdatera summary-rad
+  function updateScenariosSummary(active, perUnit, unitLabel, bottleneckRole) {
+    const summary = document.getElementById('scenarios-summary');
+    if (!summary) return;
+    const scenarios = state.scenarios || [];
+    if (scenarios.length === 0 || !active || active.length === 0) {
+      summary.style.display = 'none';
+      return;
+    }
+    // Beräkna per-scenario behov
+    const analysis = scenarios.map(scen => {
+      const u = scen.unit || 'månad';
+      const eff = perUnit(u);
+      const target = +scen.target || 0;
+      const reaches = eff >= target;
+      let extra = 0;
+      let bottleneckName = null;
+      let requiredCount = null;
+      if (!reaches && bottleneckRole && bottleneckRole.role.count > 0 && bottleneckRole.eff > 0) {
+        const perPerson = bottleneckRole.eff / bottleneckRole.role.count;
+        const targetPerDay = u === 'dag' ? target : u === 'vecka' ? target / 5 : u === 'år' ? target / 252 : target / 21;
+        requiredCount = perPerson > 0 ? Math.ceil(targetPerDay / perPerson) : Infinity;
+        extra = Math.max(0, requiredCount - bottleneckRole.role.count);
+        bottleneckName = bottleneckRole.role.name;
+      }
+      return { scen, reaches, extra, requiredCount, bottleneckName, target, u };
+    });
+    const reaching = analysis.filter(a => a.reaches);
+    const failing = analysis.filter(a => !a.reaches);
+    let html = '';
+    if (failing.length === 0) {
+      html = '<strong>✓ Alla ' + scenarios.length + ' scenarier räcker</strong> med nuvarande bemanning.';
+    } else {
+      const cheapest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount) && bottleneckRole && a.requiredCount <= (bottleneckRole.role.max || 50))
+                              .sort((a, b) => a.extra - b.extra)[0];
+      const tuffest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount))
+                             .sort((a, b) => b.extra - a.extra)[0];
+      html = '<strong>' + failing.length + ' av ' + scenarios.length + ' scenarier kräver mer bemanning.</strong>';
+      if (reaching.length > 0) html += ' (' + reaching.length + ' räcker redan.)';
+      if (cheapest) {
+        html += ' Billigaste: <strong>' + escapeHtml(cheapest.scen.name) + '</strong> (+' + cheapest.extra + ' till ' + escapeHtml(cheapest.bottleneckName) + ').';
+        html += ' <button class="ss-cta" type="button" onclick="applyScenarioRecommendation(\'' + bottleneckRole.role.id + '\', ' + cheapest.requiredCount + ')" title="Applicera bemanningen som krävs för billigaste scenariot">Applicera billigaste</button>';
+      }
+      if (tuffest && cheapest && tuffest.scen.id !== cheapest.scen.id) {
+        html += ' Tuffaste: <strong>' + escapeHtml(tuffest.scen.name) + '</strong> (+' + tuffest.extra + ').';
+      }
+    }
+    summary.innerHTML = html;
+    summary.style.display = 'block';
   }
 
   function renderActivities() {
