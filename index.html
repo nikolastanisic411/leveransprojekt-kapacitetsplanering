@@ -3992,12 +3992,12 @@
     const matches = sum === target;
     summary.classList.toggle('warning', !matches);
     if (matches) {
-      summary.innerHTML = '<span style="color:#1d6e35;font-weight:600">✓ summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + '</span>' + breakdownStr +
+      summary.innerHTML = '<span style="color:#1d6e35;font-weight:600">summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + '</span>' + breakdownStr +
         ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
     } else {
       const diff = target - sum;
       const diffText = diff > 0 ? '(saknar ' + fmtNum(diff) + ' st)' : '(' + fmtNum(Math.abs(diff)) + ' st över målet)';
-      summary.innerHTML = '<span style="color:#9a2424;font-weight:600">⚠ summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + ' ' + diffText + '</span>' + breakdownStr +
+      summary.innerHTML = '<span style="color:#9a2424;font-weight:600">summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + ' ' + diffText + '</span>' + breakdownStr +
         ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
     }
   }
