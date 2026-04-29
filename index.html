@@ -6201,6 +6201,31 @@
   }
   autoFocusFirstEmpty();
 
+    // Sync mellan flikar — om annan flik ändrar samma state, ladda om i denna flik
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY && e.newValue && e.newValue !== e.oldValue) {
+      try {
+        const fresh = JSON.parse(e.newValue);
+        if (fresh && typeof fresh === 'object' && Array.isArray(fresh.roles)) {
+          state = fresh;
+          applyStateToInputs();
+          renderRoles();
+          renderScenarios();
+          renderActivities();
+          renderConstraints();
+          renderUtfallTable();
+          updateHandoverPanel();
+          updateHandoverSummary();
+          updateStepProgress();
+          updateApplyCtaState();
+          updateNextActionBanner();
+          updateActiveRolesIndicator();
+          recalc();
+        }
+      } catch (_) {}
+    }
+  });
+
     // När användaren kommer tillbaka till sidan: säkra att banners speglar aktuellt state
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
