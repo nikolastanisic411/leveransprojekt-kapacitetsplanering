@@ -3823,6 +3823,12 @@
   function importJson(event) {
     const file = event.target.files[0];
     if (!file) return;
+    // Storleksgräns: 10 MB är gott och väl för en setup-JSON
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Filen är större än 10 MB. Det här verkar inte vara en setup-export.');
+      event.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
