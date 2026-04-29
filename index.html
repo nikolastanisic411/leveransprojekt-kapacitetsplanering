@@ -2714,8 +2714,8 @@
     <div class="advanced-params-title">Avancerade parametrar <span class="advanced-params-hint">— synliga endast i Avancerat-läge</span></div>
 
     <div class="global-row">
-    <div class="role-name"><span class="tt" tabindex="0" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
-      <span class="hint">% av total kapacitet som lyckas — appliceras ovanpå per-roll-värden</span>
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Andel leveranser som lyckas på första försöket. Resten är bomkörningar — t.ex. tekniker som åker hem utan att ha kunnat avsluta jobbet (saknar fiber, inget signalrör, kund hemma men inte avtalat tid). 90% är ett rimligt riktvärde. Per-roll-justeringar görs i Avancerat-läget.">Hitrate</span>
+      <span class="hint">andel leveranser som lyckas — speglar generell bomkörning</span>
     </div>
     <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
     <div class="count" id="hitrate-v">90%</div>
