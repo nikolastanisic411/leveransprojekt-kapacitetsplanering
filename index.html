@@ -5725,16 +5725,17 @@
   function updateHandoverSummary() {
     const el = document.getElementById('handover-summary');
     if (!el) return;
-    const h = getHandover();
     const lt = getTypfallLedtider();
-    const tf1 = h.orderHandover + lt.tf1;
-    const tf2 = h.orderHandover + h.archHandover + h.tekStartup + lt.tf2;
-    const tf3 = h.orderHandover + h.archHandover + h.tekStartup + lt.tf3;
+    // Summera handover-tider över alla roller (utom sista)
+    const totalHandover = (state.roles || []).slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+    const tf1 = totalHandover + lt.tf1;
+    const tf2 = totalHandover + lt.tf2;
+    const tf3 = totalHandover + lt.tf3;
     let html =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + h.orderHandover + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + totalHandover + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + totalHandover + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + totalHandover + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
       '</div>';
     const rwVol = getReworkVolume();
     const rwRate = (+state.reworkRate || 0);
