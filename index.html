@@ -2510,8 +2510,14 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
     
     /* === LEDNINGSGRUPPSVY i print === */
-    .exec-view { page-break-before: always; break-before: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .exec-kpi-primary, .exec-doughnut-progress, .exec-doughnut-roles, .exec-doughnut-hitrate { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .exec-view { page-break-before: always; break-before: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 12mm; }
+    .exec-kpi, .exec-chart-card, .exec-status, .exec-kpi-primary, .exec-doughnut-progress, .exec-doughnut-roles, .exec-doughnut-hitrate { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .exec-grid { gap: 8px; }
+    .exec-kpi { padding: 10px 12px; break-inside: avoid; page-break-inside: avoid; }
+    .exec-kpi-value { font-size: 22px; }
+    .exec-charts { gap: 10px; }
+    .exec-chart-card { padding: 10px; break-inside: avoid; page-break-inside: avoid; }
+    .exec-chart-card svg { max-width: 140px; }
 
     /* === FÄRGER I PRINT === */
     button { display: none !important; }
