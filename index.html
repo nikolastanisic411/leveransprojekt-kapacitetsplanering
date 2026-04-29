@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.62-AUTOSCEN-REWORK" aria-busy="true">
+<body data-build="2026-04-29-G1.63-DISABLED-HANDOVER" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.62-AUTOSCEN-REWORK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.63-DISABLED-HANDOVER</span>
   </div>
 
 </div>
@@ -4869,8 +4869,9 @@
 
   function getTotalLedtimeForTypfall(typfall) {
     const lt = getTypfallLedtider();
-    // Total handover = summa av alla roll-handoverToNext (utom sista rollen)
-    const totalHandover = (state.roles || []).slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+    // G1.63: Total handover = summa över AKTIVA roller (utom sista) — disabled roller deltar inte i pipeline
+    const enabledRoles = (state.roles || []).filter(r => r.enabled !== false);
+    const totalHandover = enabledRoles.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
     if (typfall === 10) return totalHandover + lt.tf1;
     if (typfall === 60) return totalHandover + lt.tf2;
     if (typfall === 100) return totalHandover + lt.tf3;
@@ -6099,8 +6100,9 @@
     const el = document.getElementById('handover-summary');
     if (!el) return;
     const lt = getTypfallLedtider();
-    // Summera handover-tider över alla roller (utom sista)
-    const totalHandover = (state.roles || []).slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+    // G1.63: Summera handover-tider över AKTIVA roller (utom sista) — disabled roller deltar inte i pipeline
+    const enabledRoles_sum = (state.roles || []).filter(r => r.enabled !== false);
+    const totalHandover = enabledRoles_sum.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
     const tf1 = totalHandover + lt.tf1;
     const tf2 = totalHandover + lt.tf2;
     const tf3 = totalHandover + lt.tf3;
