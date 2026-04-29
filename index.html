@@ -3101,7 +3101,7 @@
           <input type="number" min="0" max="${role.max}" step="1" value="${role.countMin !== undefined && role.countMin !== null ? role.countMin : role.count}" data-id="${role.id}" data-field="countMin" title="Min antal personer (lägsta-scenario)" inputmode="numeric">
           <input type="number" min="0" max="${role.max}" step="1" value="${role.countMax !== undefined && role.countMax !== null ? role.countMax : role.count}" data-id="${role.id}" data-field="countMax" title="Max antal personer (högsta-scenario)" inputmode="numeric">
         </div>
-        <button class="remove-btn" data-id="${role.id}" title="Ta bort roll">×</button>
+        <button class="remove-btn" data-id="${role.id}" title="Ta bort roll" aria-label="Ta bort rollen ${escapeHtml(role.name)}">×</button>
       `;
       container.appendChild(row);
       attachDragHandlers(row, role.id);
