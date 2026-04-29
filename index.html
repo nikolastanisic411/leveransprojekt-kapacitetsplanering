@@ -3265,8 +3265,10 @@
         if (state.projektStart === undefined) state.projektStart = '';
         if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
         if (state.suggestionApplied === undefined) state.suggestionApplied = false;
+        if (typeof state.reworkRate !== 'number') state.reworkRate = 0;
         if (!state.typfallLedtider || typeof state.typfallLedtider !== 'object') {
           state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
+    state.reworkRate = 0;
         } else {
           if (typeof state.typfallLedtider.tf1 !== 'number') state.typfallLedtider.tf1 = 10;
           if (typeof state.typfallLedtider.tf2 !== 'number') state.typfallLedtider.tf2 = 60;
@@ -4641,6 +4643,7 @@
         if (!state.handover || typeof state.handover !== 'object') state.handover = { orderHandover: 3, archHandover: 5, tekStartup: 10 };
         if (!state.typfallLedtider || typeof state.typfallLedtider !== 'object') state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
         if (state.suggestionApplied === undefined) state.suggestionApplied = false;
+        if (typeof state.reworkRate !== 'number') state.reworkRate = 0;
         if (!Array.isArray(state.constraints)) state.constraints = [];
         if (!Array.isArray(state.scenarios)) state.scenarios = [];
         // Säkerställ enabled/unit på roller och clampa numeriska värden
