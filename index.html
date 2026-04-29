@@ -4431,15 +4431,20 @@
   // Varje subset: { tf: 'tf1'|'tf2'|'tf3', name: 'Typfall 1', volume, leadtimeDays }
   function getActiveSubsets() {
     const subsets = [];
+    const lt = getTypfallLedtider();
     if (state.leadtimeDays === 'mix') {
-      [['tf1', 10, 'Typfall 1'], ['tf2', 60, 'Typfall 2'], ['tf3', 100, 'Typfall 3']].forEach(([tf, ld, name]) => {
+      [['tf1', lt.tf1, 'Typfall 1'], ['tf2', lt.tf2, 'Typfall 2'], ['tf3', lt.tf3, 'Typfall 3']].forEach(([tf, ld, name]) => {
         const v = +state.typfallMix[tf] || 0;
         if (v > 0) subsets.push({ tf, name, volume: v, leadtimeDays: ld });
       });
     } else {
-      const ld = +state.leadtimeDays || 10;
-      const tf = (ld === 10) ? 'tf1' : (ld === 60) ? 'tf2' : (ld === 100) ? 'tf3' : 'tf1';
-      const name = (ld === 10) ? 'Typfall 1' : (ld === 60) ? 'Typfall 2' : (ld === 100) ? 'Typfall 3' : 'Typfall 1';
+      // Legacy: state.leadtimeDays = 10/60/100 mappar till tf1/tf2/tf3 — använd state-värdena
+      const legacyVal = +state.leadtimeDays || 10;
+      let tf, name, ld;
+      if (legacyVal === 10) { tf = 'tf1'; name = 'Typfall 1'; ld = lt.tf1; }
+      else if (legacyVal === 60) { tf = 'tf2'; name = 'Typfall 2'; ld = lt.tf2; }
+      else if (legacyVal === 100) { tf = 'tf3'; name = 'Typfall 3'; ld = lt.tf3; }
+      else { tf = 'tf1'; name = 'Typfall 1'; ld = lt.tf1; }
       subsets.push({ tf, name, volume: +state.onskadVolym || 0, leadtimeDays: ld });
     }
     return subsets;
