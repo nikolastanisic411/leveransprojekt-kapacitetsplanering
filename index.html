@@ -6176,7 +6176,20 @@
   updateNextActionBanner();
   updateActiveRolesIndicator();
 
-  // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
+  // Auto-fokusera första tomma obligatoriska fält så användaren ser var de ska börja
+  function autoFocusFirstEmpty() {
+    if (!state.onskadVolym || +state.onskadVolym <= 0) {
+      const el = document.getElementById('onskad-volym');
+      if (el) { setTimeout(() => { try { el.focus(); el.select(); } catch (_) {} }, 200); return; }
+    }
+    if (!state.deadline) {
+      const el = document.getElementById('deadline');
+      if (el) { setTimeout(() => { try { el.focus(); } catch (_) {} }, 200); return; }
+    }
+  }
+  autoFocusFirstEmpty();
+
+    // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
