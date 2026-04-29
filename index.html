@@ -316,6 +316,12 @@
     transition: transform 0.15s, box-shadow 0.15s;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    /* G1.41: Sticky positionerad just under step-progress för konstant synlighet */
+    position: sticky;
+    top: 72px;
+    z-index: 49;
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
   }
   .plan-status-pill:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
   .plan-status-pill:focus { outline: 3px solid rgba(92, 14, 146, 0.4); outline-offset: 2px; }
@@ -2962,7 +2968,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.40-ROBUST-HELP" aria-busy="true">
+<body data-build="2026-04-29-G1.41-STICKY-PILL" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3389,7 +3395,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.40-ROBUST-HELP</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.41-STICKY-PILL</span>
   </div>
 
 </div>
