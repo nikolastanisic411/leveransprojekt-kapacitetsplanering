@@ -2644,7 +2644,7 @@
       <div class="title" id="suggest-title">Förslag på bemanning</div>
       <button class="suggest" id="suggest-card-btn" onclick="applySuggestion()" aria-label="Applicera förslaget på bemanningen">Applicera förslag</button>
     </div>
-    <div class="body" id="suggest-body">Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.</div>
+    <div class="body" id="suggest-body">Fyll i mål och deadline ovan så räknar verktyget fram bemanning per roll.</div>
 
     <div class="margin-row">
       <label><span class="tt" tabindex="0" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
@@ -4768,7 +4768,7 @@
       } else {
         currentSuggestion = null;
         if (card) card.classList.add('no-data');
-        const errMsg = (fallback && fallback.error) ? fallback.message : 'Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.';
+        const errMsg = (fallback && fallback.error) ? fallback.message : 'Fyll i mål och deadline ovan så räknar verktyget fram bemanning per roll.';
         if (body) body.innerHTML = errMsg;
         if (rolesEl) rolesEl.innerHTML = '';
         if (outcomeEl) outcomeEl.innerHTML = '';
@@ -4844,10 +4844,10 @@
   // Returnerar { needed: { roleId: count } } vid framgång, eller { error: 'kod', message: 'text' } vid fel.
   function computeSuggestion() {
     if (!(+state.onskadVolym > 0)) {
-      return { error: 'no_goal', message: 'Sätt målvolym i steg 1.' };
+      return { error: 'no_goal', message: 'Sätt målvolym i steg 1 — antalet du vill leverera till deadline.' };
     }
     if (!state.deadline) {
-      return { error: 'no_deadline', message: 'Sätt deadline i steg 2.' };
+      return { error: 'no_deadline', message: 'Sätt deadline i steg 2 — då allt ska vara klart.' };
     }
     const deadline = new Date(state.deadline);
     if (isNaN(deadline.getTime())) {
