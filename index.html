@@ -6245,6 +6245,19 @@
       const today0 = new Date(); today0.setHours(0,0,0,0);
       const refStart = projektStartDate || today0;
       data[i].overshoots = data[i].mastBorjaSenast < refStart;
+      // Räkna rekommenderad bemanning för att HINNA: 
+      // tillgängliga arbetsdagar = (klarSenast - refStart) × 5/7
+      const availCalDays = Math.max(0, (data[i].klarSenast.getTime() - refStart.getTime()) / dayMs);
+      const availWorkDays = availCalDays * 5 / 7;
+      data[i].availWorkDays = availWorkDays;
+      // Krävd effektiv takt per dag för att hinna V items
+      const requiredEffDay = availWorkDays > 0 ? V / availWorkDays : Infinity;
+      // Per-person effektiv takt = rollens nuvarande effektiva takt / antal personer
+      const perPersonEff = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
+      const reqHeadcount = (perPersonEff > 0 && isFinite(requiredEffDay)) ? Math.ceil(requiredEffDay / perPersonEff) : Infinity;
+      data[i].requiredHeadcount = reqHeadcount;
+      data[i].additionalNeeded = Math.max(0, reqHeadcount - data[i].role.count);
+      data[i].requiredEffDay = requiredEffDay;
     }
 
     // Bygg roll-cards
