@@ -2639,7 +2639,7 @@
   <div class="suggest-card" id="suggest-card">
     <div class="head">
       <div class="title" id="suggest-title">Förslag på bemanning</div>
-      <button class="suggest" id="suggest-card-btn" onclick="applySuggestion()" aria-label="Applicera förslaget på bemanningen">⚡ Applicera förslag</button>
+      <button class="suggest" id="suggest-card-btn" onclick="applySuggestion()" aria-label="Applicera förslaget på bemanningen">Applicera förslag</button>
     </div>
     <div class="body" id="suggest-body">Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.</div>
 
@@ -2666,7 +2666,7 @@
   </div>
 
   <div class="apply-suggestion-cta" id="apply-cta">
-    <button class="apply-suggestion-btn" id="apply-cta-btn" onclick="applySuggestion()" aria-keyshortcuts="Control+Enter Meta+Enter" title="Tangentbordsgenväg: Ctrl+Enter (Cmd+Enter på Mac)">⚡ Applicera förslaget <span style="opacity:0.7;font-weight:400;font-size:11px;margin-left:6px">⌘+↵</span></button>
+    <button class="apply-suggestion-btn" id="apply-cta-btn" onclick="applySuggestion()" aria-keyshortcuts="Control+Enter Meta+Enter" title="Tangentbordsgenväg: Ctrl+Enter (Cmd+Enter på Mac)">Applicera förslaget <span style="opacity:0.7;font-weight:400;font-size:11px;margin-left:6px">⌘+↵</span></button>
     <span class="apply-suggestion-hint" id="apply-cta-hint" role="status" aria-live="polite">Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.</span>
   </div>
 
@@ -4072,7 +4072,7 @@
       const ind = document.getElementById('saved-indicator');
       if (ind) {
         const orig = ind.textContent;
-        ind.textContent = '📤 exporterad ' + filename;
+        ind.textContent = 'exporterad ' + filename;
         ind.style.color = '#1d6e35';
         setTimeout(() => { ind.textContent = orig; ind.style.color = '#c8c6bf'; }, 3500);
       }
