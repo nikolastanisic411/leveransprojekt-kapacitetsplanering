@@ -5746,6 +5746,45 @@
   }
 
   // === GUIDAD STEG-INDIKATOR ===
+  // Render handover-input per roll i Avancerat-läget
+  function renderHandoverFields() {
+    const container = document.getElementById('handover-fields-dynamic');
+    if (!container) return;
+    container.innerHTML = '';
+    const roles = state.roles || [];
+    roles.forEach((role, idx) => {
+      const isLast = idx === roles.length - 1;
+      const field = document.createElement('div');
+      field.className = 'handover-field';
+      const ho = (typeof role.handoverToNext === 'number') ? role.handoverToNext : 0;
+      const labelText = isLast 
+        ? escapeHtml(role.name) + ' (sista i pipeline)' 
+        : escapeHtml(role.name) + ' → ' + escapeHtml(roles[idx+1].name || 'nästa');
+      const tipText = isLast
+        ? 'Sista rollen i pipeline — ingen handover till nästa.'
+        : 'Antal dagar från att ' + (role.name || 'rollen') + ' är klar tills ' + (roles[idx+1].name || 'nästa roll') + ' tar över.';
+      field.innerHTML =
+        '<label><span class="tt" tabindex="0" data-tip="' + escapeHtml(tipText) + '">' + labelText + '</span></label>' +
+        '<input type="number" min="0" max="365" step="0.5" value="' + ho + '" data-role-id="' + role.id + '" data-handover="next" inputmode="decimal" aria-label="Handover-tid för ' + escapeHtml(role.name || '') + '"' + (isLast ? ' disabled' : '') + '>' +
+        '<span class="handover-unit">dgr</span>';
+      container.appendChild(field);
+    });
+    // Bind input events
+    container.querySelectorAll('input[data-role-id]').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const id = e.target.dataset.roleId;
+        const role = state.roles.find(r => r.id === id);
+        if (!role) return;
+        const v = +e.target.value;
+        role.handoverToNext = isNaN(v) || v < 0 ? 0 : Math.min(365, v);
+        saveState();
+        updateHandoverSummary();
+        updateApplyCtaState();
+        recalc();
+      });
+    });
+  }
+
   function updateStepProgress() {
     checkDateSanity();
     const hasGoal = +state.onskadVolym > 0;
