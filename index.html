@@ -4066,10 +4066,11 @@
     const target = +state.onskadVolym || 0;
 
     // Per-subset breakdown
+    const lt = getTypfallLedtider();
     const breakdown = [];
-    if (t1 > 0) breakdown.push('<span style="color:#5C0E92">TF1: ' + t1 + ' st × 10 dgr</span>');
-    if (t2 > 0) breakdown.push('<span style="color:#5C0E92">TF2: ' + t2 + ' st × 60 dgr</span>');
-    if (t3 > 0) breakdown.push('<span style="color:#5C0E92">TF3: ' + t3 + ' st × 100 dgr</span>');
+    if (t1 > 0) breakdown.push('<span style="color:#5C0E92">TF1: ' + t1 + ' st × ' + lt.tf1 + ' dgr</span>');
+    if (t2 > 0) breakdown.push('<span style="color:#5C0E92">TF2: ' + t2 + ' st × ' + lt.tf2 + ' dgr</span>');
+    if (t3 > 0) breakdown.push('<span style="color:#5C0E92">TF3: ' + t3 + ' st × ' + lt.tf3 + ' dgr</span>');
     const breakdownStr = breakdown.length > 0 ? ' · ' + breakdown.join(' · ') : '';
 
     if (target <= 0) {
