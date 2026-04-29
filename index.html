@@ -5478,6 +5478,12 @@
       auto.push({ id: 'auto-current', name: 'Aktuell takt', target: baseMonth, unit: 'månad' });
       auto.push({ id: 'auto-stretch', name: 'Stretch (+25%)', target: Math.round(baseMonth * 1.25), unit: 'månad' });
       auto.push({ id: 'auto-min', name: 'Minimum (-15%)', target: Math.round(baseMonth * 0.85), unit: 'månad' });
+      // Om rework är aktiv: lägg till ett scenario som visar att vi behöver klara extra last
+      const rwRate = (+state.reworkRate || 0);
+      if (rwRate > 0) {
+        const rwBuffer = Math.round(baseMonth * (1 + rwRate / 100));
+        auto.push({ id: 'auto-rework', name: 'Inkl. rework-last', target: rwBuffer, unit: 'månad' });
+      }
     }
     state.scenarios = [...existingCustom, ...auto];
   }
