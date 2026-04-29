@@ -3976,6 +3976,11 @@
     return startT + leadtimeMonths;
   }
 
+  // Säker wrapper runt recalc — fångar fel så de inte tar ner hela UI:t
+  function safeRecalc() {
+    try { recalc(); } catch (err) { console.error('recalc error:', err); }
+  }
+
   function recalc() {
     const hitrate = state.hitrate / 100;
     const margin = state.margin / 100;
