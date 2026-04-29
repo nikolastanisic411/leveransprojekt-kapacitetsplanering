@@ -3949,11 +3949,32 @@
     };
   }
 
+  // Returnerar konfigurerade ledtider per typfall (med fallback till standardvärden)
+  function getTypfallLedtider() {
+    const t = (state && state.typfallLedtider) || {};
+    return {
+      tf1: (typeof t.tf1 === 'number' && t.tf1 >= 0) ? t.tf1 : 10,
+      tf2: (typeof t.tf2 === 'number' && t.tf2 >= 0) ? t.tf2 : 60,
+      tf3: (typeof t.tf3 === 'number' && t.tf3 >= 0) ? t.tf3 : 100,
+    };
+  }
+
+  // Mappar legacy 10/60/100-värden till tf1/tf2/tf3 (konstanta i UI)
+  function ledtidKeyFromValue(v) {
+    if (v === 10) return 'tf1';
+    if (v === 60) return 'tf2';
+    if (v === 100) return 'tf3';
+    return null;
+  }
+
   function getTotalLedtimeForTypfall(typfall) {
     const h = getHandover();
-    if (typfall === 10) return h.orderHandover + 10;
-    if (typfall === 60) return h.orderHandover + h.archHandover + h.tekStartup + 60;
-    if (typfall === 100) return h.orderHandover + h.archHandover + h.tekStartup + 100;
+    const lt = getTypfallLedtider();
+    // typfall är legacy-värdet (10/60/100) — översätt till tf-key
+    if (typfall === 10) return h.orderHandover + lt.tf1;
+    if (typfall === 60) return h.orderHandover + h.archHandover + h.tekStartup + lt.tf2;
+    if (typfall === 100) return h.orderHandover + h.archHandover + h.tekStartup + lt.tf3;
+    // Direktvärde som fallback (för custom)
     return typfall + h.orderHandover;
   }
 
