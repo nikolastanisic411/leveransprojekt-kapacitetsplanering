@@ -3464,8 +3464,8 @@
       const u = scen.unit || 'månad';
       div.innerHTML = `
         <button class="scen-remove-btn" data-id="${scen.id}" title="Ta bort scenario" aria-label="Ta bort scenario ${escapeHtml(scen.name)}">×</button>
-        <input type="text" class="scen-name-input" value="${escapeHtml(scen.name)}" data-id="${scen.id}" data-field="name">
-        <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target" inputmode="numeric">
+        <input type="text" class="scen-name-input" value="${escapeHtml(scen.name)}" data-id="${scen.id}" data-field="name" aria-label="Scenarionamn">
+        <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target" inputmode="numeric" aria-label="Scenario-måltakt">
         <div class="target-suffix">
           <span>leveranser /</span>
           <select class="scen-unit-select" data-id="${scen.id}" data-field="unit">
