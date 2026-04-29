@@ -2012,6 +2012,23 @@
     padding: 14px 16px;
     position: relative;
   }
+  .scen.scen-auto {
+    border-style: dashed;
+    border-color: #d8c5e8;
+  }
+  .scen.scen-auto::before {
+    content: 'AUTO';
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 9px;
+    font-weight: 600;
+    color: #5C0E92;
+    background: rgba(92,14,146,0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
   .scen .scen-name-input {
     font-size: 12px;
     color: #8a8a85;
@@ -3801,7 +3818,9 @@
     }
     state.scenarios.forEach(scen => {
       const div = document.createElement('div');
-      div.className = 'scen';
+      const isAuto = (scen.id || '').startsWith('auto-');
+      div.className = 'scen' + (isAuto ? ' scen-auto' : '');
+      if (isAuto) div.title = 'Auto-genererat scenario — regenereras vid Applicera förslag';
       const u = scen.unit || 'månad';
       div.innerHTML = `
         <button class="scen-remove-btn" data-id="${scen.id}" title="Ta bort scenario" aria-label="Ta bort scenario ${escapeHtml(scen.name)}">×</button>
