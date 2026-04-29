@@ -3902,9 +3902,12 @@
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
 
-      // Generera filnamn baserat på datum
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const filename = 'leveransprojekt-' + dateStr + '.json';
+      // Generera filnamn med datum, tid och målvolym (om satt)
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const timeStr = now.toTimeString().slice(0, 5).replace(':', '');
+      const volStr = (+state.onskadVolym > 0) ? '-' + state.onskadVolym + 'st' : '';
+      const filename = 'kapacitetsplanering-' + dateStr + '-' + timeStr + volStr + '.json';
 
       const a = document.createElement('a');
       a.href = url;
