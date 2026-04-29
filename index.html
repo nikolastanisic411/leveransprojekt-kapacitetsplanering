@@ -2942,7 +2942,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.18-ALWAYS-PILL" aria-busy="true">
+<body data-build="2026-04-29-G1.19-TREND" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3369,7 +3369,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.18-ALWAYS-PILL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.19-TREND</span>
   </div>
 
 </div>
@@ -6842,6 +6842,28 @@
             realityHtml += '<br><span style="color:#A8E6C2;font-weight:600">Hitrate ligger ' + Math.abs(hrDelta) + ' procentenheter ÖVER plan</span> — kapaciteten är förmodligen större än vad planen visar.';
           } else {
             realityHtml += '<br><span style="color:#A8E6C2">Inom rimligt avvikelseintervall (±5 procentenheter) — kalkylen ser representativ ut.</span>';
+          }
+          // G1.19: Hitrate-trend över sista 3 perioder
+          {
+            const recentEntries = state.utfall.entries
+              .filter(e => e.period && !isNaN(new Date(e.period).getTime()))
+              .sort((a, b) => a.period.localeCompare(b.period))
+              .slice(-3);
+            if (recentEntries.length >= 2) {
+              const rates = recentEntries.map(e => {
+                const u = utfallEntryUtlagt(e), l = utfallEntryTotal(e);
+                return u > 0 ? (l / u) * 100 : null;
+              }).filter(r => r !== null);
+              if (rates.length >= 2) {
+                const first = rates[0], last = rates[rates.length - 1];
+                const trendDelta = Math.round(last - first);
+                let trendIcon, trendColor, trendLabel;
+                if (trendDelta >= 5) { trendIcon = '📈'; trendColor = '#A8E6C2'; trendLabel = 'Hitrate stigande'; }
+                else if (trendDelta <= -5) { trendIcon = '📉'; trendColor = '#FFD6F0'; trendLabel = 'Hitrate sjunkande'; }
+                else { trendIcon = '➡️'; trendColor = '#FFE6A0'; trendLabel = 'Hitrate stabil'; }
+                realityHtml += '<br><span style="color:' + trendColor + ';font-weight:600;font-size:12px">' + trendIcon + ' ' + trendLabel + '</span> <span style="opacity:0.85;font-size:12px">— från ' + Math.round(first) + ' % till ' + Math.round(last) + ' % över sista ' + rates.length + ' perioder.</span>';
+              }
+            }
           }
           // Volym-progress mot mål
           if (V > 0) {
