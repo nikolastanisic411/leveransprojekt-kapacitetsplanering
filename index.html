@@ -3370,7 +3370,8 @@
     });
     const onskadEl = document.getElementById('onskad-volym');
     const onskadHandler = (e) => {
-      state.onskadVolym = +e.target.value;
+      const v = +e.target.value;
+      state.onskadVolym = isNaN(v) ? 0 : Math.max(0, v);
       saveState();
       updateMixSummary();
       // Säkerställ att next-action-banner och step-progress uppdateras direkt
