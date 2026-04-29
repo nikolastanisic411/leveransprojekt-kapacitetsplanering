@@ -6216,6 +6216,22 @@
     }
   }
 
+    // Säkerhetsnät: om sparning är pending (debounce), skriv direkt vid unload
+  let _unsavedChanges = false;
+  const _origSaveState = saveState;
+  saveState = function() {
+    _unsavedChanges = true;
+    _origSaveState.apply(this, arguments);
+  };
+  window.addEventListener('beforeunload', () => {
+    if (_unsavedChanges) {
+      try {
+        // Forcera direkt skrivning utan debounce
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (_) {}
+    }
+  });
+
     // Sync mellan flikar — om annan flik ändrar samma state, ladda om i denna flik
   window.addEventListener('storage', (e) => {
     if (e.key === STORAGE_KEY && e.newValue && e.newValue !== e.oldValue) {
