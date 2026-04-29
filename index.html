@@ -6262,14 +6262,17 @@
         const downstream = data[i+1];
         // Kalenderdagar = arbetsdagar × 7/5 (5 arbetsdagar per vecka)
         const downstreamDaysCal = downstream.effectiveRate > 0 ? (V / downstream.effectiveRate) * 7 / 5 : 0;
-        // Handover mellan rollerna — försök matcha mot rollnamn
-        let handoverDays = 0;
-        const downName = (downstream.role.name || '').toLowerCase();
-        const thisName = (data[i].role.name || '').toLowerCase();
-        if (/order/.test(thisName) && /arkitekt/.test(downName)) handoverDays = h.orderHandover;
-        else if (/order/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.orderHandover;
-        else if (/arkitekt/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.archHandover + h.tekStartup;
-        else handoverDays = 1; // generisk handover-fallback
+        // Handover mellan rollerna — använd rollens egen handoverToNext (per-roll-konfigurerad)
+        let handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
+        // Backward-compat fallback om field saknas
+        if (handoverDays === 0 && !('handoverToNext' in (data[i].role || {}))) {
+          const downName = (downstream.role.name || '').toLowerCase();
+          const thisName = (data[i].role.name || '').toLowerCase();
+          if (/order/.test(thisName) && /arkitekt/.test(downName)) handoverDays = h.orderHandover;
+          else if (/order/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.orderHandover;
+          else if (/arkitekt/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.archHandover + h.tekStartup;
+          else handoverDays = 1;
+        }
         data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
       }
       // Nätarkitekt får extra volym från TF1-rework om reworkRate > 0
