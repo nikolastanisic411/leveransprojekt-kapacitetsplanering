@@ -5084,23 +5084,32 @@
 
     document.getElementById('vol-out').textContent = Math.round(potentialVolym);
 
-    // Räkna ut vad som krävs per månad i snitt (för "Per månad"-cellens undertext)
-    // Använd effectiveStartMonths eftersom vi måste vara klara med start innan deadline - ledtid
+    // Räkna ut snittakt för att nå målet — använd hela projekttiden (intuitivt)
+    // istället för effectiveMonths (parabolisk ramp-formel ger absurda värden vid kort tid kvar)
     let requiredMonthly = 0;
-    if (effectiveStartMonths > 0 && state.onskadVolym > 0) {
-      // Effektiv tid efter ramp-uppvarvning (rampen kostar 0.5 * ramp i tid)
-      const effectiveMonths = effectiveStartMonths >= effectiveRamp
-        ? (effectiveStartMonths - 0.5 * effectiveRamp)
-        : (0.5 * effectiveStartMonths * effectiveStartMonths / Math.max(effectiveRamp, 0.001));
-      requiredMonthly = effectiveMonths > 0 ? state.onskadVolym / effectiveMonths : 0;
+    let warningShort = false;
+    if (state.onskadVolym > 0 && monthsAvailable > 0) {
+      // Enkel snitttakt: total volym / total kalender-tid
+      requiredMonthly = state.onskadVolym / monthsAvailable;
+      // Varning: om leadtime + ramp äter mer än hälften av tiden är planen orealistisk
+      if (effectiveStartMonths < effectiveRamp * 0.5) warningShort = true;
     }
 
     // Undertext för "Per månad vid full takt"
+    const monthSubEl = document.getElementById('month-sub');
     if (requiredMonthly > 0) {
-      document.getElementById('month-sub').innerHTML =
-        'krävs ' + Math.round(requiredMonthly) + '/mån för att nå målet';
+      const reqRounded = Math.round(requiredMonthly);
+      if (warningShort) {
+        monthSubEl.innerHTML =
+          'snitt <strong>' + reqRounded + '/mån</strong> krävs · <span style="color:#9a2424">ledtid + ramp äter merparten av tiden</span>';
+      } else if (reqRounded > effMonth * 1.5) {
+        monthSubEl.innerHTML =
+          'snitt <strong>' + reqRounded + '/mån</strong> krävs (' + Math.round(reqRounded / Math.max(effMonth, 1) * 100) + '% av aktuell takt)';
+      } else {
+        monthSubEl.innerHTML = 'snitt <strong>' + reqRounded + '/mån</strong> krävs för att nå målet';
+      }
     } else {
-      document.getElementById('month-sub').textContent = 'vid ' + state.hitrate + '% hitrate';
+      monthSubEl.textContent = 'vid ' + state.hitrate + '% hitrate';
     }
 
     // Undertext för "Volym till deadline" — jämförelse mot målet
