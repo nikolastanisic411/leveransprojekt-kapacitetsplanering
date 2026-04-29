@@ -3442,7 +3442,11 @@
         const role = state.roles.find(r => r.id === id);
         if (!role) return;
         if (field === 'name') role.name = e.target.value;
-        else if (field === 'count') role.count = +e.target.value;
+        else if (field === 'count') {
+          const newCount = +e.target.value;
+          if (role.count !== newCount) state.suggestionApplied = true;
+          role.count = newCount;
+        }
         else if (field === 'takt') role.takt = +e.target.value;
         else if (field === 'unit') role.unit = e.target.value;
         else if (field === 'countMin') {
