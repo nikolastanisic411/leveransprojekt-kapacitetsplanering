@@ -3294,7 +3294,20 @@
           });
         }
       }
-    } catch (e) { console.warn('Kunde inte ladda:', e); }
+    } catch (e) {
+      console.warn('Kunde inte ladda sparat state:', e);
+      // Försök rensa korrupt data så användaren inte fastnar i error-loop
+      try {
+        if (typeof localStorage !== 'undefined') {
+          // Spara backup för felsökning
+          const corrupted = localStorage.getItem(STORAGE_KEY);
+          if (corrupted) {
+            try { localStorage.setItem(STORAGE_KEY + '-corrupt-' + Date.now(), corrupted); } catch (_) {}
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   // Debouncad save: skriv till localStorage max var 250ms — minskar I/O vid snabba inputs
