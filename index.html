@@ -69,6 +69,15 @@
   }
   input, textarea, select { caret-color: #5C0E92; }
   ::selection { background: rgba(92,14,146,0.20); color: #1a1a1a; }
+  /* Scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c8c6bf #f8f6f0;
+  }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track { background: #f8f6f0; }
+  *::-webkit-scrollbar-thumb { background: #c8c6bf; border-radius: 4px; }
+  *::-webkit-scrollbar-thumb:hover { background: #a8a6a0; }
   ::-moz-selection { background: rgba(92,14,146,0.20); color: #1a1a1a; }
   h1 {
     font-size: 28px;
