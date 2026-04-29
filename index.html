@@ -3608,7 +3608,10 @@
     renderUtfallTable();
     ['dag', 'vecka', 'månad'].forEach(g => {
       const btn = document.getElementById('utfall-gran-' + g);
-      if (btn) btn.classList.toggle('active', g === gran);
+      if (btn) {
+        btn.classList.toggle('active', g === gran);
+        btn.setAttribute('aria-pressed', g === gran ? 'true' : 'false');
+      }
     });
   }
 
