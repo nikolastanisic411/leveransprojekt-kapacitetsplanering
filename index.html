@@ -717,7 +717,7 @@
     border-radius: 10px;
   }
   .apply-suggestion-cta .apply-suggestion-btn {
-    background: #5C0E92;
+    background: linear-gradient(135deg, #5C0E92 0%, #6B0FA8 100%);
     color: #ffffff;
     border: none;
     padding: 10px 20px;
@@ -729,6 +729,14 @@
     transition: all 0.15s;
     box-shadow: 0 2px 8px rgba(92,14,146,0.25);
     white-space: nowrap;
+  }
+  @keyframes apply-cta-pulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(92,14,146,0.25); }
+    50% { box-shadow: 0 4px 16px rgba(92,14,146,0.45); }
+  }
+  .apply-suggestion-cta:not(.disabled) .apply-suggestion-btn { animation: apply-cta-pulse 2.5s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .apply-suggestion-cta:not(.disabled) .apply-suggestion-btn { animation: none; }
   }
   .apply-suggestion-cta .apply-suggestion-btn:hover {
     background: #6B0FA8;
