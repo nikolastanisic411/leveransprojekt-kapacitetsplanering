@@ -2806,7 +2806,7 @@
 
   <div class="chart-card">
     <div class="chart-title">Kumulativ volym fram till deadline</div>
-    <svg id="chart" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kumulativ volym över tid"></svg>
+    <svg id="chart" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kumulativ volym över tid"></svg>
     <div class="legend" id="chart-legend">
       <div class="legend-item"><span class="legend-line"></span> Levererat (vald takt)</div>
       <div class="legend-item"><span class="legend-line deadline"></span> Deadline</div>
@@ -5658,8 +5658,8 @@
     highRate = highRate || rate;
     const svg = document.getElementById('chart');
     svg.innerHTML = '';
-    const W = 800, H = 340;
-    const M = { top: 28, right: 40, bottom: 56, left: 60 };
+    const W = 800, H = 360;
+    const M = { top: 36, right: 56, bottom: 64, left: 72 };
     const innerW = W - M.left - M.right;
     const innerH = H - M.top - M.bottom;
     const ns = 'http://www.w3.org/2000/svg';
