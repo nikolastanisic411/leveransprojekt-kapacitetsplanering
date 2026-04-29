@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.72-COPY-PESSIMISTIC" aria-busy="true">
+<body data-build="2026-04-29-G1.73-CLARIFY-CALIBRATE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.72-COPY-PESSIMISTIC</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.73-CLARIFY-CALIBRATE</span>
   </div>
 
 </div>
@@ -7404,7 +7404,7 @@
           }
           // G1.55: Kalibrerings-CTA — om signifikant avvikelse, erbjud auto-kalibrering med ett klick
           if (Math.abs(hrDelta) >= 5 && actualHitrate > 0 && actualHitrate <= 100) {
-            realityHtml += '<div style="margin-top:8px"><button class="ho-apply-btn" onclick="calibratePlanFromActual(' + actualHitrate + ')" type="button" title="Sätt plan-hitrate till verklighetens ' + actualHitrate + ' % så att alla beräkningar matchar utfallet">Kalibrera plan till verklighetens ' + actualHitrate + ' %</button></div>';
+            realityHtml += '<div style="margin-top:8px;font-size:12px;opacity:0.85"><span style="opacity:0.7">Verktyget räknar redan automatiskt på verkligheten i alla insikter.</span> <button class="ho-apply-btn" onclick="calibratePlanFromActual(' + actualHitrate + ')" type="button" title="Uppdatera plan-hitrate-fältet i steg 1 så det matchar verkligheten — användbart om du vill ändra ANTAGANDET, inte bara bedömningen">Sätt plan-hitrate till ' + actualHitrate + ' %</button></div>';
           }
           // G1.19: Hitrate-trend över sista 3 perioder
           {
