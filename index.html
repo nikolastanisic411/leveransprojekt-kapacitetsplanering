@@ -7272,6 +7272,24 @@
     }
   });
 
+    // Persistera scroll-position så reload landar på samma plats (ej bara toppen)
+  try {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const SCROLL_KEY = 'maxtakt-scroll-y';
+    window.addEventListener('beforeunload', () => {
+      try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch (_) {}
+    });
+    window.addEventListener('load', () => {
+      try {
+        const y = parseInt(sessionStorage.getItem(SCROLL_KEY), 10);
+        if (!isNaN(y) && y > 0) {
+          // Vänta tills allt renderats
+          setTimeout(() => window.scrollTo({ top: y, behavior: 'instant' }), 50);
+        }
+      } catch (_) {}
+    });
+  } catch (_) {}
+
     // ESC-tangenten: blur:a aktivt fält så användaren snabbt kan stega bort
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.activeElement && document.activeElement.blur) {
