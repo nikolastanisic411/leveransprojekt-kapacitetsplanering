@@ -3938,7 +3938,7 @@
         <div class="role-label">${escapeHtml(role.name)}
           <span class="small">${role.count} st · ${taktStr} · kap ${capPerDay}/dag</span>
         </div>
-        <textarea data-role-id="${role.id}" placeholder="vad gör denna roll? beskriv aktiviteterna...">${escapeHtml(state.activities[role.id] || '')}</textarea>
+        <textarea data-role-id="${role.id}" placeholder="vad gör denna roll? beskriv aktiviteterna..." aria-label="Aktiviteter för ${escapeHtml(role.name)}">${escapeHtml(state.activities[role.id] || '')}</textarea>
       `;
       container.appendChild(row);
       attachDragHandlers(row, role.id);
