@@ -6279,6 +6279,7 @@
       data[i].requiredEffDay = requiredEffDay;
     }
 
+    const bottleneck = data.find(d => d.isBottleneck);
     // Bygg roll-cards
     let html = '';
     data.forEach((d, i) => {
@@ -6316,6 +6317,10 @@
         html += '<strong>Åtgärd:</strong> Behöver <strong>' + d.requiredHeadcount + ' personer</strong> ';
         html += '(<span style="color:#FFD6F0">+' + d.additionalNeeded + '</span> mot nuvarande ' + d.role.count + ') ';
         html += 'som startar <strong>' + startStr + '</strong> och är klara <strong>' + fmt(d.klarSenast) + '</strong>.';
+        // Hint: om den här rollen INTE är flaskhalsen, lös flaskhalsen först
+        if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
+          html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
+        }
         html += '</div>';
       } else if (isFinite(d.requiredHeadcount)) {
         // OK — bemanning räcker
@@ -6327,7 +6332,6 @@
     });
     content.innerHTML = html;
 
-    const bottleneck = data.find(d => d.isBottleneck);
     let footerHtml = 'Total volym: <strong style="color:#fff">' + Math.round(V) + ' st</strong> till deadline <strong style="color:#fff">' + fmt(deadline) +
       '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '');
     // Konsoliderad åtgärdsplan när det inte hinns
