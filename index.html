@@ -5028,8 +5028,9 @@
         const newCount = Math.min(Math.max(1, sug), r.max);
         if (r.count !== newCount) updatedIds.push(r.id);
         r.count = newCount;
-        r.countMin = newCount;
-        r.countMax = newCount;
+        // Smart spann: ±1 runt rekommendationen så användaren ser low/high direkt utan att tänka på det
+        r.countMin = Math.max(1, newCount - 1);
+        r.countMax = Math.min(r.max, newCount + 1);
       }
     });
     // Visual flash på de roller som ändrades
