@@ -1002,11 +1002,13 @@
     font-family: inherit;
     transition: all 0.15s;
   }
-  button.add-row:hover {
+  button.add-row:hover,
+  button.add-row:focus-visible {
     background: #f4f2eb;
     border-style: solid;
     border-color: #1a1a1a;
   }
+  button.add-row:active { transform: scale(0.99); }
 
   input[type=range] {
     -webkit-appearance: none;
