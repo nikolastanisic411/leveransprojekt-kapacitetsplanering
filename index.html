@@ -6116,6 +6116,63 @@
     }
   }
 
+    // Visa setup-varning om aktuell setup inte hinns till deadline (någon roll måste börja innan idag/projektstart)
+  function updateSetupWarning() {
+    const el = document.getElementById('setup-warning');
+    if (!el) return;
+    const target = +state.onskadVolym || 0;
+    const deadline = state.deadline ? new Date(state.deadline) : null;
+    if (target <= 0 || !deadline || isNaN(deadline.getTime())) {
+      el.style.display = 'none';
+      return;
+    }
+    const active = activeRoles();
+    if (active.length === 0) { el.style.display = 'none'; return; }
+
+    // Använd samma burst-modell som matrisen och sammanfattningen
+    const dayMs = 1000 * 60 * 60 * 24;
+    const today0 = new Date(); today0.setHours(0,0,0,0);
+    const projektStartDate = (state.projektStart && state.projektStart.length >= 8 && !isNaN(new Date(state.projektStart).getTime())) ? new Date(state.projektStart) : today0;
+    const refStart = projektStartDate;
+    const V = target;
+    const effTakts = active.map(r => roleEffectivePerDay(r));
+    let cumulativeMin = Infinity;
+    const data = active.map((role, idx) => {
+      const ownRate = effTakts[idx];
+      cumulativeMin = Math.min(cumulativeMin, ownRate);
+      return { role, idx, ownRate, effectiveRate: cumulativeMin };
+    });
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (i === data.length - 1) {
+        data[i].klarSenast = new Date(deadline);
+      } else {
+        const downstream = data[i+1];
+        const downstreamDaysCal = downstream.effectiveRate > 0 ? (V / downstream.effectiveRate) * 7 / 5 : 0;
+        const handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
+        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
+      }
+      const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
+      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
+      data[i].overshoots = data[i].mastBorjaSenast < refStart;
+    }
+
+    const overshooters = data.filter(d => d.overshoots);
+    if (overshooters.length === 0) {
+      el.style.display = 'none';
+      return;
+    }
+    const fmt = d => d.toLocaleDateString('sv-SE');
+    const earliest = overshooters.reduce((min, d) => d.mastBorjaSenast < min.mastBorjaSenast ? d : min);
+    const refStartLabel = (state.projektStart && state.projektStart.length >= 8) ? 'projektstart ' + fmt(refStart) : 'idag';
+    const daysShort = Math.ceil((refStart - earliest.mastBorjaSenast) / dayMs);
+    el.innerHTML = '<div class="sw-title">⚠ Deadline kommer inte hållas med nuvarande setup</div>' +
+      '<strong>' + escapeHtml(earliest.role.name) + '</strong> behöver börja senast <strong>' + fmt(earliest.mastBorjaSenast) + '</strong>' +
+      ' — det är <strong>' + daysShort + ' dagar</strong> innan ' + refStartLabel + '. ' +
+      (overshooters.length > 1 ? overshooters.length + ' roller hinner inte. ' : '') +
+      'Höj bemanningen, korta ledtiderna eller flytta deadline.';
+    el.style.display = 'block';
+  }
+
     // Scrolla mjukt till ett steg och fokusera primärt fält så användaren kan börja skriva direkt
   function scrollToStep(n) {
     const el = document.getElementById('step-' + n);
