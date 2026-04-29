@@ -2959,7 +2959,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.33-WEEK-PROGNOS" aria-busy="true">
+<body data-build="2026-04-29-G1.34-SPARKLINE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3386,7 +3386,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.33-WEEK-PROGNOS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.34-SPARKLINE</span>
   </div>
 
 </div>
@@ -6930,7 +6930,20 @@
                 if (trendDelta >= 5) { trendIcon = '📈'; trendColor = '#A8E6C2'; trendLabel = 'Hitrate stigande'; }
                 else if (trendDelta <= -5) { trendIcon = '📉'; trendColor = '#FFD6F0'; trendLabel = 'Hitrate sjunkande'; }
                 else { trendIcon = '➡️'; trendColor = '#FFE6A0'; trendLabel = 'Hitrate stabil'; }
-                realityHtml += '<br><span style="color:' + trendColor + ';font-weight:600;font-size:12px">' + trendIcon + ' ' + trendLabel + '</span> <span style="opacity:0.85;font-size:12px">— från ' + Math.round(first) + ' % till ' + Math.round(last) + ' % över sista ' + rates.length + ' perioder.</span>';
+                // G1.34: Sparkline för hitrate-trend
+                let sparkSvg = '';
+                if (rates.length >= 2) {
+                  const w = 80, hH = 16;
+                  const minR = Math.min(...rates), maxR = Math.max(...rates);
+                  const rangeR = (maxR - minR) || 1;
+                  const points = rates.map((r, i) => {
+                    const x = (i / (rates.length - 1)) * w;
+                    const y = hH - ((r - minR) / rangeR) * hH;
+                    return x.toFixed(1) + ',' + y.toFixed(1);
+                  }).join(' ');
+                  sparkSvg = '<svg width="' + w + '" height="' + hH + '" style="vertical-align:middle;margin:0 4px" aria-hidden="true"><polyline fill="none" stroke="' + trendColor + '" stroke-width="1.5" points="' + points + '"/></svg>';
+                }
+                realityHtml += '<br><span style="color:' + trendColor + ';font-weight:600;font-size:12px">' + trendIcon + ' ' + trendLabel + '</span>' + sparkSvg + '<span style="opacity:0.85;font-size:12px">— från ' + Math.round(first) + ' % till ' + Math.round(last) + ' % över sista ' + rates.length + ' perioder.</span>';
               }
             }
           }
