@@ -3597,9 +3597,9 @@
   }
 
   function applyStateToInputs() {
-    document.getElementById('hitrate').value = state.hitrate;
-    document.getElementById('rampMonths').value = state.rampMonths;
-    document.getElementById('deadline').value = state.deadline;
+    document.getElementById('hitrate').value = state.hitrate || 90;
+    document.getElementById('rampMonths').value = state.rampMonths || 0;
+    document.getElementById('deadline').value = state.deadline || '';
     document.getElementById('projektStart').value = state.projektStart || '';
     if (state.handover) {
       const ho = document.getElementById('handover-order');
