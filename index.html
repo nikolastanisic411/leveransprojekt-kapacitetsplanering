@@ -2991,6 +2991,14 @@
     </div>
   </div>
 
+  <div class="global-row">
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Andel TF1-leveranser som blir bomkörningar och eskaleras till Nätarkitekt för rework. T.ex. 10% betyder att 10 av 100 TF1-jobb behöver designas om av Nätarkitekt — ökar Nätarkitekt-belastningen.">Rework-eskalering</span>
+      <span class="hint">% av TF1-leveranser som måste designas om av Nätarkitekt</span>
+    </div>
+    <input type="range" id="reworkRate" aria-label="Rework-eskalering procent" min="0" max="30" value="0" step="1">
+    <div class="count" id="reworkRate-v">0%</div>
+  </div>
+
   <div class="handover-group">
     <div class="handover-label">Handover-tider mellan roller <span class="hint">— standardtider för varje övergång i pipelinen</span></div>
     <div class="handover-fields">
