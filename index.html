@@ -3080,6 +3080,8 @@
           saveState();
           renderRoles();
           renderActivities();
+          updateApplyCtaState();
+          updateNextActionBanner();
           recalc();
         }
       });
@@ -3092,6 +3094,8 @@
     saveState();
     renderRoles();
     renderActivities();
+    updateApplyCtaState();
+    updateNextActionBanner();
     recalc();
     setTimeout(() => {
       const input = document.querySelector(`input[data-id="${newId}"][data-field="name"]`);
