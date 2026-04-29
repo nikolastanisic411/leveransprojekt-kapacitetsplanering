@@ -2951,6 +2951,13 @@
         if (state.leadtimeDays === undefined) state.leadtimeDays = 10;
         if (state.projektStart === undefined) state.projektStart = '';
         if (!state.typfallMix) state.typfallMix = { tf1: 0, tf2: 0, tf3: state.onskadVolym || 390 };
+        if (!state.typfallLedtider || typeof state.typfallLedtider !== 'object') {
+          state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
+        } else {
+          if (typeof state.typfallLedtider.tf1 !== 'number') state.typfallLedtider.tf1 = 10;
+          if (typeof state.typfallLedtider.tf2 !== 'number') state.typfallLedtider.tf2 = 60;
+          if (typeof state.typfallLedtider.tf3 !== 'number') state.typfallLedtider.tf3 = 100;
+        }
         if (state.snapshot === undefined) state.snapshot = null;
         if (!state.utfall || typeof state.utfall !== 'object') state.utfall = { granularity: 'vecka', entries: [] };
         if (!state.utfall.granularity) state.utfall.granularity = 'vecka';
