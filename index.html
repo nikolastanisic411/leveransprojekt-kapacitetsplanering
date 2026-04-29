@@ -6137,6 +6137,34 @@
     }
   }
 
+    // Applicera rekommenderad bemanning för en specifik roll direkt från Sammanfattnings-vyn
+  function applyRoleRecommendation(roleId, newCount) {
+    const role = state.roles.find(r => r.id === roleId);
+    if (!role) return;
+    const cap = Math.min(role.max || 50, Math.max(1, +newCount || 1));
+    role.count = cap;
+    // Justera spannet runt nya värdet
+    role.countMin = Math.max(1, cap - 1);
+    role.countMax = Math.min(role.max || 50, cap + 1);
+    state.suggestionApplied = true;
+    saveState();
+    applyStateToInputs();
+    renderRoles();
+    updateApplyCtaState();
+    updateNextActionBanner();
+    updateStepProgress();
+    recalc();
+    // Visuell flash på rollen
+    setTimeout(() => {
+      const row = document.getElementById('row-' + roleId);
+      if (row) {
+        row.classList.remove('flash');
+        void row.offsetWidth;
+        row.classList.add('flash');
+      }
+    }, 50);
+  }
+
     // Visa setup-varning om aktuell setup inte hinns till deadline (någon roll måste börja innan idag/projektstart)
   function updateSetupWarning() {
     const el = document.getElementById('setup-warning');
