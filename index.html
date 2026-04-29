@@ -2409,7 +2409,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-fix66">
+<body data-build="2026-04-29-fix66" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -6345,6 +6345,7 @@
   });
   updateSnapshotUI();
   recalc();
+  document.body.removeAttribute('aria-busy');
 </script>
 
 </body>
