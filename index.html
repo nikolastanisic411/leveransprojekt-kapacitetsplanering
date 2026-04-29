@@ -2942,7 +2942,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.19-TREND" aria-busy="true">
+<body data-build="2026-04-29-G1.20-COPY-TIPS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3369,7 +3369,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.19-TREND</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.20-COPY-TIPS</span>
   </div>
 
 </div>
@@ -6581,6 +6581,24 @@
     }, 350);
   }
 
+  // G1.20: Kopiera smart-tips som plain text
+  function copySmartTips() {
+    const box = document.getElementById('handover-footer');
+    if (!box) return;
+    const tipsContainer = box.querySelector('div[style*="background:rgba(255,255,255,0.08)"]');
+    if (!tipsContainer) { showToast('Inga tips att kopiera'); return; }
+    const items = tipsContainer.querySelectorAll('li');
+    if (items.length === 0) { showToast('Inga tips att kopiera'); return; }
+    let txt = 'SMART-TIPS — alternativ till mer bemanning\n';
+    txt += '═══════════════════════════════════════════\n\n';
+    items.forEach((li, i) => { txt += '• ' + (li.innerText || li.textContent || '').replace(/\s+/g, ' ').trim() + '\n\n'; });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => showToast('Smart-tips kopierade')).catch(() => prompt('Kopiera följande:', txt));
+    } else {
+      prompt('Kopiera följande:', txt);
+    }
+  }
+
   // G1.16: Proaktiv early warning högst upp — färgkodad pill som klickas för att hoppa till Sammanfattningen
   function updatePlanStatusPill(opts) {
     const pill = document.getElementById('plan-status-pill');
@@ -6993,7 +7011,10 @@
           footerHtml += '<strong style="color:#fff">Smart-tips — alternativ till mer bemanning:</strong>';
           footerHtml += '<ul style="margin:6px 0 0 18px;padding:0;list-style:disc">';
           tips.forEach(t => { footerHtml += '<li style="margin:3px 0">' + t + '</li>'; });
-          footerHtml += '</ul></div>';
+          footerHtml += '</ul>';
+          // G1.20: Kopiera tipsen som plain text för delning
+          footerHtml += '<div style="margin-top:8px"><button class="ho-copy-btn" onclick="copySmartTips()" type="button">Kopiera tipsen</button></div>';
+          footerHtml += '</div>';
         }
       }
     }
