@@ -4463,6 +4463,19 @@
     };
   }
 
+  // Beräkna rework-volym (TF1 × reworkRate) — extra last på Nätarkitekt
+  function getReworkVolume() {
+    const rate = (+state.reworkRate || 0) / 100;
+    if (rate <= 0) return 0;
+    let tf1Vol = 0;
+    if (state.leadtimeDays === 'mix') {
+      tf1Vol = +state.typfallMix.tf1 || 0;
+    } else if (state.leadtimeDays === 10) {
+      tf1Vol = +state.onskadVolym || 0;
+    }
+    return Math.round(tf1Vol * rate);
+  }
+
   // Mappar legacy 10/60/100-värden till tf1/tf2/tf3 (konstanta i UI)
   function ledtidKeyFromValue(v) {
     if (v === 10) return 'tf1';
