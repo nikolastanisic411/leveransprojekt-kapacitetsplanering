@@ -2942,7 +2942,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.17-PRINT-STATUS" aria-busy="true">
+<body data-build="2026-04-29-G1.18-ALWAYS-PILL" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3369,7 +3369,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.17-PRINT-STATUS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.18-ALWAYS-PILL</span>
   </div>
 
 </div>
@@ -6787,20 +6787,16 @@
       else if (marginalDays === 0) { robustEmoji = '⚠️'; robustLabel = 'Precis i tid — ingen marginal'; robustColor = '#FFD6F0'; pillVariant = 'orange'; }
       else { robustEmoji = '🔴'; robustLabel = 'Försenad'; robustColor = '#FFD6F0'; pillVariant = 'red'; }
       footerHtml += '<br><span style="color:' + robustColor + ';font-weight:600">' + robustEmoji + ' ' + robustLabel + '</span>';
-      // G1.16: Uppdatera early-warning-pill — visa endast vid problem, dölj när robust
-      if (pillVariant === 'green') {
-        updatePlanStatusPill({ show: false });
+      // G1.18: Visa pillen alltid för konsekvent feedback (inkl. grön när robust)
+      let pillText;
+      if (marginalDays > 0) {
+        pillText = '<strong>' + robustLabel + '</strong> &mdash; ' + marginalDays + ' dagars marginal till deadline ' + fmt(deadline) + '.';
+      } else if (marginalDays === 0) {
+        pillText = '<strong>Precis i tid</strong> &mdash; ingen marginal till deadline ' + fmt(deadline) + '.';
       } else {
-        let pillText;
-        if (marginalDays > 0) {
-          pillText = '<strong>' + robustLabel + '</strong> &mdash; ' + marginalDays + ' dagars marginal till deadline ' + fmt(deadline) + '.';
-        } else if (marginalDays === 0) {
-          pillText = '<strong>Precis i tid</strong> &mdash; ingen marginal till deadline ' + fmt(deadline) + '.';
-        } else {
-          pillText = '<strong>Försenad ' + Math.abs(marginalDays) + ' dagar</strong> mot deadline ' + fmt(deadline) + ' &mdash; gå till Sammanfattning för åtgärdsförslag.';
-        }
-        updatePlanStatusPill({ show: true, variant: pillVariant, icon: robustEmoji, text: pillText });
+        pillText = '<strong>Försenad ' + Math.abs(marginalDays) + ' dagar</strong> mot deadline ' + fmt(deadline) + ' &mdash; gå till Sammanfattning för åtgärdsförslag.';
       }
+      updatePlanStatusPill({ show: true, variant: pillVariant, icon: robustEmoji, text: pillText });
       // G1.13: Stresstest — vid vilken handover-ökning eller hitrate-fall spricker planen?
       if (marginalDays > 0) {
         const stressBits = [];
