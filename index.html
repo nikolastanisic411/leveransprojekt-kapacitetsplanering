@@ -3891,7 +3891,7 @@
         if (mixSum > 0) { totalVol = mixSum; mixUsed = true; }
       }
       if (!totalVol || totalVol <= 0) {
-        el.innerHTML = '<span style="color:#a8a8a3">Sätt målvolym för konkreta siffror</span>';
+        el.innerHTML = '<span style="color:#a8a8a3;font-style:italic">Sätt målvolym i steg 1 för att se konkreta siffror på lyckade leveranser och bomkörningar.</span>';
         return;
       }
       const success = Math.round(totalVol * state.hitrate / 100);
