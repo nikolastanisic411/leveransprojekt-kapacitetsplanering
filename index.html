@@ -3859,10 +3859,14 @@
         if (!state.handover || typeof state.handover !== 'object') state.handover = { orderHandover: 3, archHandover: 5, tekStartup: 10 };
         if (!Array.isArray(state.constraints)) state.constraints = [];
         if (!Array.isArray(state.scenarios)) state.scenarios = [];
-        // Säkerställ enabled/unit på roller
+        // Säkerställ enabled/unit på roller och clampa numeriska värden
         state.roles.forEach(r => {
           if (r.enabled === undefined) r.enabled = true;
           if (!r.unit) r.unit = 'dag';
+          if (typeof r.count !== 'number' || !isFinite(r.count) || r.count < 0) r.count = 1;
+          if (typeof r.takt !== 'number' || !isFinite(r.takt) || r.takt < 0) r.takt = 1;
+          if (!r.max || r.max < 1) r.max = 50;
+          if (!r.typfalls) r.typfalls = { tf1: true, tf2: true, tf3: true };
         });
         saveState();
         location.reload();
