@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.55-CALIBRATE" aria-busy="true">
+<body data-build="2026-04-29-G1.56-INPUT-VALID" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.55-CALIBRATE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.56-INPUT-VALID</span>
   </div>
 
 </div>
@@ -6792,6 +6792,46 @@
     const deadline = state.deadline ? new Date(state.deadline) : null;
     if (target <= 0 || !deadline || isNaN(deadline.getTime())) {
       el.style.display = 'none';
+      return;
+    }
+    // G1.56: Input-validering för uppenbara felinmatningar
+    const dayMs0 = 1000 * 60 * 60 * 24;
+    const today00 = new Date(); today00.setHours(0,0,0,0);
+    const fmt0 = d => d.toLocaleDateString('sv-SE');
+    if (deadline < today00) {
+      el.innerHTML = '<div class="sw-title">⚠ Deadline har redan passerat</div>' +
+        'Deadline <strong>' + fmt0(deadline) + '</strong> är ' + Math.round((today00 - deadline) / dayMs0) + ' dagar bakåt i tiden. ' +
+        'Uppdatera deadline för att kunna planera framåt.';
+      el.style.display = 'block';
+      return;
+    }
+    if (state.projektStart && state.projektStart.length >= 8) {
+      const ps = new Date(state.projektStart);
+      if (!isNaN(ps.getTime())) {
+        if (ps > deadline) {
+          el.innerHTML = '<div class="sw-title">⚠ Projektstart är efter deadline</div>' +
+            'Projektstart <strong>' + fmt0(ps) + '</strong> ligger efter deadline <strong>' + fmt0(deadline) + '</strong>. ' +
+            'Korrigera ordningen för att kunna räkna fram en realistisk plan.';
+          el.style.display = 'block';
+          return;
+        }
+        if (ps < today00) {
+          const daysOverdue = Math.round((today00 - ps) / dayMs0);
+          if (daysOverdue >= 14) {
+            el.innerHTML = '<div class="sw-title">⚠ Projektstart ligger ' + daysOverdue + ' dagar bakåt</div>' +
+              'Projektstart <strong>' + fmt0(ps) + '</strong> är passerat med ' + daysOverdue + ' dagar — om projektet faktiskt har startat, justera ev. utfall under steg 8. ' +
+              'Annars överväg att flytta projektstart närmare idag för att få en realistisk prognos.';
+            el.style.display = 'block';
+            return;
+          }
+        }
+      }
+    }
+    const daysToDeadline = Math.round((deadline - today00) / dayMs0);
+    if (daysToDeadline >= 0 && daysToDeadline < 1) {
+      el.innerHTML = '<div class="sw-title">⚠ Deadline är inom 1 dag</div>' +
+        'Deadline <strong>' + fmt0(deadline) + '</strong> är extremt nära. Verktyget kan inte planera meningsfullt på under 1 dag — överväg att flytta deadline framåt.';
+      el.style.display = 'block';
       return;
     }
     const active = activeRoles();
