@@ -2496,6 +2496,106 @@
     .tf-pills { flex-direction: column; }
     .tf-btn { width: 100%; }
   }
+
+  /* === LEDNINGSGRUPPSVY === */
+  .exec-view {
+    margin: 16px 0 32px;
+    padding: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #fdfcf8 100%);
+    border: 0.5px solid #d8d6cf;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .exec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .exec-kpi {
+    padding: 16px 18px;
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 10px;
+  }
+  .exec-kpi-primary {
+    background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
+    color: #ffffff;
+    border-color: #5C0E92;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .exec-kpi-label {
+    font-size: 11px;
+    color: #8a8a85;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .exec-kpi-primary .exec-kpi-label { color: rgba(255,255,255,0.85); }
+  .exec-kpi-value {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+    font-variant-numeric: tabular-nums;
+  }
+  .exec-kpi-primary .exec-kpi-value { color: #ffffff; }
+  .exec-kpi-sub {
+    font-size: 12px;
+    color: #6b6b66;
+    margin-top: 4px;
+  }
+  .exec-kpi-primary .exec-kpi-sub { color: rgba(255,255,255,0.85); }
+  .exec-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .exec-chart-card {
+    padding: 16px;
+    background: #ffffff;
+    border: 0.5px solid #e5e3dc;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .exec-chart-title {
+    font-size: 11px;
+    color: #6b6b66;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .exec-chart-card svg {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+  }
+  .exec-chart-caption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #1a1a1a;
+    font-weight: 500;
+  }
+  .exec-status {
+    padding: 14px 18px;
+    background: #f8f6f0;
+    border-left: 3px solid #5C0E92;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #1a1a1a;
+    line-height: 1.5;
+  }
+  @media (max-width: 700px) {
+    .exec-view { padding: 16px; }
+    .exec-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .exec-charts { grid-template-columns: 1fr; }
+    .exec-kpi-value { font-size: 22px; }
+  }
 </style>
 </head>
 <body data-build="2026-04-29-FIX-CRASH" aria-busy="true">
