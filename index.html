@@ -5003,7 +5003,28 @@
   }
 
   // Föreslå ramptid automatiskt baserat på hur långt fram projektstart ligger
-  function suggestRampMonths() {
+  // Auto-generera relevanta scenarier baserat på nuvarande mål och bemanning
+  function autoGenerateScenarios() {
+    // Beräkna baserat på aktuellt mål
+    const targetVol = +state.onskadVolym || 0;
+    if (targetVol <= 0) return;
+    // Beräkna month-takt baserat på faktisk capacity
+    const active = activeRoles();
+    if (active.length === 0) return;
+    const minEffDay = Math.min(...active.map(r => roleEffectivePerDay(r)));
+    const baseMonth = Math.round(minEffDay * 21);
+    // Behåll redan namngivna custom-scenarier; ersätt bara auto-genererade
+    const existingCustom = (state.scenarios || []).filter(s => !(s.id || '').startsWith('auto-'));
+    const auto = [];
+    if (baseMonth > 0) {
+      auto.push({ id: 'auto-current', name: 'Aktuell takt', target: baseMonth, unit: 'månad' });
+      auto.push({ id: 'auto-stretch', name: 'Stretch (+25%)', target: Math.round(baseMonth * 1.25), unit: 'månad' });
+      auto.push({ id: 'auto-min', name: 'Minimum (-15%)', target: Math.round(baseMonth * 0.85), unit: 'månad' });
+    }
+    state.scenarios = [...existingCustom, ...auto];
+  }
+
+    function suggestRampMonths() {
     if (!state.projektStart) return 1; // okänt projektstart — anta 1 månad ramp
     const today = new Date();
     const start = new Date(state.projektStart);
@@ -5061,6 +5082,7 @@
     currentSuggestion = needed;
     state.suggestionApplied = true;
     // Auto-räkna ramp om användaren inte explicit har satt den (= 0)
+    autoGenerateScenarios();
     if (!state.rampMonths || state.rampMonths === 0) {
       state.rampMonths = suggestRampMonths();
       const rampInput = document.getElementById('rampMonths');
@@ -5070,6 +5092,7 @@
     }
     saveState();
     applyStateToInputs();
+    renderScenarios();
     renderRoles();
     updateApplyCtaState();
     updateNextActionBanner();
