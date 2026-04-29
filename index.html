@@ -3517,14 +3517,26 @@
     document.getElementById('projektStart').addEventListener('input', (e) => {
       state.projektStart = e.target.value; saveState(); recalc();
     });
+    // Centraliserad refresh efter datum-ändringar
+    const refreshAfterDateChange = () => {
+      saveState();
+      updateNextActionBanner();
+      updateApplyCtaState();
+      updateStepProgress();
+      checkDateSanity();
+      recalc();
+    };
+    document.getElementById('projektStart').addEventListener('input', (e) => {
+      state.projektStart = e.target.value; refreshAfterDateChange();
+    });
     document.getElementById('projektStart').addEventListener('change', (e) => {
-      state.projektStart = e.target.value; saveState(); recalc();
+      state.projektStart = e.target.value; refreshAfterDateChange();
     });
     document.getElementById('deadline').addEventListener('input', (e) => {
-      state.deadline = e.target.value; saveState(); recalc();
+      state.deadline = e.target.value; refreshAfterDateChange();
     });
     document.getElementById('deadline').addEventListener('change', (e) => {
-      state.deadline = e.target.value; saveState(); recalc();
+      state.deadline = e.target.value; refreshAfterDateChange();
     });
     ['handover-order', 'handover-arch', 'handover-tek'].forEach(id => {
       const el = document.getElementById(id);
