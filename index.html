@@ -2474,6 +2474,9 @@
       page-break-inside: avoid;
     }
 
+    /* Inga animationer i print */
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    
     /* === LEDNINGSGRUPPSVY i print === */
     .exec-view { page-break-before: always; break-before: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .exec-kpi-primary, .exec-doughnut-progress, .exec-doughnut-roles, .exec-doughnut-hitrate { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
