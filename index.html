@@ -3400,7 +3400,11 @@
       const addCard = document.createElement('div');
       addCard.className = 'scen add-scenario';
       addCard.textContent = '+ Lägg till scenario';
+      addCard.tabIndex = 0;
+      addCard.setAttribute('role', 'button');
+      addCard.setAttribute('aria-label', 'Lägg till scenario');
       addCard.onclick = addScenario;
+      addCard.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addScenario(); } };
       container.appendChild(addCard);
       return;
     }
