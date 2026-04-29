@@ -21,9 +21,9 @@
     --surface: #ffffff;
     --surface-soft: #FCFAFD;
     --border: #D8D5DD;
-    --text: #1a1a1a;
-    --text-muted: #6b6b66;
-    --text-faint: #a8a8a3;
+    --text: #1A1A1F;
+    --text-muted: #6B6770;
+    --text-faint: #A8A5AD;
     --success: #1d6e35;
     --warning: #b8410e;
   }
@@ -55,7 +55,7 @@
     padding: 0;
     background: linear-gradient(180deg, #FBFAFD 0%, #F5F2F8 100%);
     background-attachment: fixed;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.5;
@@ -81,7 +81,7 @@
     font-family: inherit;
     font-size: 14px;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
   .target-cell input[type=date]:hover,
@@ -94,7 +94,7 @@
     border-color: #5C0E92;
     box-shadow: 0 0 0 3px rgba(92, 14, 146, 0.15);
   }
-  ::selection { background: rgba(92,14,146,0.20); color: #1a1a1a; }
+  ::selection { background: rgba(92,14,146,0.20); color: #1A1A1F; }
   /* Scrollbar styling */
   * {
     scrollbar-width: thin;
@@ -104,14 +104,14 @@
   *::-webkit-scrollbar-track { background: #F8F5FB; }
   *::-webkit-scrollbar-thumb { background: #C8C5CD; border-radius: 4px; }
   *::-webkit-scrollbar-thumb:hover { background: #A8A5AD; }
-  ::-moz-selection { background: rgba(92,14,146,0.20); color: #1a1a1a; }
+  ::-moz-selection { background: rgba(92,14,146,0.20); color: #1A1A1F; }
   h1 {
     font-size: 28px;
     font-weight: 500;
     margin: 0 0 6px;
     letter-spacing: -0.02em;
     line-height: 1.2;
-    color: #1a1a1a;
+    color: #1A1A1F;
   }
   .subtitle-help {
     color: #5C0E92;
@@ -127,7 +127,7 @@
   .subtitle-help:hover, .subtitle-help:focus-visible { background: rgba(92,14,146,0.14); outline: none; }
   .subtitle {
     font-size: 14px;
-    color: #6b6b66;
+    color: #6B6770;
     margin: 0 0 32px;
   }
   .toolbar {
@@ -144,7 +144,7 @@
   }
   .toolbar button {
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     border: 0.5px solid #C8C5CD;
     border-radius: 8px;
     padding: 8px 14px;
@@ -167,9 +167,9 @@
     align-self: center;
   }
   .toolbar button.primary {
-    background: #1a1a1a;
+    background: #1A1A1F;
     color: #ffffff;
-    border-color: #1a1a1a;
+    border-color: #1A1A1F;
   }
   .toolbar button.primary:hover { background: #333; }
   /* Focus styles för bättre tangentbordsnavigation */
@@ -193,7 +193,7 @@
   .toolbar .snapshot-info {
     margin-left: auto;
     font-size: 11px;
-    color: #8a8a85;
+    color: #888590;
     align-self: center;
     font-style: italic;
   }
@@ -259,7 +259,7 @@
   .next-action-banner .nab-icon {
     font-size: 22px;
   }
-  .next-action-banner strong { color: #1a1a1a; }
+  .next-action-banner strong { color: #1A1A1F; }
   .next-action-banner button {
     background: #5C0E92;
     color: #fff;
@@ -304,13 +304,13 @@
     border: 0.5px solid #E5E2EA;
     cursor: pointer;
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     transition: all 0.15s;
     user-select: none;
   }
   .step-progress .sp-step:hover {
     border-color: #5C0E92;
-    color: #1a1a1a;
+    color: #1A1A1F;
   }
   .step-progress .sp-step .sp-num {
     display: inline-flex;
@@ -386,7 +386,7 @@
 
   .active-roles-indicator {
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
     font-weight: 500;
     background: #F4F0F7;
     border: 0.5px solid #D8D5DD;
@@ -417,7 +417,7 @@
   }
   .section .saved-indicator {
     font-size: 12px;
-    color: #8a8a85;
+    color: #888590;
     font-style: italic;
     text-transform: none;
     letter-spacing: 0;
@@ -425,7 +425,7 @@
   }
   .section .section-hint {
     font-size: 12px;
-    color: #707068;
+    color: #707070;
     font-weight: 400;
     text-transform: none;
     letter-spacing: 0;
@@ -477,7 +477,7 @@
     border: 0.5px solid #e0d4ed;
     border-radius: 8px;
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -497,18 +497,18 @@
     gap: 4px;
   }
   .per-subset-row .ps-tf-name {
-    color: #6b6b66;
+    color: #6B6770;
     font-size: 11px;
   }
   .per-subset-row .ps-tf-volym {
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
   .per-subset-row .ps-tf-volym.short { color: #9a2424; }
   .per-subset-row .ps-tf-meta {
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
   }
   .per-subset-row .ps-sep { color: #d8c5e8; font-size: 10px; }
   .klart-per-roll {
@@ -518,7 +518,7 @@
     border: 0.5px solid #E5E2EA;
     border-radius: 10px;
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -528,7 +528,7 @@
   .klart-per-roll .klart-label { color: #5C0E92; font-weight: 600; }
   .klart-per-roll .klart-label {
     font-size: 11px;
-    color: #8a8a85;
+    color: #888590;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: 500;
@@ -540,11 +540,11 @@
     gap: 4px;
   }
   .klart-per-roll .klart-role-name {
-    color: #6b6b66;
+    color: #6B6770;
     font-size: 12px;
   }
   .klart-per-roll .klart-role-num {
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
@@ -585,7 +585,7 @@
   }
   .process-flow .pf-title {
     font-size: 13px;
-    color: #6b6b66;
+    color: #6B6770;
     margin-bottom: 16px;
   }
   .process-flow .pf-row {
@@ -617,27 +617,27 @@
   }
   .process-flow .pf-step .pf-num {
     font-size: 10px;
-    color: #8a8a85;
+    color: #888590;
     margin-bottom: 4px;
     font-weight: 500;
   }
   .process-flow .pf-step .pf-name {
     font-size: 12px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: #1A1A1F;
     margin-bottom: 6px;
     word-break: break-word;
   }
   .process-flow .pf-step .pf-cap {
     font-size: 18px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
   .process-flow .pf-step .pf-suffix {
     font-size: 10px;
-    color: #6b6b66;
+    color: #6B6770;
   }
   .process-flow .pf-step.bottleneck .pf-cap {
     color: #9a2424;
@@ -684,7 +684,7 @@
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%) translateY(-6px);
-    background: #1a1a1a;
+    background: #1A1A1F;
     color: #fff;
     padding: 8px 12px;
     border-radius: 6px;
@@ -718,7 +718,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(0px);
     border: 4px solid transparent;
-    border-top-color: #1a1a1a;
+    border-top-color: #1A1A1F;
     z-index: 11;
     pointer-events: none;
   }
@@ -768,7 +768,7 @@
   }
   .apply-suggestion-cta .apply-suggestion-hint {
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     line-height: 1.45;
     flex: 1;
   }
@@ -822,7 +822,7 @@
   }
   .advanced-params-hint {
     font-weight: 400;
-    color: #8a8a85;
+    color: #888590;
     text-transform: none;
     letter-spacing: 0;
     margin-left: 4px;
@@ -847,7 +847,7 @@
     cursor: pointer;
     font-family: inherit;
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -862,7 +862,7 @@
   }
   .ui-mode-toggle .ui-mode-hint {
     font-size: 12px;
-    color: #8a8a85;
+    color: #888590;
     line-height: 1.4;
   }
 
@@ -895,7 +895,7 @@
     align-items: center;
     padding: 8px 0;
     font-size: 11px;
-    color: #a8a8a3;
+    color: #A8A5AD;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     border-bottom: 0.5px solid #E5E2EA;
@@ -908,7 +908,7 @@
   .role-header .header-sub {
     display: block;
     font-size: 10px;
-    color: #8a8a85;
+    color: #888590;
     font-weight: 400;
     letter-spacing: 0;
     text-transform: none;
@@ -962,12 +962,12 @@
     border-radius: 4px;
     transition: all 0.15s;
   }
-  .drag-handle:hover { color: #6b6b66; background: #F4F0F7; }
+  .drag-handle:hover { color: #6B6770; background: #F4F0F7; }
   .drag-handle:active { cursor: grabbing; }
 
   .role-num {
     font-size: 13px;
-    color: #8a8a85;
+    color: #888590;
     text-align: center;
     font-variant-numeric: tabular-nums;
     font-weight: 500;
@@ -975,7 +975,7 @@
 
   .role-row .role-name-input {
     font-size: 14px;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-weight: 500;
     background: transparent;
     border: 0.5px solid transparent;
@@ -1008,7 +1008,7 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
   }
   .role-row input[type=number]:focus { outline: none; border-color: #5C0E92; box-shadow: 0 0 0 2px rgba(92,14,146,0.15); }
@@ -1017,7 +1017,7 @@
     font-size: 14px;
     font-variant-numeric: tabular-nums;
     font-weight: 500;
-    color: #4a4a45;
+    color: #4A4750;
   }
   .role-row.bottleneck .cap { color: #9a2424; }
   .role-row.bottleneck .role-name-input { color: #9a2424; }
@@ -1053,7 +1053,7 @@
   }
   .role-row .role-spann .spann-sublabel {
     font-size: 9px;
-    color: #a8a8a3;
+    color: #A8A5AD;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     text-align: center;
@@ -1069,7 +1069,7 @@
     text-align: center;
     font-variant-numeric: tabular-nums;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-weight: 500;
     font-family: inherit;
   }
@@ -1103,7 +1103,7 @@
     border: 0.5px solid #D8D5DD;
     border-radius: 6px;
     background: #ffffff;
-    color: #a8a8a3;
+    color: #A8A5AD;
     cursor: pointer;
     user-select: none;
     transition: all 0.12s;
@@ -1149,14 +1149,14 @@
     border-radius: 6px;
     font-size: 12px;
     background: #ffffff;
-    color: #4a4a45;
+    color: #4A4750;
     font-family: inherit;
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
   .role-row .role-cap-input:focus,
   .role-row .role-hitrate-input:focus {
-    outline: none; border-color: #1a1a1a;
+    outline: none; border-color: #1A1A1F;
   }
   .role-row .role-cap-input::placeholder,
   .role-row .role-hitrate-input::placeholder {
@@ -1171,7 +1171,7 @@
     border-radius: 6px;
     font-size: 12px;
     background: #ffffff;
-    color: #4a4a45;
+    color: #4A4750;
     font-family: inherit;
     text-align: center;
     cursor: pointer;
@@ -1192,7 +1192,7 @@
     color: #6B5A1F;
     line-height: 1.5;
   }
-  .roles-empty-state strong { color: #1a1a1a; }
+  .roles-empty-state strong { color: #1A1A1F; }
   .add-role-row {
     margin-top: 12px;
     display: flex;
@@ -1201,7 +1201,7 @@
   }
   button.add-row {
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     border: 0.5px dashed #A8A5AD;
     border-radius: 8px;
     padding: 10px 16px;
@@ -1256,13 +1256,13 @@
   .handover-group .handover-label {
     font-size: 13px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: #1A1A1F;
     margin-bottom: 10px;
   }
   .handover-group .handover-label .hint {
     font-size: 12px;
     font-weight: 400;
-    color: #6b6b66;
+    color: #6B6770;
     margin-left: 4px;
   }
   .handover-fields {
@@ -1280,7 +1280,7 @@
     border: 0.5px solid #E5E2EA;
     border-radius: 6px;
   }
-  .handover-field label { font-size: 12px; color: #4a4a45; line-height: 1.3; }
+  .handover-field label { font-size: 12px; color: #4A4750; line-height: 1.3; }
   .handover-field input {
     width: 100%;
     padding: 4px 6px;
@@ -1290,21 +1290,21 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
   }
   .handover-field input:focus { outline: none; border-color: #5C0E92; box-shadow: 0 0 0 2px rgba(92,14,146,0.15); }
-  .handover-field .handover-unit { font-size: 11px; color: #8a8a85; }
+  .handover-field .handover-unit { font-size: 11px; color: #888590; }
   .handover-summary {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 0.5px solid #E5E2EA;
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     line-height: 1.6;
     font-variant-numeric: tabular-nums;
   }
-  .handover-summary strong { color: #1a1a1a; }
+  .handover-summary strong { color: #1A1A1F; }
   .global-row input[type=range]#hitrate {
     appearance: none;
     -webkit-appearance: none;
@@ -1321,7 +1321,7 @@
     appearance: none;
     width: 18px;
     height: 18px;
-    background: #1a1a1a;
+    background: #1A1A1F;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -1329,7 +1329,7 @@
   .global-row input[type=range]#hitrate::-moz-range-thumb {
     width: 18px;
     height: 18px;
-    background: #1a1a1a;
+    background: #1A1A1F;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -1342,11 +1342,11 @@
     align-items: center;
     padding: 12px 0 4px;
   }
-  .global-row .role-name { font-size: 14px; color: #1a1a1a; font-weight: 500; }
+  .global-row .role-name { font-size: 14px; color: #1A1A1F; font-weight: 500; }
   .global-row .role-name .hint {
     display: block;
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     font-weight: 400;
     margin-top: 2px;
     line-height: 1.4;
@@ -1364,16 +1364,16 @@
     align-items: center;
     padding: 12px 0 4px;
   }
-  .target-cell label { font-size: 14px; color: #1a1a1a; font-weight: 500; }
+  .target-cell label { font-size: 14px; color: #1A1A1F; font-weight: 500; }
   .hitrate-detail {
     grid-column: 1 / -1;
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     margin-top: 2px;
     padding-left: 2px;
     line-height: 1.5;
   }
-  .hitrate-detail strong { color: #1a1a1a; font-weight: 600; }
+  .hitrate-detail strong { color: #1A1A1F; font-weight: 600; }
   .hitrate-detail .miss { color: #9a2424; font-weight: 600; }
   .required-mark {
     color: #c91515;
@@ -1387,7 +1387,7 @@
   }
   .required-legend {
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     margin: 0 0 18px;
     display: inline-flex;
     align-items: center;
@@ -1408,7 +1408,7 @@
     font-size: 13px;
     font-weight: 500;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
     max-width: 200px;
   }
@@ -1421,7 +1421,7 @@
   }
   .tf-btn {
     background: #ffffff;
-    color: #6b6b66;
+    color: #6B6770;
     border: 0.5px solid #C8C5CD;
     border-radius: 8px;
     padding: 8px 14px;
@@ -1439,7 +1439,7 @@
   .tf-btn span {
     font-size: 11px;
     font-weight: 400;
-    color: #9a9a95;
+    color: #999595;
   }
   .tf-btn { transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s; }
   .tf-btn:hover { background: rgba(92,14,146,0.04); border-color: #5C0E92; }
@@ -1472,7 +1472,7 @@
   }
   .mix-field .mix-lbl {
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
     font-weight: 500;
     display: flex;
     flex-direction: column;
@@ -1480,7 +1480,7 @@
   }
   .mix-field .mix-lbl small {
     font-size: 10px;
-    color: #a8a8a3;
+    color: #A8A5AD;
     font-weight: 400;
   }
   .mix-field input[type=number] {
@@ -1490,16 +1490,16 @@
     font-size: 14px;
     font-weight: 500;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
-  .mix-field input[type=number]:focus { outline: none; border-color: #1a1a1a; }
+  .mix-field input[type=number]:focus { outline: none; border-color: #1A1A1F; }
   .mix-summary {
     grid-column: 1 / -1;
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     text-align: right;
     padding: 4px 4px 0;
     font-variant-numeric: tabular-nums;
@@ -1548,7 +1548,7 @@
     transform: none;
   }
   .suggest-card.no-data .body {
-    color: #8a8a85;
+    color: #888590;
     font-style: italic;
     font-size: 12px;
   }
@@ -1563,7 +1563,7 @@
   .suggest-card .title { font-size: 15px; font-weight: 600; color: #5C0E92; letter-spacing: -0.01em; }
   .suggest-card .body {
     font-size: 13px;
-    color: #4a4a45;
+    color: #4A4750;
     line-height: 1.6;
     margin-bottom: 10px;
   }
@@ -1585,7 +1585,7 @@
   .suggest-card .margin-row label .hint {
     display: block;
     font-size: 11px;
-    color: #9a9a95;
+    color: #999595;
     font-weight: 400;
     margin-top: 1px;
   }
@@ -1609,19 +1609,19 @@
     font-size: 12px;
   }
   .suggest-card .role-suggest .nm {
-    color: #6b6b66;
+    color: #6B6770;
     font-size: 11px;
     margin-bottom: 2px;
   }
   .suggest-card .role-suggest .vl {
     font-weight: 500;
     font-size: 13px;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-variant-numeric: tabular-nums;
   }
   .suggest-card .role-suggest .delta {
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
   }
   .suggest-card .role-suggest .delta.up { color: #1d6e35; }
   .suggest-card .outcome {
@@ -1629,11 +1629,11 @@
     border-radius: 6px;
     padding: 10px 12px;
     font-size: 13px;
-    color: #4a4a45;
+    color: #4A4750;
     line-height: 1.6;
     margin-top: 4px;
   }
-  .suggest-card .outcome strong { color: #1a1a1a; font-weight: 500; }
+  .suggest-card .outcome strong { color: #1A1A1F; font-weight: 500; }
 
   .summary {
     background: #ffffff;
@@ -1645,7 +1645,7 @@
     grid-template-columns: 1fr 1fr 1fr;
     gap: 18px;
   }
-  .stat .lbl { font-size: 12px; color: #6b6b66; }
+  .stat .lbl { font-size: 12px; color: #6B6770; }
   .stat .val {
     font-size: 28px;
     font-weight: 500;
@@ -1653,7 +1653,7 @@
     margin: 4px 0 4px;
     letter-spacing: -0.01em;
   }
-  .stat .sub { font-size: 12px; color: #8a8a85; }
+  .stat .sub { font-size: 12px; color: #888590; }
 
   .goal-warning {
     display: flex;
@@ -1700,39 +1700,39 @@
   }
   .chart-card .chart-title .chart-subtitle {
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     font-weight: 400;
     margin-left: 8px;
   }
   .utfall-card { background: #ffffff; border: 0.5px solid #E5E2EA; border-radius: 12px; padding: 18px 20px; margin-top: 6px; }
   .utfall-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid #E5E2EA; }
   .utfall-gran { display: flex; align-items: center; gap: 6px; }
-  .utfall-gran-label { font-size: 12px; color: #6b6b66; margin-right: 4px; }
-  .utfall-gran-btn { background: #ffffff; border: 0.5px solid #C8C5CD; color: #4a4a45; padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; font-family: inherit; }
-  .utfall-gran-btn:hover { border-color: #6b6b66; }
-  .utfall-gran-btn.active { background: #1a1a1a; color: #ffffff; border-color: #1a1a1a; }
+  .utfall-gran-label { font-size: 12px; color: #6B6770; margin-right: 4px; }
+  .utfall-gran-btn { background: #ffffff; border: 0.5px solid #C8C5CD; color: #4A4750; padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; font-family: inherit; }
+  .utfall-gran-btn:hover { border-color: #6B6770; }
+  .utfall-gran-btn.active { background: #1A1A1F; color: #ffffff; border-color: #1A1A1F; }
   .utfall-table-wrap { overflow-x: auto; }
   .utfall-table { width: 100%; font-size: 12px; border-collapse: collapse; }
-  .utfall-table th { text-align: left; font-size: 11px; color: #6b6b66; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; padding: 8px 6px; border-bottom: 0.5px solid #E5E2EA; white-space: nowrap; }
+  .utfall-table th { text-align: left; font-size: 11px; color: #6B6770; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; padding: 8px 6px; border-bottom: 0.5px solid #E5E2EA; white-space: nowrap; }
   .utfall-table th.num, .utfall-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .utfall-table th.tf-col { color: #5C0E92; }
   .utfall-table td { padding: 6px 6px; border-bottom: 0.5px solid #f0eee7; vertical-align: middle; }
   .utfall-table tbody tr:hover { background: rgba(92,14,146,0.04); }
-  .utfall-table .period-cell { font-weight: 500; color: #1a1a1a; min-width: 110px; }
-  .utfall-table input[type=number] { width: 56px; padding: 4px 6px; border: 0.5px solid #C8C5CD; border-radius: 4px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; background: #ffffff; color: #1a1a1a; font-family: inherit; }
+  .utfall-table .period-cell { font-weight: 500; color: #1A1A1F; min-width: 110px; }
+  .utfall-table input[type=number] { width: 56px; padding: 4px 6px; border: 0.5px solid #C8C5CD; border-radius: 4px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; background: #ffffff; color: #1A1A1F; font-family: inherit; }
   .utfall-table input[type=number]:focus { outline: none; border-color: #5C0E92; box-shadow: 0 0 0 2px rgba(92,14,146,0.18); }
-  .utfall-table input[type=date] { padding: 4px 6px; border: 0.5px solid transparent; border-radius: 4px; font-size: 12px; background: transparent; color: #1a1a1a; font-family: inherit; }
+  .utfall-table input[type=date] { padding: 4px 6px; border: 0.5px solid transparent; border-radius: 4px; font-size: 12px; background: transparent; color: #1A1A1F; font-family: inherit; }
   .utfall-table input[type=date]:focus { outline: none; border-color: #5C0E92; background: #ffffff; }
   .utfall-table input[type=date]:hover { border-color: #E5E2EA; }
-  .utfall-table input[type=date]:focus { outline: none; border-color: #1a1a1a; background: #ffffff; }
-  .utfall-table .util-total { font-weight: 600; color: #1a1a1a; }
+  .utfall-table input[type=date]:focus { outline: none; border-color: #1A1A1F; background: #ffffff; }
+  .utfall-table .util-total { font-weight: 600; color: #1A1A1F; }
   .utfall-table .util-remove { background: transparent; border: none; color: #C8C5CD; cursor: pointer; padding: 4px 6px; font-size: 14px; line-height: 1; border-radius: 4px; }
   .utfall-table .util-remove:hover, .utfall-table .util-remove:focus-visible { color: #9a2424; background: #FBE8E8; outline: none; box-shadow: 0 0 0 2px rgba(154,36,36,0.3); }
   .utfall-actions { margin-top: 12px; display: flex; gap: 8px; }
-  .utfall-summary { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid #E5E2EA; font-size: 12px; color: #4a4a45; line-height: 1.5; }
-  .utfall-summary strong { color: #1a1a1a; }
+  .utfall-summary { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid #E5E2EA; font-size: 12px; color: #4A4750; line-height: 1.5; }
+  .utfall-summary strong { color: #1A1A1F; }
   .utfall-empty {
-    color: #6b6b66;
+    color: #6B6770;
     padding: 32px 16px;
     font-size: 13px;
     text-align: center;
@@ -1837,7 +1837,7 @@
   }
   .pipeline-flow-line {
     font-size: 12px;
-    color: #4a4a45;
+    color: #4A4750;
     margin: 4px 0 8px;
     padding: 8px 12px;
     background: #F4F0F7;
@@ -1846,7 +1846,7 @@
   }
   .pipeline-flow-line .pipeline-step {
     font-weight: 500;
-    color: #1a1a1a;
+    color: #1A1A1F;
   }
   .pipeline-flow-line .pipeline-bottleneck {
     color: #5C0E92;
@@ -1860,7 +1860,7 @@
   }
   .pipeline-flow-line .pipeline-hint {
     font-size: 11px;
-    color: #8a8a85;
+    color: #888590;
     font-style: italic;
     margin-left: 8px;
   }
@@ -1877,7 +1877,7 @@
     text-align: left;
     font-weight: 500;
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     padding: 8px 8px 6px;
@@ -1893,15 +1893,15 @@
     padding: 10px 8px;
     border-bottom: 0.5px solid #f0eee7;
     vertical-align: middle;
-    color: #1a1a1a;
+    color: #1A1A1F;
   }
   .planning-matrix .role-cell {
     font-weight: 500;
-    color: #1a1a1a;
+    color: #1A1A1F;
   }
   .planning-matrix .takt-detail {
     font-size: 10px;
-    color: #8a8a85;
+    color: #888590;
     font-weight: 400;
   }
   .planning-matrix tr.bottleneck .role-cell {
@@ -1945,7 +1945,7 @@
   .planning-matrix tr.bottleneck .timebar-fill { background: #5C0E92; }
   .planning-matrix .last-order-cell {
     font-variant-numeric: tabular-nums;
-    color: #1a1a1a;
+    color: #1A1A1F;
   }
   .planning-matrix .last-order-cell.muted {
     color: #C8C5CD;
@@ -1964,7 +1964,7 @@
     padding-top: 12px;
     border-top: 0.5px solid #E5E2EA;
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
     line-height: 1.5;
   }
   .matrix-summary .matrix-warning {
@@ -1973,7 +1973,7 @@
   }
   .chart-card .chart-title {
     font-size: 13px;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-weight: 500;
     margin-bottom: 14px;
     padding-bottom: 8px;
@@ -1991,7 +1991,7 @@
     gap: 18px;
     margin-top: 12px;
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     flex-wrap: wrap;
   }
   .chart-card .legend-item { display: flex; align-items: center; gap: 6px; }
@@ -2008,7 +2008,7 @@
     print-color-adjust: exact;
   }
   .chart-card .forecast-text strong { color: #9a2424; font-weight: 600; }
-  .legend-line { width: 18px; height: 2px; background: #1a1a1a; }
+  .legend-line { width: 18px; height: 2px; background: #1A1A1F; }
   .legend-line.deadline {
     background: transparent;
     border-left: 1.5px dashed #9a2424;
@@ -2077,7 +2077,7 @@
   }
   .scen .scen-name-input {
     font-size: 12px;
-    color: #8a8a85;
+    color: #888590;
     background: transparent;
     border: 0.5px solid transparent;
     border-radius: 6px;
@@ -2092,7 +2092,7 @@
     outline: none;
     border-color: #5C0E92;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     box-shadow: 0 0 0 2px rgba(92,14,146,0.15);
   }
   .scen .scen-target-input {
@@ -2105,7 +2105,7 @@
     padding: 4px 6px;
     width: 100%;
     font-family: inherit;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
     margin: 4px 0 6px;
@@ -2119,7 +2119,7 @@
   }
   .scen .target-suffix {
     font-size: 12px;
-    color: #8a8a85;
+    color: #888590;
     text-align: center;
     margin-bottom: 10px;
     display: flex;
@@ -2133,7 +2133,7 @@
     border-radius: 6px;
     padding: 3px 6px;
     background: #ffffff;
-    color: #4a4a45;
+    color: #4A4750;
     font-family: inherit;
     cursor: pointer;
     -webkit-appearance: none;
@@ -2141,7 +2141,7 @@
     appearance: none;
   }
   .scen .scen-unit-select:hover { border-color: #A8A5AD; }
-  .scen .scen-unit-select:focus { outline: none; border-color: #1a1a1a; }
+  .scen .scen-unit-select:focus { outline: none; border-color: #1A1A1F; }
   .scen .verdict-row { text-align: center; }
   .verdict {
     font-size: 13px;
@@ -2155,7 +2155,7 @@
   .v-fail { background: #F7DBDB; color: #9a2424; transition: background 0.15s; }
   .v-ok:hover { background: #c7e8cd; }
   .v-fail:hover { background: #f4cdcd; }
-  .gap { font-size: 12px; color: #6b6b66; margin-top: 8px; text-align: center; }
+  .gap { font-size: 12px; color: #6B6770; margin-top: 8px; text-align: center; }
   .scen .scen-remove-btn {
     position: absolute;
     top: 8px; right: 8px;
@@ -2177,7 +2177,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #6b6b66;
+    color: #6B6770;
     font-size: 13px;
     font-weight: 500;
     transition: all 0.15s;
@@ -2201,7 +2201,7 @@
   }
   button {
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     border: 0.5px solid #C8C5CD;
     border-radius: 8px;
     padding: 10px 16px;
@@ -2230,10 +2230,10 @@
     padding: 14px 18px;
     margin-top: 12px;
     font-size: 13px;
-    color: #4a4a45;
+    color: #4A4750;
     line-height: 1.6;
   }
-  .timeline strong { color: #1a1a1a; font-weight: 500; }
+  .timeline strong { color: #1A1A1F; font-weight: 500; }
 
   .analysis-block {
     margin-top: 16px;
@@ -2256,7 +2256,7 @@
   }
   .analysis-block .desc {
     font-size: 13px;
-    color: #6b6b66;
+    color: #6B6770;
     margin-bottom: 14px;
   }
 
@@ -2285,11 +2285,11 @@
     border-radius: 4px;
     transition: all 0.15s;
   }
-  .activity-row .activity-handle:hover { color: #6b6b66; background: #F4F0F7; }
+  .activity-row .activity-handle:hover { color: #6B6770; background: #F4F0F7; }
   .activity-row .activity-handle:active { cursor: grabbing; }
   .activity-row .activity-num {
     font-size: 16px;
-    color: #1a1a1a;
+    color: #1A1A1F;
     text-align: center;
     font-variant-numeric: tabular-nums;
     font-weight: 500;
@@ -2298,13 +2298,13 @@
   .activity-row .role-label {
     font-size: 14px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: #1A1A1F;
     padding-top: 8px;
   }
   .activity-row .role-label .small {
     display: block;
     font-size: 11px;
-    color: #9a9a95;
+    color: #999595;
     font-weight: 400;
     margin-top: 2px;
   }
@@ -2315,13 +2315,13 @@
     border-radius: 6px;
     font-size: 13px;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
     line-height: 1.5;
     min-height: 60px;
     resize: vertical;
   }
-  .activity-row textarea:focus { outline: none; border-color: #1a1a1a; }
+  .activity-row textarea:focus { outline: none; border-color: #1A1A1F; }
 
   /* CHECKLIST */
   .checklist {
@@ -2350,17 +2350,17 @@
     border-radius: 6px;
     font-size: 13px;
     background: transparent;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
   }
   .checklist-item input[type=text]:hover { border-color: #E5E2EA; }
   .checklist-item input[type=text]:focus {
     outline: none;
-    border-color: #1a1a1a;
+    border-color: #1A1A1F;
     background: #ffffff;
   }
   .checklist-item.checked input[type=text] {
-    color: #a8a8a3;
+    color: #A8A5AD;
     text-decoration: line-through;
   }
   .checklist-item .cl-remove {
@@ -2386,7 +2386,7 @@
   .add-checklist-item {
     margin-top: 10px;
     background: transparent;
-    color: #6b6b66;
+    color: #6B6770;
     border: 0.5px dashed #C8C5CD;
     border-radius: 6px;
     padding: 6px 12px;
@@ -2399,8 +2399,8 @@
   .add-checklist-item:hover {
     background: #F4F0F7;
     border-style: solid;
-    border-color: #1a1a1a;
-    color: #1a1a1a;
+    border-color: #1A1A1F;
+    color: #1A1A1F;
   }
 
   .constraints-textarea {
@@ -2410,7 +2410,7 @@
     border-radius: 8px;
     font-size: 13px;
     background: #ffffff;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-family: inherit;
     line-height: 1.5;
     min-height: 90px;
@@ -2424,15 +2424,15 @@
     border-color: #5C0E92;
     box-shadow: 0 0 0 3px rgba(92, 14, 146, 0.15);
   }
-  .constraints-textarea::placeholder { color: #9a9a95; font-style: italic; }
-  .constraints-textarea:focus { outline: none; border-color: #1a1a1a; }
+  .constraints-textarea::placeholder { color: #999595; font-style: italic; }
+  .constraints-textarea:focus { outline: none; border-color: #1A1A1F; }
 
   .footer-note {
     margin-top: 40px;
     padding-top: 20px;
     border-top: 0.5px solid #D8D5DD;
     font-size: 12px;
-    color: #707068;
+    color: #707070;
     line-height: 1.6;
   }
 
@@ -2687,7 +2687,7 @@
   }
   .exec-kpi-label {
     font-size: 11px;
-    color: #8a8a85;
+    color: #888590;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-weight: 500;
@@ -2699,13 +2699,13 @@
     font-weight: 500;
     line-height: 1.1;
     letter-spacing: -0.02em;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-variant-numeric: tabular-nums;
   }
   .exec-kpi-primary .exec-kpi-value { color: #ffffff; }
   .exec-kpi-sub {
     font-size: 12px;
-    color: #6b6b66;
+    color: #6B6770;
     margin-top: 4px;
   }
   .exec-kpi-primary .exec-kpi-sub { color: rgba(255,255,255,0.85); }
@@ -2724,7 +2724,7 @@
   }
   .exec-chart-title {
     font-size: 11px;
-    color: #6b6b66;
+    color: #6B6770;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-weight: 500;
@@ -2738,7 +2738,7 @@
   .exec-chart-caption {
     margin-top: 8px;
     font-size: 12px;
-    color: #1a1a1a;
+    color: #1A1A1F;
     font-weight: 500;
   }
   .exec-status {
@@ -2747,7 +2747,7 @@
     border-left: 3px solid #5C0E92;
     border-radius: 4px;
     font-size: 13.5px;
-    color: #1a1a1a;
+    color: #1A1A1F;
     line-height: 1.5;
   }
   @media (max-width: 700px) {
@@ -2890,7 +2890,7 @@
       <span class="hint">datum då projektet startar — används som anchor för ramp-up och som start för kumulativa graferna</span>
     </label>
     <input type="date" id="projektStart" min="2020-01-01" max="2099-12-31" aria-label="Projektstart-datum">
-    <div id="projektStart-info" class="date-info" style="font-size:11px;color:#6b6b66;margin-top:4px;display:none"></div>
+    <div id="projektStart-info" class="date-info" style="font-size:11px;color:#6B6770;margin-top:4px;display:none"></div>
   </div>
 
   <div class="target-cell">
@@ -2898,7 +2898,7 @@
       <span class="hint">datumet då allt ska vara levererat — räknas baklänges per roll med handover-tider</span>
     </label>
     <input type="date" id="deadline" value="" min="2020-01-01" max="2099-12-31" aria-label="Projektets deadline" aria-required="true" required oninvalid="this.setCustomValidity('Sätt deadline för ditt projekt')" oninput="this.setCustomValidity('')">
-    <div id="deadline-info" class="date-info" style="font-size:11px;color:#6b6b66;margin-top:4px;display:none"></div>
+    <div id="deadline-info" class="date-info" style="font-size:11px;color:#6B6770;margin-top:4px;display:none"></div>
     <div id="deadline-warn" class="date-warn" style="display:none;font-size:11px;color:#b8410e;margin-top:4px"></div>
   </div>
 
@@ -3207,7 +3207,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#a8a8a3;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G200.0-FINAL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G200.0-FINAL</span>
   </div>
 
 </div>
@@ -3813,9 +3813,9 @@
     if (entries.length === 0) {
       wrap.innerHTML = '<div class="utfall-empty">' +
         
-        '<strong style="display:block;margin-bottom:6px;color:#1a1a1a">Inga rapporterade utfall ännu</strong>' +
+        '<strong style="display:block;margin-bottom:6px;color:#1A1A1F">Inga rapporterade utfall ännu</strong>' +
         'Klicka <em>+ Rapportera ny period</em> nedan när du vill registrera vad ni faktiskt levererat under en vecka eller månad.<br>' +
-        '<span style="font-size:11px;color:#a8a8a3">Utfallsdata visualiseras som en grön linje i kumulativ-volym-grafen så du ser plan vs verklighet.</span>' +
+        '<span style="font-size:11px;color:#A8A5AD">Utfallsdata visualiseras som en grön linje i kumulativ-volym-grafen så du ser plan vs verklighet.</span>' +
         '</div>';
       if (summary) summary.innerHTML = '';
       return;
@@ -3838,7 +3838,7 @@
       const hitClass = hitrate >= 90 ? 'v-ok' : hitrate >= 75 ? '' : 'v-fail';
       html += '<tr>';
       html += '<td class="period-cell"><input type="date" value="' + escapeHtml(e.period || '') +
-              '" data-id="' + e.id + '" data-field="period" aria-label="Period"> <span style="font-size:11px;color:#6b6b66;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
+              '" data-id="' + e.id + '" data-field="period" aria-label="Period"> <span style="font-size:11px;color:#6B6770;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
       html += '<td class="num"><input type="number" min="0" step="1" value="' + utlagt +
               '" data-id="' + e.id + '" data-field="utlagt" inputmode="numeric" aria-label="Utlagt"></td>';
       html += '<td class="num"><input type="number" min="0" step="1" value="' + levererat +
@@ -3948,7 +3948,7 @@
     const container = document.getElementById('scenarios-grid');
     container.innerHTML = '';
     if (!state.scenarios || state.scenarios.length === 0) {
-      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#8a8a85;font-size:13px;background:#F8F5FB;border-radius:10px;font-style:italic">Inga scenarier lagts till än. Klicka <strong>+ Lägg till scenario</strong> för att testa olika mål-takter mot din nuvarande setup.</div>';
+      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#888590;font-size:13px;background:#F8F5FB;border-radius:10px;font-style:italic">Inga scenarier lagts till än. Klicka <strong>+ Lägg till scenario</strong> för att testa olika mål-takter mot din nuvarande setup.</div>';
       // Behåll add-card så användaren ser hur de lägger till
       const addCard = document.createElement('div');
       addCard.className = 'scen add-scenario';
@@ -4567,7 +4567,7 @@
       summary.classList.remove('warning');
       summary.innerHTML = 'summa: <strong>' + fmtNum(sum) + '</strong>' + breakdownStr +
         ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>' +
-        ' <span style="color:#a8a8a3">(sätt mål-volym ovan för att jämföra)</span>';
+        ' <span style="color:#A8A5AD">(sätt mål-volym ovan för att jämföra)</span>';
       return;
     }
 
@@ -4947,7 +4947,7 @@
         if (mixSum > 0) { totalVol = mixSum; mixUsed = true; }
       }
       if (!totalVol || totalVol <= 0) {
-        el.innerHTML = '<span style="color:#a8a8a3;font-style:italic">Sätt målvolym i steg 1 för att se konkreta siffror på lyckade leveranser och bomkörningar.</span>';
+        el.innerHTML = '<span style="color:#A8A5AD;font-style:italic">Sätt målvolym i steg 1 för att se konkreta siffror på lyckade leveranser och bomkörningar.</span>';
         return;
       }
       const success = Math.round(totalVol * state.hitrate / 100);
@@ -5901,7 +5901,7 @@
     tt.setAttribute('text-anchor', 'middle');
     tt.setAttribute('font-size', '24');
     tt.setAttribute('font-weight', '500');
-    tt.setAttribute('fill', '#1a1a1a');
+    tt.setAttribute('fill', '#1A1A1F');
     tt.setAttribute('font-family', 'inherit');
     tt.setAttribute('font-variant-numeric', 'tabular-nums');
     tt.setAttribute('letter-spacing', '-0.02em');
@@ -5942,7 +5942,7 @@
     tt.setAttribute('text-anchor', 'middle');
     tt.setAttribute('font-size', '20');
     tt.setAttribute('font-weight', '500');
-    tt.setAttribute('fill', '#1a1a1a');
+    tt.setAttribute('fill', '#1A1A1F');
     tt.setAttribute('font-family', 'inherit');
     tt.setAttribute('font-variant-numeric', 'tabular-nums');
     tt.textContent = centerLabel;
@@ -6180,7 +6180,7 @@
 
   // === ROLE COLORS ===
   // Distinkta färger som funkar i print, plus röd reserverad för flaskhals.
-  const ROLE_COLORS = ['#1a1a1a', '#5C0E92', '#1d6e35', '#c2570d', '#0e6dab', '#7a3d99', '#4a4a45'];
+  const ROLE_COLORS = ['#1A1A1F', '#5C0E92', '#1d6e35', '#c2570d', '#0e6dab', '#7a3d99', '#4A4750'];
   function colorForRole(idx) {
     return ROLE_COLORS[idx % ROLE_COLORS.length];
   }
@@ -6195,7 +6195,7 @@
     const V = (state.onskadVolym && state.onskadVolym > 0) ? state.onskadVolym : potentialVolym;
 
     if (active.length === 0 || !V || V <= 0) {
-      container.innerHTML = '<div style="color:#a8a8a3;text-align:center;padding:20px;font-size:12px;">Sätt mål-volym och bemanning för att se planeringen.</div>';
+      container.innerHTML = '<div style="color:#A8A5AD;text-align:center;padding:20px;font-size:12px;">Sätt mål-volym och bemanning för att se planeringen.</div>';
       return;
     }
 
@@ -6409,7 +6409,7 @@
     txt.setAttribute('x', 400); txt.setAttribute('y', 120);
     txt.setAttribute('text-anchor', 'middle');
     txt.setAttribute('font-size', '14');
-    txt.setAttribute('fill', '#8a8a85');
+    txt.setAttribute('fill', '#888590');
     txt.setAttribute('font-family', 'inherit');
     txt.textContent = message || 'Ingen data att visa.';
     svg.appendChild(txt);
@@ -6418,7 +6418,7 @@
   function drawMatrixEmptyState(message) {
     const c = document.getElementById('roles-matrix');
     if (!c) return;
-    c.innerHTML = '<div style="padding: 30px 16px; text-align:center; color:#8a8a85; font-size:13px; background:#F8F5FB; border-radius:8px;">' +
+    c.innerHTML = '<div style="padding: 30px 16px; text-align:center; color:#888590; font-size:13px; background:#F8F5FB; border-radius:8px;">' +
       (message || 'Ingen data att visa.') + '</div>';
   }
 
@@ -6441,7 +6441,7 @@
       const txt = document.createElementNS(ns, 'text');
       txt.setAttribute('x', W / 2); txt.setAttribute('y', H / 2);
       txt.setAttribute('text-anchor', 'middle');
-      txt.setAttribute('font-size', '13'); txt.setAttribute('fill', '#a8a8a3');
+      txt.setAttribute('font-size', '13'); txt.setAttribute('fill', '#A8A5AD');
       txt.setAttribute('font-family', 'inherit');
       txt.textContent = 'Inga data att visa.';
       svg.appendChild(txt);
@@ -6485,11 +6485,11 @@
     grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
     const stop1 = document.createElementNS(ns, 'stop');
     stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('stop-color', '#1a1a1a');
+    stop1.setAttribute('stop-color', '#1A1A1F');
     stop1.setAttribute('stop-opacity', '0.18');
     const stop2 = document.createElementNS(ns, 'stop');
     stop2.setAttribute('offset', '100%');
-    stop2.setAttribute('stop-color', '#1a1a1a');
+    stop2.setAttribute('stop-color', '#1A1A1F');
     stop2.setAttribute('stop-opacity', '0.02');
     grad.appendChild(stop1); grad.appendChild(stop2);
     defs.appendChild(grad);
@@ -6509,7 +6509,7 @@
       const lbl = document.createElementNS(ns, 'text');
       lbl.setAttribute('x', M.left - 10); lbl.setAttribute('y', y + 4);
       lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('font-size', '11');
-      lbl.setAttribute('fill', '#6b6b66'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('fill', '#6B6770'); lbl.setAttribute('font-family', 'inherit');
       lbl.setAttribute('font-variant-numeric', 'tabular-nums');
       lbl.setAttribute('font-weight', '500');
       lbl.textContent = Math.round(t).toLocaleString('sv-SE');
@@ -6523,7 +6523,7 @@
     yTitle.setAttribute('transform', 'rotate(-90)');
     yTitle.setAttribute('text-anchor', 'middle');
     yTitle.setAttribute('font-size', '10');
-    yTitle.setAttribute('fill', '#8a8a85');
+    yTitle.setAttribute('fill', '#888590');
     yTitle.setAttribute('font-family', 'inherit');
     yTitle.setAttribute('letter-spacing', '0.05em');
     yTitle.setAttribute('text-transform', 'uppercase');
@@ -6550,7 +6550,7 @@
       const lbl = document.createElementNS(ns, 'text');
       lbl.setAttribute('x', x); lbl.setAttribute('y', M.top + innerH + 18);
       lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '11');
-      lbl.setAttribute('fill', '#6b6b66'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('fill', '#6B6770'); lbl.setAttribute('font-family', 'inherit');
       lbl.setAttribute('font-weight', '500');
       lbl.textContent = monthNames[tickDate.getMonth()];
       svg.appendChild(lbl);
@@ -6558,7 +6558,7 @@
       const yrLbl = document.createElementNS(ns, 'text');
       yrLbl.setAttribute('x', x); yrLbl.setAttribute('y', M.top + innerH + 32);
       yrLbl.setAttribute('text-anchor', 'middle'); yrLbl.setAttribute('font-size', '9');
-      yrLbl.setAttribute('fill', '#a8a8a3'); yrLbl.setAttribute('font-family', 'inherit');
+      yrLbl.setAttribute('fill', '#A8A5AD'); yrLbl.setAttribute('font-family', 'inherit');
       yrLbl.textContent = tickDate.getFullYear();
       svg.appendChild(yrLbl);
 
@@ -6582,13 +6582,13 @@
     // "idag"-markör vid x=0
     const todayDot = document.createElementNS(ns, 'circle');
     todayDot.setAttribute('cx', xScale(0)); todayDot.setAttribute('cy', M.top + innerH);
-    todayDot.setAttribute('r', 3); todayDot.setAttribute('fill', '#1a1a1a');
+    todayDot.setAttribute('r', 3); todayDot.setAttribute('fill', '#1A1A1F');
     svg.appendChild(todayDot);
 
     const todayLbl = document.createElementNS(ns, 'text');
     todayLbl.setAttribute('x', xScale(0)); todayLbl.setAttribute('y', M.top + innerH + 16);
     todayLbl.setAttribute('text-anchor', 'middle'); todayLbl.setAttribute('font-size', '10');
-    todayLbl.setAttribute('fill', '#1a1a1a'); todayLbl.setAttribute('font-weight', '500');
+    todayLbl.setAttribute('fill', '#1A1A1F'); todayLbl.setAttribute('font-weight', '500');
     todayLbl.setAttribute('font-family', 'inherit');
     todayLbl.textContent = 'idag';
     svg.appendChild(todayLbl);
@@ -6689,7 +6689,7 @@
       snapLbl.setAttribute('y', yScale(snapVolym) + 14);
       snapLbl.setAttribute('text-anchor', 'end');
       snapLbl.setAttribute('font-size', '10');
-      snapLbl.setAttribute('fill', '#6b6b66');
+      snapLbl.setAttribute('fill', '#6B6770');
       snapLbl.setAttribute('font-family', 'inherit');
       snapLbl.textContent = 'nuläge: ' + Math.round(snapVolym);
       svg.appendChild(snapLbl);
@@ -6810,7 +6810,7 @@
       const postPath = document.createElementNS(ns, 'path');
       postPath.setAttribute('d', postD);
       postPath.setAttribute('fill', 'none');
-      postPath.setAttribute('stroke', '#1a1a1a');
+      postPath.setAttribute('stroke', '#1A1A1F');
       postPath.setAttribute('stroke-width', '2.5');
       postPath.setAttribute('stroke-linejoin', 'round');
       svg.appendChild(postPath);
@@ -6822,7 +6822,7 @@
         lineD += `L ${points[i].x} ${points[i].y} `;
       }
       path.setAttribute('d', lineD);
-      path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#1a1a1a');
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#1A1A1F');
       path.setAttribute('stroke-width', '2.5'); path.setAttribute('stroke-linejoin', 'round');
       svg.appendChild(path);
     }
@@ -7037,7 +7037,7 @@
       rampLbl.setAttribute('y', labelsCollide ? labelY1 : (M.top + 4));
       rampLbl.setAttribute('text-anchor', 'middle');
       rampLbl.setAttribute('font-size', '9');
-      rampLbl.setAttribute('fill', '#8a8a85');
+      rampLbl.setAttribute('fill', '#888590');
       rampLbl.setAttribute('font-family', 'inherit');
       rampLbl.setAttribute('letter-spacing', '0.04em');
       rampLbl.textContent = 'FULL TAKT';
@@ -7060,7 +7060,7 @@
       ltLbl.setAttribute('y', labelsCollide ? labelY2 : (M.top + 4));
       ltLbl.setAttribute('text-anchor', 'middle');
       ltLbl.setAttribute('font-size', '9');
-      ltLbl.setAttribute('fill', '#8a8a85');
+      ltLbl.setAttribute('fill', '#888590');
       ltLbl.setAttribute('font-family', 'inherit');
       ltLbl.setAttribute('letter-spacing', '0.04em');
       ltLbl.textContent = '1:A KLAR';
@@ -7075,12 +7075,12 @@
         const x = xScale(m); const y = yScale(v);
         const tickDot = document.createElementNS(ns, 'circle');
         tickDot.setAttribute('cx', x); tickDot.setAttribute('cy', y);
-        tickDot.setAttribute('r', 3); tickDot.setAttribute('fill', '#1a1a1a');
+        tickDot.setAttribute('r', 3); tickDot.setAttribute('fill', '#1A1A1F');
         tickDot.setAttribute('stroke', '#fff'); tickDot.setAttribute('stroke-width', '1.5');
         svg.appendChild(tickDot);
         const tickLbl = document.createElementNS(ns, 'text');
         tickLbl.setAttribute('x', x + 8); tickLbl.setAttribute('y', y + 4);
-        tickLbl.setAttribute('font-size', '10'); tickLbl.setAttribute('fill', '#6b6b66');
+        tickLbl.setAttribute('font-size', '10'); tickLbl.setAttribute('fill', '#6B6770');
         tickLbl.setAttribute('font-family', 'inherit');
         tickLbl.setAttribute('font-variant-numeric', 'tabular-nums');
         tickLbl.textContent = Math.round(v);
