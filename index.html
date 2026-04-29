@@ -293,6 +293,48 @@
   .next-action-banner button:hover { background: #4a0a76; }
   .next-action-banner button:active { transform: scale(0.98); }
   .next-action-banner button:hover { background: #6B0FA8; }
+  /* G1.16: Plan-status-pill — proaktiv early warning högst upp */
+  .plan-status-pill {
+    margin: 0 0 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .plan-status-pill:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .plan-status-pill:focus { outline: 3px solid rgba(92, 14, 146, 0.4); outline-offset: 2px; }
+  .plan-status-pill .psp-icon { font-size: 22px; flex-shrink: 0; }
+  .plan-status-pill .psp-text { flex: 1; }
+  .plan-status-pill .psp-arrow { font-size: 16px; opacity: 0.7; flex-shrink: 0; }
+  .plan-status-pill.psp-red {
+    background: linear-gradient(135deg, #FFE5EE 0%, #FFD6E0 100%);
+    border-color: #E89AB5;
+    color: #5A1530;
+  }
+  .plan-status-pill.psp-orange {
+    background: linear-gradient(135deg, #FFF0E0 0%, #FFE6CC 100%);
+    border-color: #E8B57A;
+    color: #5A3A10;
+  }
+  .plan-status-pill.psp-yellow {
+    background: linear-gradient(135deg, #FFF8E5 0%, #FFF1C8 100%);
+    border-color: #E8C870;
+    color: #4A3A0D;
+  }
+  .plan-status-pill.psp-green {
+    background: linear-gradient(135deg, #E8F5EE 0%, #D6EEDC 100%);
+    border-color: #88C9A2;
+    color: #1A4A28;
+  }
   .step-progress {
     display: flex;
     flex-wrap: wrap;
@@ -2896,7 +2938,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.15-TAKT-PROGNOS" aria-busy="true">
+<body data-build="2026-04-29-G1.16-EARLY-WARNING" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -2938,6 +2980,8 @@
     <div class="sp-step" data-step="7" onclick="scrollToStep(7)" tabindex="0" role="button" aria-label="Gå till steg 7: Scenarier" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(7);}"><span class="sp-num">7</span><span class="sp-label">Scenarier</span></div>
     <div class="sp-step" data-step="8" onclick="scrollToStep(8)" tabindex="0" role="button" aria-label="Gå till steg 8: Uppföljning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(8);}"><span class="sp-num">8</span><span class="sp-label">Uppföljning</span></div>
   </div>
+
+  <div class="plan-status-pill" id="plan-status-pill" role="status" aria-live="polite" tabindex="0" style="display:none" onclick="scrollToStep(6)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(6);}"></div>
 
   <div class="summary-banner" id="summary-banner">
     <div class="banner-headline" id="banner-headline">—</div>
@@ -3321,7 +3365,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.15-TAKT-PROGNOS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.16-EARLY-WARNING</span>
   </div>
 
 </div>
@@ -6533,6 +6577,21 @@
     }, 350);
   }
 
+  // G1.16: Proaktiv early warning högst upp — färgkodad pill som klickas för att hoppa till Sammanfattningen
+  function updatePlanStatusPill(opts) {
+    const pill = document.getElementById('plan-status-pill');
+    if (!pill) return;
+    if (!opts || !opts.show) {
+      pill.style.display = 'none';
+      pill.className = 'plan-status-pill';
+      return;
+    }
+    pill.className = 'plan-status-pill psp-' + opts.variant;
+    pill.innerHTML = '<span class="psp-icon" aria-hidden="true">' + opts.icon + '</span><span class="psp-text">' + opts.text + '</span><span class="psp-arrow" aria-hidden="true">&rarr;</span>';
+    pill.setAttribute('aria-label', (opts.ariaLabel || opts.text) + ' Klicka för att gå till Sammanfattning.');
+    pill.style.display = 'flex';
+  }
+
   function updateHandoverPanel() {
     const card = document.getElementById('handover-card');
     const content = document.getElementById('handover-content');
@@ -6547,6 +6606,7 @@
       card.classList.add('empty');
       content.innerHTML = 'Sätt mål, deadline och bemanning för att se översikten för resursägare.';
       footer.innerHTML = '';
+      updatePlanStatusPill({ show: false });
       return;
     }
 
@@ -6716,13 +6776,27 @@
       footerHtml += '<strong style="color:#fff">Prognos med nuvarande bemanning:</strong> klart <strong style="color:#fff">' + fmt(lastRole.actualFinish) + '</strong> (' + prognosText + ').';
       // G1.13: Robusthets-flagga — hur tight är planen?
       const marginalDays = -projectFinishDelta; // positivt = marginal, negativt = försening
-      let robustEmoji, robustLabel, robustColor;
-      if (marginalDays >= 14) { robustEmoji = '🟢'; robustLabel = 'Robust plan'; robustColor = '#A8E6C2'; }
-      else if (marginalDays >= 7) { robustEmoji = '🟡'; robustLabel = 'OK med viss risk'; robustColor = '#FFE6A0'; }
-      else if (marginalDays >= 1) { robustEmoji = '🟠'; robustLabel = 'Tight plan'; robustColor = '#FFC68A'; }
-      else if (marginalDays === 0) { robustEmoji = '⚠️'; robustLabel = 'Precis i tid — ingen marginal'; robustColor = '#FFD6F0'; }
-      else { robustEmoji = '🔴'; robustLabel = 'Försenad'; robustColor = '#FFD6F0'; }
+      let robustEmoji, robustLabel, robustColor, pillVariant;
+      if (marginalDays >= 14) { robustEmoji = '🟢'; robustLabel = 'Robust plan'; robustColor = '#A8E6C2'; pillVariant = 'green'; }
+      else if (marginalDays >= 7) { robustEmoji = '🟡'; robustLabel = 'OK med viss risk'; robustColor = '#FFE6A0'; pillVariant = 'yellow'; }
+      else if (marginalDays >= 1) { robustEmoji = '🟠'; robustLabel = 'Tight plan'; robustColor = '#FFC68A'; pillVariant = 'orange'; }
+      else if (marginalDays === 0) { robustEmoji = '⚠️'; robustLabel = 'Precis i tid — ingen marginal'; robustColor = '#FFD6F0'; pillVariant = 'orange'; }
+      else { robustEmoji = '🔴'; robustLabel = 'Försenad'; robustColor = '#FFD6F0'; pillVariant = 'red'; }
       footerHtml += '<br><span style="color:' + robustColor + ';font-weight:600">' + robustEmoji + ' ' + robustLabel + '</span>';
+      // G1.16: Uppdatera early-warning-pill — visa endast vid problem, dölj när robust
+      if (pillVariant === 'green') {
+        updatePlanStatusPill({ show: false });
+      } else {
+        let pillText;
+        if (marginalDays > 0) {
+          pillText = '<strong>' + robustLabel + '</strong> &mdash; ' + marginalDays + ' dagars marginal till deadline ' + fmt(deadline) + '.';
+        } else if (marginalDays === 0) {
+          pillText = '<strong>Precis i tid</strong> &mdash; ingen marginal till deadline ' + fmt(deadline) + '.';
+        } else {
+          pillText = '<strong>Försenad ' + Math.abs(marginalDays) + ' dagar</strong> mot deadline ' + fmt(deadline) + ' &mdash; gå till Sammanfattning för åtgärdsförslag.';
+        }
+        updatePlanStatusPill({ show: true, variant: pillVariant, icon: robustEmoji, text: pillText });
+      }
       // G1.13: Stresstest — vid vilken handover-ökning eller hitrate-fall spricker planen?
       if (marginalDays > 0) {
         const stressBits = [];
