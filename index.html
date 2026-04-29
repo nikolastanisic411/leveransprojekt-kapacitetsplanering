@@ -2959,7 +2959,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.31-SCROLL-MARGIN" aria-busy="true">
+<body data-build="2026-04-29-G1.32-ARIA-CHANGE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3386,7 +3386,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.31-SCROLL-MARGIN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.32-ARIA-CHANGE</span>
   </div>
 
 </div>
@@ -6631,14 +6631,20 @@
   }
 
   // G1.16: Proaktiv early warning högst upp — färgkodad pill som klickas för att hoppa till Sammanfattningen
+  let _lastPillVariant = null;
   function updatePlanStatusPill(opts) {
     const pill = document.getElementById('plan-status-pill');
     if (!pill) return;
     if (!opts || !opts.show) {
       pill.style.display = 'none';
       pill.className = 'plan-status-pill';
+      _lastPillVariant = null;
       return;
     }
+    // G1.32: Bara aria-live-meddela när status byts — undvik repetition
+    const announce = (_lastPillVariant !== null && _lastPillVariant !== opts.variant);
+    pill.setAttribute('aria-live', announce ? 'assertive' : 'polite');
+    _lastPillVariant = opts.variant;
     pill.className = 'plan-status-pill psp-' + opts.variant;
     pill.innerHTML = '<span class="psp-icon" aria-hidden="true">' + opts.icon + '</span><span class="psp-text">' + opts.text + '</span><span class="psp-arrow" aria-hidden="true">&rarr;</span>';
     pill.setAttribute('aria-label', (opts.ariaLabel || opts.text.replace(/<[^>]+>/g, '')) + ' Klicka för att gå till Sammanfattning.');
