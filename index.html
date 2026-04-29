@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.14-VERKLIGHET" aria-busy="true">
+<body data-build="2026-04-29-G1.15-TAKT-PROGNOS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.14-VERKLIGHET</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.15-TAKT-PROGNOS</span>
   </div>
 
 </div>
@@ -6773,6 +6773,49 @@
           if (V > 0) {
             const pct = Math.min(100, Math.round((totalLevererat / V) * 100));
             realityHtml += '<br><span style="opacity:0.85;font-size:12px">Levererat ' + pct + ' % av målet (' + fmtNum(totalLevererat) + ' / ' + fmtNum(V) + ' st).</span>';
+          }
+          // G1.15: Leveranstakts-prognos — vart landar vi vid deadline om takten håller?
+          if (V > 0) {
+            const validEntries = state.utfall.entries
+              .filter(e => e.period && !isNaN(new Date(e.period).getTime()))
+              .sort((a, b) => a.period.localeCompare(b.period));
+            if (validEntries.length >= 2) {
+              const firstDate = new Date(validEntries[0].period);
+              const lastDate = new Date(validEntries[validEntries.length - 1].period);
+              const spanDays = Math.max(1, Math.round((lastDate.getTime() - firstDate.getTime()) / dayMs));
+              const ratePerDay = totalLevererat / spanDays;
+              if (ratePerDay > 0) {
+                const remainingDays = Math.max(0, Math.round((deadline.getTime() - lastDate.getTime()) / dayMs));
+                const projectedAtDeadline = Math.round(totalLevererat + ratePerDay * remainingDays);
+                const ratePerWeek = (ratePerDay * 7).toFixed(1);
+                realityHtml += '<br><span style="opacity:0.9;font-size:12px"><strong>Faktisk takt:</strong> ' + ratePerWeek + ' st/vecka (' + ratePerDay.toFixed(2) + ' st/dag) över ' + spanDays + ' dagar.</span>';
+                if (projectedAtDeadline >= V) {
+                  realityHtml += '<br><span style="color:#A8E6C2;font-weight:600">📈 Vid nuvarande takt: ' + projectedAtDeadline + ' st vid deadline ' + fmt(deadline) + ' (räcker — målet ' + V + ' st nås).</span>';
+                  // När når vi V?
+                  const daysToTarget = Math.ceil((V - totalLevererat) / ratePerDay);
+                  const targetDate = new Date(lastDate.getTime() + daysToTarget * dayMs);
+                  realityHtml += ' <span style="opacity:0.85;font-size:12px">Målet uppnås ca <strong>' + fmt(targetDate) + '</strong>.</span>';
+                } else {
+                  const shortfall = V - projectedAtDeadline;
+                  const pctOfTarget = Math.round((projectedAtDeadline / V) * 100);
+                  realityHtml += '<br><span style="color:#FFD6F0;font-weight:600">📉 Vid nuvarande takt: ' + projectedAtDeadline + ' st vid deadline (' + pctOfTarget + ' % av målet ' + V + ' — saknas ' + shortfall + ' st).</span>';
+                  // När skulle vi nå V vid nuvarande takt?
+                  const daysToTarget = Math.ceil((V - totalLevererat) / ratePerDay);
+                  const targetDate = new Date(lastDate.getTime() + daysToTarget * dayMs);
+                  const overrunDays = Math.round((targetDate.getTime() - deadline.getTime()) / dayMs);
+                  realityHtml += ' <span style="opacity:0.85;font-size:12px">Målet nås först <strong>' + fmt(targetDate) + '</strong> (' + overrunDays + ' dagar efter deadline).</span>';
+                  // Nödvändig takt-höjning
+                  const requiredRate = remainingDays > 0 ? (V - totalLevererat) / remainingDays : Infinity;
+                  if (isFinite(requiredRate) && requiredRate > ratePerDay) {
+                    const requiredPerWeek = (requiredRate * 7).toFixed(1);
+                    const factor = (requiredRate / ratePerDay).toFixed(2);
+                    realityHtml += '<br><span style="opacity:0.9;font-size:12px">För att klara målet: höj takten till <strong style="color:#fff">' + requiredPerWeek + ' st/vecka</strong> (×' + factor + ' nuvarande).</span>';
+                  }
+                }
+              }
+            } else if (validEntries.length === 1) {
+              realityHtml += '<br><span style="opacity:0.7;font-size:12px">Bara en period rapporterad — minst två behövs för att räkna ut faktisk takt.</span>';
+            }
           }
           realityHtml += '</div>';
           footerHtml += realityHtml;
