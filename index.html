@@ -6313,10 +6313,18 @@
         html += '</div>';
       } else if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
         const startStr = fmt(refStartDate);
+        // Beräkna alternativ: höj per-person-takt istället för fler personer
+        const currentPerPersonRaw = (d.role.count > 0 && d.role.takt) ? +d.role.takt : 0;
+        const requiredPerPersonRaw = (d.role.count > 0) ? (currentPerPersonRaw * (d.requiredHeadcount / d.role.count)) : 0;
         html += '<div class="ho-action">';
         html += '<strong>Åtgärd:</strong> Behöver <strong>' + d.requiredHeadcount + ' personer</strong> ';
         html += '(<span style="color:#FFD6F0">+' + d.additionalNeeded + '</span> mot nuvarande ' + d.role.count + ') ';
         html += 'som startar <strong>' + startStr + '</strong> och är klara <strong>' + fmt(d.klarSenast) + '</strong>.';
+        // Alternativ: höj takt per person
+        if (currentPerPersonRaw > 0 && requiredPerPersonRaw > currentPerPersonRaw) {
+          const unitDisp = d.role.unit === 'vecka' ? '/vecka' : d.role.unit === 'månad' ? '/månad' : '/dag';
+          html += '<br><span style="opacity:0.9">Alternativ: höj takt från <strong>' + currentPerPersonRaw.toFixed(1) + unitDisp + '</strong> till <strong>' + requiredPerPersonRaw.toFixed(1) + unitDisp + '</strong> per person.</span>';
+        }
         // Hint: om den här rollen INTE är flaskhalsen, lös flaskhalsen först
         if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
           html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
