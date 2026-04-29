@@ -4474,7 +4474,7 @@
     }
 
     const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
-    document.getElementById('banner-takt').textContent = Math.round(effMonth) + '/mån';
+    document.getElementById('banner-takt').textContent = fmtNum(Math.round(effMonth)) + '/mån';
     if (hasSpread) {
       document.getElementById('banner-takt-sub').innerHTML =
         effDay.toFixed(1) + '/dag · spann ' + lowEffDay.toFixed(1) + '–' + highEffDay.toFixed(1);
@@ -4484,9 +4484,9 @@
     document.getElementById('banner-bottleneck').textContent = bottleneck.name;
     document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.val.toFixed(0) + '/dag — sätter taket';
     if (state.onskadVolym > 0) {
-      document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' / ' + state.onskadVolym;
+      document.getElementById('banner-volym').textContent = fmtNum(Math.round(potentialVolym)) + ' / ' + fmtNum(state.onskadVolym);
     } else {
-      document.getElementById('banner-volym').textContent = Math.round(potentialVolym) + ' st';
+      document.getElementById('banner-volym').textContent = fmtNum(Math.round(potentialVolym)) + ' st';
     }
     // Mix-validering: om mix-summan inte matchar onskadVolym, visa varning istället för marginal
     let mixMismatch = false;
