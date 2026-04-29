@@ -787,6 +787,16 @@
   }
   .role-header .col-spann { text-align: center; }
 
+  @keyframes role-flash {
+    0% { background: rgba(92,14,146,0.18); }
+    100% { background: transparent; }
+  }
+  .role-row.flash {
+    animation: role-flash 0.6s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .role-row.flash { animation: none; }
+  }
   .role-row {
     display: grid;
     grid-template-columns: 22px 22px 24px 1fr 46px 30px 56px 56px 52px 52px 60px 112px 100px 22px;
@@ -4753,15 +4763,29 @@
       updateNextActionBanner();
       return;
     }
+    const updatedIds = [];
     state.roles.forEach(r => {
       const sug = needed[r.id];
       if (sug !== undefined) {
         const newCount = Math.min(Math.max(1, sug), r.max);
+        if (r.count !== newCount) updatedIds.push(r.id);
         r.count = newCount;
         r.countMin = newCount;
         r.countMax = newCount;
       }
     });
+    // Visual flash på de roller som ändrades
+    setTimeout(() => {
+      updatedIds.forEach(id => {
+        const row = document.getElementById('row-' + id);
+        if (row) {
+          row.classList.remove('flash');
+          // Trigga reflow för att starta om animation
+          void row.offsetWidth;
+          row.classList.add('flash');
+        }
+      });
+    }, 50);
     currentSuggestion = needed;
     saveState();
     applyStateToInputs();
