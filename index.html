@@ -6384,6 +6384,7 @@
         }
         // Apply-knapp för att tillämpa rekommendationen direkt
         html += '<button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + ' personer</button>';
+        html += '<button class="ho-copy-btn" onclick="copyRoleRecommendation(\'' + d.role.id + '\')" type="button" title="Kopiera rekommendation som text för att skicka till resursägaren">Kopiera till urklipp</button>';
         html += '</div>';
       } else if (isFinite(d.requiredHeadcount)) {
         // OK — bemanning räcker
