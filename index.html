@@ -1092,7 +1092,22 @@
   }
   .role-row .role-tf-pill.active:hover { background: #6B0FA8; border-color: #6B0FA8; }
   .role-row.not-in-typfall {
-    opacity: 0.4;
+    opacity: 0.5;
+    background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(0,0,0,0.025) 6px 12px);
+  }
+  .role-row.not-in-typfall .role-name-input {
+    text-decoration: line-through;
+    text-decoration-color: rgba(154,36,36,0.5);
+  }
+  .role-row.not-in-typfall::after {
+    content: 'Ej aktiv i valt typfall';
+    grid-column: 1 / -1;
+    font-size: 10px;
+    color: #9a2424;
+    text-align: center;
+    padding: 2px 0;
+    background: rgba(154,36,36,0.05);
+    margin-top: 4px;
   }
   .role-row.not-in-typfall .role-name-input,
   .role-row.not-in-typfall .cap {
