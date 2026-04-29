@@ -3480,16 +3480,23 @@
     });
 
     if (summary) {
-      const totalKlart = entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+      const totalUtlagt = entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+      const totalLevererat = entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+      const totalHitrate = totalUtlagt > 0 ? Math.round((totalLevererat / totalUtlagt) * 100) : 0;
       const periods = entries.length;
-      const avg = periods > 0 ? (totalKlart / periods) : 0;
+      const avg = periods > 0 ? (totalLevererat / periods) : 0;
       const granLabel = gran === 'dag' ? 'dag' : gran === 'månad' ? 'månad' : 'vecka';
-      let h = '<strong>' + totalKlart + ' st</strong> rapporterade över <strong>' + periods + '</strong> period' + (periods === 1 ? '' : 'er') +
-        ' · snitt <strong>' + avg.toFixed(1) + '</strong> per ' + granLabel + '.';
+      let h = '<strong>' + fmtNum(totalUtlagt) + '</strong> utlagt · ';
+      h += '<strong>' + fmtNum(totalLevererat) + '</strong> levererat · ';
+      h += '<strong>' + (totalUtlagt > 0 ? totalHitrate + '%' : '—') + '</strong> hitrate';
+      h += ' · över ' + periods + ' period' + (periods === 1 ? '' : 'er');
+      h += ' (snitt ' + avg.toFixed(1) + '/' + granLabel + ')';
       if (state.onskadVolym > 0) {
-        const remaining = Math.max(0, state.onskadVolym - totalKlart);
-        if (remaining > 0) h += ' Kvar till mål: <strong>' + remaining + '</strong> st.';
-        else h += ' <strong style="color:#1d6e35">Målet uppnått!</strong>';
+        const remaining = Math.max(0, state.onskadVolym - totalLevererat);
+        if (remaining > 0) {
+          const pct = Math.round((totalLevererat / state.onskadVolym) * 100);
+          h += '. Mot mål: <strong>' + pct + '%</strong> (kvar ' + fmtNum(remaining) + ')';
+        } else h += '. <strong style="color:#1d6e35">Målet uppnått.</strong>';
       }
       summary.innerHTML = h;
     }
