@@ -2656,10 +2656,12 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         const ind = document.getElementById('saved-indicator');
         if (ind) {
-          ind.textContent = 'sparat';
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+          ind.textContent = 'sparat ' + timeStr;
           ind.style.color = '#1d6e35';
           clearTimeout(saveTimer);
-          saveTimer = setTimeout(() => { ind.style.color = '#c8c6bf'; }, 1500);
+          saveTimer = setTimeout(() => { ind.style.color = '#c8c6bf'; }, 2500);
         }
       } catch (e) { console.warn('Kunde inte spara:', e); }
     }, 250);
