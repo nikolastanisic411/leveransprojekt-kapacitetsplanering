@@ -2293,6 +2293,20 @@
     .suggest-card .margin-row { grid-template-columns: 1fr 60px; }
     .summary-banner .banner-grid { grid-template-columns: 1fr; }
   }
+  @media (max-width: 480px) {
+    .page { padding: 12px; }
+    h1 { font-size: 20px; }
+    .toolbar { flex-direction: column; align-items: stretch; gap: 6px; }
+    .toolbar button { width: 100%; justify-content: center; }
+    .step-progress { padding: 6px; }
+    .step-progress .sp-step { padding: 3px 6px 3px 3px; font-size: 9px; }
+    .step-progress .sp-step .sp-num { width: 16px; height: 16px; font-size: 9px; }
+    .target-cell { gap: 4px; }
+    .summary-banner { padding: 16px; }
+    .handover-fields { grid-template-columns: 1fr !important; }
+    .tf-pills { flex-direction: column; }
+    .tf-btn { width: 100%; }
+  }
 </style>
 </head>
 <body>
