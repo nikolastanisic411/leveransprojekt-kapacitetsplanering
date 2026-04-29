@@ -4271,6 +4271,10 @@
     btn2.classList.toggle('active', state.leadtimeDays === 60);
     btn3.classList.toggle('active', state.leadtimeDays === 100);
     btnMix.classList.toggle('active', isMix);
+    btn1.setAttribute('aria-pressed', state.leadtimeDays === 10 ? 'true' : 'false');
+    btn2.setAttribute('aria-pressed', state.leadtimeDays === 60 ? 'true' : 'false');
+    btn3.setAttribute('aria-pressed', state.leadtimeDays === 100 ? 'true' : 'false');
+    btnMix.setAttribute('aria-pressed', isMix ? 'true' : 'false');
     mixRow.style.display = isMix ? 'grid' : 'none';
     if (isMix) {
       document.getElementById('mix-tf1').value = state.typfallMix.tf1 || 0;
