@@ -3436,7 +3436,11 @@
     const addCard = document.createElement('div');
     addCard.className = 'scen add-scenario';
     addCard.textContent = '+ Lägg till scenario';
+    addCard.tabIndex = 0;
+    addCard.setAttribute('role', 'button');
+    addCard.setAttribute('aria-label', 'Lägg till scenario');
     addCard.onclick = addScenario;
+    addCard.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addScenario(); } };
     container.appendChild(addCard);
 
     container.querySelectorAll('input[data-field], select[data-field]').forEach(input => {
@@ -6277,16 +6281,4 @@
     }
   });
 
-    // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
-  document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      applySuggestion();
-    }
-  });
-  updateSnapshotUI();
-  recalc();
-</script>
-
-</body>
-</html>
+    // Tangentbordsgenväg: Ctrl/Cmd+Enter = 
