@@ -3799,6 +3799,25 @@
       el.addEventListener('input', handler);
       el.addEventListener('change', handler);
     });
+    // Typfall-ledtider — redigerbara
+    [['lt-tf1', 'tf1', 10], ['lt-tf2', 'tf2', 60], ['lt-tf3', 'tf3', 100]].forEach(([id, key, def]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const handler = (e) => {
+        if (!state.typfallLedtider) state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
+        const v = +e.target.value;
+        state.typfallLedtider[key] = (isNaN(v) || v < 1) ? def : Math.min(500, v);
+        saveState();
+        updateTypfallButtonLabels();
+        updateMixSummary();
+        updateHandoverSummary();
+        updateApplyCtaState();
+        updateNextActionBanner();
+        recalc();
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+    });
     const onskadEl = document.getElementById('onskad-volym');
     const onskadHandler = (e) => {
       const v = +e.target.value;
