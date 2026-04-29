@@ -3009,6 +3009,8 @@
         role.typfalls[tfKey] = !role.typfalls[tfKey];
         saveState();
         renderRoles();
+        updateApplyCtaState();
+        updateNextActionBanner();
         recalc();
       });
     });
@@ -3049,6 +3051,8 @@
           role.enabled = e.target.checked;
           const row = document.getElementById('row-' + id);
           if (row) row.classList.toggle('disabled', !role.enabled);
+          updateApplyCtaState();
+          updateNextActionBanner();
         }
         saveState();
         recalc();
