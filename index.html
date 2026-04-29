@@ -2389,7 +2389,7 @@
   </div>
 
   <div class="target-cell">
-    <label><span class="tt" data-tip="Hur lång tid varje enskild leverans tar från start till klar. Påverkar när första leveranserna är färdiga och senaste möjliga startdatum för att hinna till deadline. Välj Blandat om volymen består av en mix av typfall.">Typfall (ledtid)</span><span class="required-mark" title="Välj typfall som matchar din leveranslängd — påverkar tidslinjen direkt">*</span>
+    <label><span class="tt" tabindex="0" data-tip="Hur lång tid varje enskild leverans tar från start till klar. Påverkar när första leveranserna är färdiga och senaste möjliga startdatum för att hinna till deadline. Välj Blandat om volymen består av en mix av typfall.">Typfall (ledtid)</span><span class="required-mark" title="Välj typfall som matchar din leveranslängd — påverkar tidslinjen direkt">*</span>
       <span class="hint">tid per leverans från start till klar</span>
     </label>
     <div class="typfall-toggle">
@@ -2428,7 +2428,7 @@
   <div class="section" id="step-2"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
 
   <div class="global-row">
-    <div class="role-name"><span class="tt" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
       <span class="hint">% av total kapacitet som lyckas — appliceras ovanpå per-roll-värden</span>
     </div>
     <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
@@ -2437,7 +2437,7 @@
   </div>
 
   <div class="global-row">
-    <div class="role-name"><span class="tt" data-tip="Antal månader det tar innan leveranstakten är uppe i full kapacitet. Användbart vid uppstart av nya projekt — det tar tid innan team, processer och flöde stabiliseras. Sätt 0 för pågående projekt i full drift.">Rampperiod</span>
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Antal månader det tar innan leveranstakten är uppe i full kapacitet. Användbart vid uppstart av nya projekt — det tar tid innan team, processer och flöde stabiliseras. Sätt 0 för pågående projekt i full drift.">Rampperiod</span>
       <span class="hint">månader till full takt vid uppstart</span>
     </div>
     <input type="range" id="rampMonths" aria-label="Antal månaders ramp-upp" min="0" max="12" value="0" step="1">
@@ -2448,17 +2448,17 @@
     <div class="handover-label">Handover-tider mellan roller <span class="hint">— standardtider för varje övergång i pipelinen</span></div>
     <div class="handover-fields">
       <div class="handover-field">
-        <label><span class="tt" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
         <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
-        <label><span class="tt" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
         <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
-        <label><span class="tt" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
+        <label><span class="tt" tabindex="0" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
         <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10">
         <span class="handover-unit">dgr</span>
       </div>
@@ -2495,7 +2495,7 @@
     <div class="body" id="suggest-body">Sätt målvolym, typfall och deadline ovan så räknar verktyget fram en optimal bemanning.</div>
 
     <div class="margin-row">
-      <label><span class="tt" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
+      <label><span class="tt" tabindex="0" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
         <span class="hint">buffert utöver minimum</span>
       </label>
       <input type="range" id="margin" aria-label="Säkerhetsmarginal i procent" min="0" max="50" value="10" step="5">
@@ -2536,13 +2536,13 @@
     <div>Roll</div>
     <div></div>
     <div></div>
-    <div class="col-takt"><span class="tt" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
+    <div class="col-takt"><span class="tt" tabindex="0" data-tip="Hur många leveranser en person i den här rollen klarar per tidsenhet.">Takt</span></div>
     <div class="col-takt">Enhet</div>
-    <div class="col-tak"><span class="tt" data-tip="Hårt tak per roll i samma enhet som takt (dag/vecka/månad). Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak</span><span class="header-sub">per takt-enhet</span></div>
-    <div class="col-hit"><span class="tt" data-tip="Per-roll hitrate i procent — hur realistiskt rollen hinner sin nominella takt. Tom = 100%. Global hitrate ovanför multipliceras alltid.">Hit %</span><span class="header-sub">tom = 100%</span></div>
-    <div class="col-cap"><span class="tt" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
-    <div class="col-tf"><span class="tt" data-tip="Klicka pillerna för att markera vilka typfall rollen deltar i. Roller utan markering för aktivt typfall räknas inte med.">Typfall</span><span class="header-sub">klicka pill</span></div>
-    <div class="col-spann"><span class="tt" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span><span class="header-sub">min – max</span></div>
+    <div class="col-tak"><span class="tt" tabindex="0" data-tip="Hårt tak per roll i samma enhet som takt (dag/vecka/månad). Effektiv kapacitet = min(antal × takt, taket). Lämna tomt = inget tak.">Tak</span><span class="header-sub">per takt-enhet</span></div>
+    <div class="col-hit"><span class="tt" tabindex="0" data-tip="Per-roll hitrate i procent — hur realistiskt rollen hinner sin nominella takt. Tom = 100%. Global hitrate ovanför multipliceras alltid.">Hit %</span><span class="header-sub">tom = 100%</span></div>
+    <div class="col-cap"><span class="tt" tabindex="0" data-tip="Effektiv kapacitet = (antal × takt, begränsad av ev. tak) × hitrate. Den lägsta blir flaskhalsen.">Kap/dag</span></div>
+    <div class="col-tf"><span class="tt" tabindex="0" data-tip="Klicka pillerna för att markera vilka typfall rollen deltar i. Roller utan markering för aktivt typfall räknas inte med.">Typfall</span><span class="header-sub">klicka pill</span></div>
+    <div class="col-spann"><span class="tt" tabindex="0" data-tip="Min och max antal personer för scenario-simulering. Snitt = (min + max) / 2. Tre kurvor i grafen — lägsta, plan och högsta.">Spann</span><span class="header-sub">min – max</span></div>
     <div></div>
   </div>
 
@@ -2554,7 +2554,7 @@
   </div>
 
   <div class="process-flow">
-    <div class="pf-title"><span class="tt" data-tip="Kapacitet per steg. Flaskhals markerad i rött.">Kapacitet per steg i leveranskedjan</span></div>
+    <div class="pf-title"><span class="tt" tabindex="0" data-tip="Kapacitet per steg. Flaskhals markerad i rött.">Kapacitet per steg i leveranskedjan</span></div>
     <div class="pf-row" id="pf-row"></div>
   </div>
 
@@ -2562,17 +2562,17 @@
 
   <div class="summary">
     <div class="stat">
-      <div class="lbl"><span class="tt" data-tip="MIN(alla rollers kapaciteter) × hitrate. Den lägsta kapaciteten i kedjan sätter taket.">Per dag</span></div>
+      <div class="lbl"><span class="tt" tabindex="0" data-tip="MIN(alla rollers kapaciteter) × hitrate. Den lägsta kapaciteten i kedjan sätter taket.">Per dag</span></div>
       <div class="val" id="day-out">—</div>
       <div class="sub">flaskhals: <span id="bottleneck">—</span></div>
     </div>
     <div class="stat">
-      <div class="lbl"><span class="tt" data-tip="Vad ni levererar per månad vid full takt — alltså efter ev. rampperiod är klar.">Per månad</span></div>
+      <div class="lbl"><span class="tt" tabindex="0" data-tip="Vad ni levererar per månad vid full takt — alltså efter ev. rampperiod är klar.">Per månad</span></div>
       <div class="val" id="month-out">—</div>
       <div class="sub" id="month-sub">—</div>
     </div>
     <div class="stat">
-      <div class="lbl"><span class="tt" data-tip="Total volym ni hinner leverera fram till deadline med nuvarande bemanning. Tar hänsyn till ramp om den är aktiv.">Totalt till deadline</span></div>
+      <div class="lbl"><span class="tt" tabindex="0" data-tip="Total volym ni hinner leverera fram till deadline med nuvarande bemanning. Tar hänsyn till ramp om den är aktiv.">Totalt till deadline</span></div>
       <div class="val" id="vol-out">—</div>
       <div class="sub" id="vol-sub">—</div>
     </div>
