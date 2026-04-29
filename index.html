@@ -3546,6 +3546,7 @@
         else if (id === 'handover-tek') state.handover.tekStartup = isNaN(v) ? 10 : Math.max(0, v);
         saveState();
         updateHandoverSummary();
+        updateApplyCtaState();
         recalc();
       };
       el.addEventListener('input', handler);
