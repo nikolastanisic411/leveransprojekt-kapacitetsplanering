@@ -2676,6 +2676,12 @@
     background: #ffffff;
     border: 0.5px solid #E5E2EA;
     border-radius: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  }
+  .exec-kpi:hover:not(.exec-kpi-primary) {
+    border-color: #D8C5E8;
+    box-shadow: 0 2px 8px rgba(92,14,146,0.08);
+    transform: translateY(-1px);
   }
   .exec-kpi-primary {
     background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
