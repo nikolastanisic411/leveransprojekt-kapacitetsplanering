@@ -3119,7 +3119,7 @@
         <button type="button" class="role-tf-pill ${tf[k] ? 'active' : ''}" data-id="${role.id}" data-field="tf-${k}" title="Klicka för att togglade — ${tf[k] ? 'avmarkera' : 'aktivera'} rollen i Typfall ${label}">${label}</button>`;
       row.innerHTML = `
         <input type="checkbox" class="role-checkbox" ${role.enabled !== false ? 'checked' : ''} data-id="${role.id}" data-field="enabled" title="Räkna med rollen i kalkylen" aria-label="Inkludera ${escapeHtml(role.name)} i beräkningen">
-        <div class="drag-handle" title="Dra för att sortera om">⋮⋮</div>
+        <div class="drag-handle" title="Dra för att sortera om" aria-label="Drag-handle för rollordning" aria-hidden="true">⋮⋮</div>
         <div class="role-num">${idx + 1}</div>
         <input type="text" class="role-name-input" value="${escapeHtml(role.name)}" data-id="${role.id}" data-field="name" aria-label="Rollnamn">
         <input type="range" min="1" max="${role.max}" value="${role.count}" step="1" data-id="${role.id}" data-field="count">
