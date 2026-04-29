@@ -6358,6 +6358,13 @@
     }
   });
 
+    // ESC-tangenten: blur:a aktivt fält så användaren snabbt kan stega bort
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.activeElement && document.activeElement.blur) {
+      try { document.activeElement.blur(); } catch (_) {}
+    }
+  });
+
     // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
