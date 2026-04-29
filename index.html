@@ -2357,9 +2357,14 @@
     border-radius: 4px;
     transition: all 0.15s;
   }
-  .checklist-item .cl-remove:hover {
+  .checklist-item .cl-remove:hover,
+  .checklist-item .cl-remove:focus-visible {
     color: #9a2424;
     background: #FBE8E8;
+    outline: none;
+  }
+  .checklist-item .cl-remove:focus-visible {
+    box-shadow: 0 0 0 2px rgba(154,36,36,0.3);
   }
   .add-checklist-item {
     margin-top: 10px;
