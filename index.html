@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.60-EXEC-REWORK" aria-busy="true">
+<body data-build="2026-04-29-G1.61-CENTRALIZED-REWORK" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.60-EXEC-REWORK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.61-CENTRALIZED-REWORK</span>
   </div>
 
 </div>
@@ -4308,8 +4308,8 @@
       });
       return;
     }
-    // Effektiv takt per dag = kapacitet × per-roll-hitrate; flaskhals = min av dessa
-    const effDay = Math.min(...active.map(r => roleEffectivePerDay(r)));
+    // Effektiv takt per dag = kapacitet × per-roll-hitrate × global-hitrate × rework-faktor; flaskhals = min av dessa
+    const effDay = Math.min(...active.map(r => roleEffectivePerDayWithRework(r)));
     const perUnit = (u) => {
       if (u === 'dag') return effDay;
       if (u === 'vecka') return effDay * 5;
@@ -5143,6 +5143,18 @@
   function roleEffectivePerDay(role) {
     return roleCapPerDay(role) * roleHitrate(role) * globalHitrate();
   }
+  // G1.61: Effektiv takt mot huvudvolymen — för Nätarkitekt minskas takten av rework-eskalering
+  // (rollen processerar V + rwVol istället för V, så dess takt mot V är base × V/(V+rwVol)).
+  // Används där flaskhals och kapacitet jämförs mot huvudmålet.
+  function roleEffectivePerDayWithRework(role) {
+    const base = roleEffectivePerDay(role);
+    const target = +state.onskadVolym || 0;
+    const rwVol = getReworkVolume();
+    if (rwVol > 0 && target > 0 && /arkitekt/i.test(role.name || '')) {
+      return base * (target / (target + rwVol));
+    }
+    return base;
+  }
   // Returnerar kapacitet per dag givet ett alternativt antal personer (för min/max-scenarier)
   function roleCapPerDayWithCount(role, alternativeCount) {
     const raw = (+alternativeCount || 0) * rolePerDay(role);
@@ -5329,7 +5341,7 @@
     const caps = active.map(r => ({
       id: r.id, name: r.name,
       raw: roleCapPerDay(r),
-      eff: roleEffectivePerDay(r),
+      eff: roleEffectivePerDayWithRework(r),
       hitrate: roleHitrate(r),
     }));
     const minEff = Math.min(...caps.map(c => c.eff));
@@ -6369,20 +6381,10 @@
     const target = +state.onskadVolym || 0;
     const active = activeRoles();
     const totalHeadcount = state.roles ? state.roles.reduce((s, r) => s + (r.enabled !== false ? (+r.count || 0) : 0), 0) : 0;
-    // G1.60: Rework-konsistens — om Nätarkitekt är flaskhals och har rework-volym, justera dess effektiva takt
-    const rwVol_exec = getReworkVolume();
-    const effRateForRole = (r) => {
-      const base = roleEffectivePerDay(r);
-      if (rwVol_exec > 0 && /arkitekt/i.test(r.name || '') && target > 0) {
-        // Nätarkitekt processerar V + rwVol istället för V — minska effektiv takt mot V proportionellt
-        const factor = target / (target + rwVol_exec);
-        return base * factor;
-      }
-      return base;
-    };
-    const minEffDay = active.length > 0 ? Math.min(...active.map(effRateForRole)) : 0;
+    // G1.60/G1.61: Använd centraliserad helper för rework-justerad effektiv takt
+    const minEffDay = active.length > 0 ? Math.min(...active.map(roleEffectivePerDayWithRework)) : 0;
     const monthlyRate = minEffDay * 21;
-    const bottleneck = active.length > 0 ? active.reduce((b, r) => effRateForRole(r) < effRateForRole(b) ? r : b) : null;
+    const bottleneck = active.length > 0 ? active.reduce((b, r) => roleEffectivePerDayWithRework(r) < roleEffectivePerDayWithRework(b) ? r : b) : null;
     
     // Beräkna projected volume mot deadline
     const today = new Date();
