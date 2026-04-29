@@ -7281,6 +7281,8 @@
     });
     window.addEventListener('load', () => {
       try {
+        // Om URL har hash (#step-N), låt browsern navigera dit istället
+        if (window.location.hash) return;
         const y = parseInt(sessionStorage.getItem(SCROLL_KEY), 10);
         if (!isNaN(y) && y > 0) {
           // Vänta tills allt renderats
