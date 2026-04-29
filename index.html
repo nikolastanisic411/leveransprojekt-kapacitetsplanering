@@ -3523,7 +3523,16 @@
 
   function recalcScenarios() {
     const active = activeRoles();
-    if (active.length === 0) return;
+    if (active.length === 0) {
+      // Inga aktiva roller — visa neutrala verdicts med förklaring
+      (state.scenarios || []).forEach(scen => {
+        const verdict = document.getElementById('verdict-' + scen.id);
+        const gap = document.getElementById('gap-' + scen.id);
+        if (verdict) { verdict.textContent = '—'; verdict.className = 'verdict'; }
+        if (gap) gap.textContent = 'aktivera roller för att räkna';
+      });
+      return;
+    }
     // Effektiv takt per dag = kapacitet × per-roll-hitrate; flaskhals = min av dessa
     const effDay = Math.min(...active.map(r => roleEffectivePerDay(r)));
     const perUnit = (u) => {
