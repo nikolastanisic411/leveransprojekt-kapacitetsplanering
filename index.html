@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.9-PROGNOS" aria-busy="true">
+<body data-build="2026-04-29-G1.10-SMARTTIPS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.9-PROGNOS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.10-SMARTTIPS</span>
   </div>
 
 </div>
@@ -6715,6 +6715,38 @@
       footerHtml += '<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.2);font-size:13px">';
       footerHtml += '<strong style="color:#fff">Prognos med nuvarande bemanning:</strong> klart <strong style="color:#fff">' + fmt(lastRole.actualFinish) + '</strong> (' + prognosText + ').';
       footerHtml += '</div>';
+
+      // G1.10: Smart sensitivitetsanalys — alternativ till mer bemanning
+      if (projectFinishDelta > 0) {
+        const tips = [];
+        // Alt 1: korta total handover
+        const totalHandover = data.slice(0, -1).reduce((s, d) => s + ((typeof d.role.handoverToNext === 'number') ? d.role.handoverToNext : 0), 0);
+        if (totalHandover >= projectFinishDelta) {
+          tips.push('Korta handover-tider med totalt <strong style="color:#fff">' + projectFinishDelta + ' dagar</strong> (idag totalt ' + totalHandover + ' dagar) → klarar deadline utan extra bemanning.');
+        } else if (totalHandover > 0) {
+          tips.push('Korta alla handover-tider till noll sparar <strong style="color:#fff">' + totalHandover + ' dagar</strong> (räcker inte hela vägen — försening blir då ' + (projectFinishDelta - totalHandover) + ' dagar).');
+        }
+        // Alt 2: tidigare projektstart
+        tips.push('Starta projektet <strong style="color:#fff">' + projectFinishDelta + ' dagar tidigare</strong> → klarar deadline med samma bemanning.');
+        // Alt 3: höj global hitrate
+        const currentHitrate = (typeof state.hitrate === 'number') ? state.hitrate : 100;
+        const totalWorkDaysCal = data.reduce((s, d) => s + (d.ownRate > 0 ? (V / d.ownRate) * 7 / 5 : 0), 0);
+        const targetWorkDaysCal = totalWorkDaysCal - projectFinishDelta;
+        if (targetWorkDaysCal > 0 && currentHitrate > 0 && currentHitrate < 100) {
+          const factor = totalWorkDaysCal / targetWorkDaysCal;
+          const newHitrate = Math.min(100, Math.round(currentHitrate * factor));
+          if (newHitrate > currentHitrate && newHitrate <= 100) {
+            tips.push('Höj global hitrate från <strong style="color:#fff">' + currentHitrate + '%</strong> till <strong style="color:#fff">' + newHitrate + '%</strong> → klarar deadline med samma bemanning.');
+          }
+        }
+        if (tips.length > 0) {
+          footerHtml += '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.08);border-radius:8px;font-size:13px;line-height:1.6">';
+          footerHtml += '<strong style="color:#fff">Smart-tips — alternativ till mer bemanning:</strong>';
+          footerHtml += '<ul style="margin:6px 0 0 18px;padding:0;list-style:disc">';
+          tips.forEach(t => { footerHtml += '<li style="margin:3px 0">' + t + '</li>'; });
+          footerHtml += '</ul></div>';
+        }
+      }
     }
     // Konsoliderad åtgärdsplan när det inte hinns
     const overshoots = data.filter(d => d.overshoots);
