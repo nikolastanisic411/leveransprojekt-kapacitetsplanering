@@ -2259,7 +2259,15 @@
     line-height: 1.5;
     min-height: 90px;
     resize: vertical;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
+  .constraints-textarea:hover { border-color: #a8a6a0; }
+  .constraints-textarea:focus {
+    outline: none;
+    border-color: #5C0E92;
+    box-shadow: 0 0 0 3px rgba(92, 14, 146, 0.15);
+  }
+  .constraints-textarea::placeholder { color: #a8a8a3; }
   .constraints-textarea:focus { outline: none; border-color: #1a1a1a; }
 
   .footer-note {
