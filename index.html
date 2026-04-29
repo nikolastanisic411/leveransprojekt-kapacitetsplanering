@@ -1855,6 +1855,13 @@
     background: rgba(255,255,255,0.18);
     border-color: rgba(255,255,255,0.4);
   }
+  .handover-card .ho-role.tight {
+    border-color: rgba(255,200,150,0.5);
+    background: linear-gradient(135deg, rgba(255,160,80,0.18) 0%, rgba(255,160,80,0.10) 100%);
+  }
+  .handover-card .ho-role.relaxed {
+    border-color: rgba(168,230,194,0.5);
+  }
   .handover-card .ho-role .ho-name {
     font-size: 14px;
     font-weight: 600;
@@ -2942,7 +2949,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.25-RATE-CMP" aria-busy="true">
+<body data-build="2026-04-29-G1.26-CARD-COLOR" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3369,7 +3376,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.25-RATE-CMP</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.26-CARD-COLOR</span>
   </div>
 
 </div>
@@ -6714,6 +6721,11 @@
       const classes = ['ho-role'];
       if (d.isBottleneck) classes.push('bottleneck');
       if (d.overshoots) classes.push('overshoots');
+      else if (isFinite(d.bufferDays)) {
+        if (d.bufferDays < 0) classes.push('overshoots');
+        else if (d.bufferDays >= 0 && d.bufferDays <= 6) classes.push('tight');
+        else if (d.bufferDays >= 14) classes.push('relaxed');
+      }
       const roleClass = classes.join(' ');
       const flag = (d.overshoots ? '<span class="ho-flag warn">⚠ Hinner inte</span> ' : '') + (d.isBottleneck ? '<span class="ho-flag">⚑ Flaskhals</span>' : '');
       const dailyRate = d.ownRate.toFixed(1);
