@@ -550,7 +550,9 @@
     border-bottom: 0.5px dotted #c8c6bf;
     position: relative;
   }
-  .tt:hover::after {
+  .tt:hover::after,
+  .tt:focus::after,
+  .tt:focus-within::after {
     content: attr(data-tip);
     position: absolute;
     bottom: 100%;
@@ -572,7 +574,9 @@
     letter-spacing: 0;
     text-transform: none;
   }
-  .tt:hover::before {
+  .tt:hover::before,
+  .tt:focus::before,
+  .tt:focus-within::before {
     content: '';
     position: absolute;
     bottom: 100%;
