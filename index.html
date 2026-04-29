@@ -235,6 +235,23 @@
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(92,14,146,0.25);
   }
+
+  .setup-warning {
+    margin: 0 0 14px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #FBE8E8 0%, #F7DBDB 100%);
+    border: 0.5px solid #9a2424;
+    border-left: 4px solid #9a2424;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #6b1a1a;
+    line-height: 1.5;
+    box-shadow: 0 1px 3px rgba(154,36,36,0.10);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .setup-warning strong { color: #9a2424; font-weight: 600; }
+  .setup-warning .sw-title { font-size: 14px; font-weight: 600; color: #9a2424; margin-bottom: 4px; }
   .next-action-banner {
     margin: 0 0 14px;
     padding: 14px 18px;
@@ -2819,6 +2836,7 @@
     <span class="snapshot-info" id="snapshot-info" role="status" aria-live="polite">inget nuläge markerat</span>
   </div>
 
+  <div id="setup-warning" class="setup-warning" style="display:none" role="alert" aria-live="polite"></div>
   <div class="next-action-banner" id="next-action-banner" role="status" aria-live="polite" style="display:none"></div>
   <div class="step-progress" id="step-progress" role="navigation" aria-label="Steg-navigering">
     <div class="sp-step" data-step="1" onclick="scrollToStep(1)" tabindex="0" role="button" aria-label="Gå till steg 1: Mål" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(1);}"><span class="sp-num">1</span><span class="sp-label">Mål</span></div>
