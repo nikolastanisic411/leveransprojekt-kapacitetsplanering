@@ -6329,6 +6329,8 @@
         if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
           html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
         }
+        // Apply-knapp för att tillämpa rekommendationen direkt
+        html += '<button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + ' personer</button>';
         html += '</div>';
       } else if (isFinite(d.requiredHeadcount)) {
         // OK — bemanning räcker
