@@ -1834,11 +1834,14 @@
     font-style: italic;
     margin-left: 8px;
   }
+  /* Roles-matrix wrapper hanterar overflow */
+  #roles-matrix { overflow-x: auto; }
   .planning-matrix {
     width: 100%;
     font-size: 12px;
     border-collapse: collapse;
     margin-top: 8px;
+    table-layout: auto;
   }
   .planning-matrix th {
     text-align: left;
@@ -1882,9 +1885,16 @@
     font-weight: 600;
   }
   .planning-matrix .timebar-cell {
-    width: 30%;
-    min-width: 160px;
+    width: 25%;
+    min-width: 120px;
+    max-width: 240px;
     padding-left: 12px;
+    box-sizing: border-box;
+  }
+  .planning-matrix .timebar-track {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .planning-matrix .timebar-track {
     background: #f4f2eb;
