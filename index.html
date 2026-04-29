@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.61-CENTRALIZED-REWORK" aria-busy="true">
+<body data-build="2026-04-29-G1.62-AUTOSCEN-REWORK" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.61-CENTRALIZED-REWORK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.62-AUTOSCEN-REWORK</span>
   </div>
 
 </div>
@@ -5888,10 +5888,10 @@
     // Beräkna baserat på aktuellt mål
     const targetVol = +state.onskadVolym || 0;
     if (targetVol <= 0) return;
-    // Beräkna month-takt baserat på faktisk capacity
+    // Beräkna month-takt baserat på faktisk capacity (rework-justerad för konsistens)
     const active = activeRoles();
     if (active.length === 0) return;
-    const minEffDay = Math.min(...active.map(r => roleEffectivePerDay(r)));
+    const minEffDay = Math.min(...active.map(roleEffectivePerDayWithRework));
     const baseMonth = Math.round(minEffDay * 21);
     // Behåll redan namngivna custom-scenarier; ersätt bara auto-genererade
     const existingCustom = (state.scenarios || []).filter(s => !(s.id || '').startsWith('auto-'));
@@ -6415,7 +6415,7 @@
 
     // KPI: Flaskhals
     document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : '—';
-    document.getElementById('exec-bottleneck-sub').textContent = bottleneck ? roleEffectivePerDay(bottleneck).toFixed(1) + '/dag sätter taket' : 'inga aktiva roller';
+    document.getElementById('exec-bottleneck-sub').textContent = bottleneck ? roleEffectivePerDayWithRework(bottleneck).toFixed(1) + '/dag sätter taket' : 'inga aktiva roller';
 
     // Doughnut: Måluppfyllnad
     const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
