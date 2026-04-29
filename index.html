@@ -6808,8 +6808,9 @@
         const monthsFromToday = (d.date.getFullYear() - today.getFullYear()) * 12
           + (d.date.getMonth() - today.getMonth())
           + (d.date.getDate() - today.getDate()) / 30;
-        // Bara visa punkter som är inom chartens x-omfång (ej för långt i framtiden)
+        // Bara visa punkter som är inom chartens x-omfång (ej före projektstart eller för långt i framtiden)
         if (monthsFromToday > xMax) return;
+        if (monthsFromToday < 0) return;
         const x = xScale(monthsFromToday);
         const y = yScale(d.cumulative);
         utfallPoints.push({ x, y, monthsFromToday, cumulative: d.cumulative });
