@@ -6520,6 +6520,12 @@
       footerHtml += '<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.25);font-size:13px"><strong style="color:#fff">Konsoliderad åtgärdsplan:</strong> ';
       footerHtml += additions.map(d => escapeHtml(d.role.name) + ' +' + d.additionalNeeded + ' pers').join(' · ');
       footerHtml += '. Totalt <strong style="color:#fff">+' + additions.reduce((s, d) => s + d.additionalNeeded, 0) + ' personer</strong> behövs.';
+      // Bygg apply-all data-attribut: "id1:count1;id2:count2..."
+      const applyData = additions.map(d => d.role.id + ':' + d.requiredHeadcount).join(';');
+      footerHtml += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">';
+      footerHtml += '<button class="ho-apply-all-btn" onclick="applyAllRecommendations(\'' + applyData + '\')" type="button">Applicera alla rekommendationer</button>';
+      footerHtml += '<button class="ho-copy-btn" onclick="copyConsolidatedPlan()" type="button">Kopiera hela planen</button>';
+      footerHtml += '</div>';
       footerHtml += '</div>';
     }
     footer.innerHTML = footerHtml;
