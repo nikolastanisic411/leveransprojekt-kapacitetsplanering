@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.75-SETUP-PESSIMISTIC" aria-busy="true">
+<body data-build="2026-04-29-G1.76-PER-TF-HANDOVER" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.75-SETUP-PESSIMISTIC</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.76-PER-TF-HANDOVER</span>
   </div>
 
 </div>
@@ -4876,14 +4876,21 @@
     return null;
   }
 
+  // G1.76: Handover-summa PER TYPFALL — filtrera roller som hanterar TFen
+  // (TF1 går t.ex. inte genom Nätarkitekt, så den handovern ska inte räknas).
+  function getHandoverSumForTypfall(tfKey) {
+    const enabledRoles = (state.roles || []).filter(r => r.enabled !== false);
+    const tfRoles = enabledRoles.filter(r => (r.typfalls || {tf1:true,tf2:true,tf3:true})[tfKey] !== false);
+    return tfRoles.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+  }
   function getTotalLedtimeForTypfall(typfall) {
     const lt = getTypfallLedtider();
-    // G1.63: Total handover = summa över AKTIVA roller (utom sista) — disabled roller deltar inte i pipeline
+    if (typfall === 10) return getHandoverSumForTypfall('tf1') + lt.tf1;
+    if (typfall === 60) return getHandoverSumForTypfall('tf2') + lt.tf2;
+    if (typfall === 100) return getHandoverSumForTypfall('tf3') + lt.tf3;
+    // Fallback för okänt typfall: använd alla enabled roller
     const enabledRoles = (state.roles || []).filter(r => r.enabled !== false);
     const totalHandover = enabledRoles.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
-    if (typfall === 10) return totalHandover + lt.tf1;
-    if (typfall === 60) return totalHandover + lt.tf2;
-    if (typfall === 100) return totalHandover + lt.tf3;
     return typfall + totalHandover;
   }
 
@@ -6130,17 +6137,18 @@
     const el = document.getElementById('handover-summary');
     if (!el) return;
     const lt = getTypfallLedtider();
-    // G1.63: Summera handover-tider över AKTIVA roller (utom sista) — disabled roller deltar inte i pipeline
-    const enabledRoles_sum = (state.roles || []).filter(r => r.enabled !== false);
-    const totalHandover = enabledRoles_sum.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
-    const tf1 = totalHandover + lt.tf1;
-    const tf2 = totalHandover + lt.tf2;
-    const tf3 = totalHandover + lt.tf3;
+    // G1.76: Per-TF handover — TF1 räknar bara handover mellan roller som hanterar TF1 etc.
+    const ho1 = getHandoverSumForTypfall('tf1');
+    const ho2 = getHandoverSumForTypfall('tf2');
+    const ho3 = getHandoverSumForTypfall('tf3');
+    const tf1 = ho1 + lt.tf1;
+    const tf2 = ho2 + lt.tf2;
+    const tf3 = ho3 + lt.tf3;
     let html =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + totalHandover + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + totalHandover + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + totalHandover + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + ho1 + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + ho2 + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
+        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + ho3 + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
       '</div>';
     const rwVol = getReworkVolume();
     const rwRate = (+state.reworkRate || 0);
