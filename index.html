@@ -6154,6 +6154,10 @@
       }
       const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
       data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
+      // overshoots: mastBorjaSenast < projektStart (eller idag om ingen projektstart)
+      const today0 = new Date(); today0.setHours(0,0,0,0);
+      const refStart = projektStartDate || today0;
+      data[i].overshoots = data[i].mastBorjaSenast < refStart;
     }
 
     // Bygg roll-cards
