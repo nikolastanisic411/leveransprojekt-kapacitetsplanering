@@ -3677,7 +3677,23 @@
     if (!state.utfall) state.utfall = { granularity: 'vecka', entries: [] };
     const today = new Date();
     const id = 'u' + Date.now();
-    const entry = { id, period: today.toISOString().slice(0, 10), utlagt: 0, levererat: 0, tf1: 0, tf2: 0, tf3: 0, perRole: {} };
+    // Auto-incrementera datum från senaste raden — ny period = föregående + en granularity
+    const entries = state.utfall.entries || [];
+    const gran = state.utfall.granularity || 'vecka';
+    let suggestedDate = today.toISOString().slice(0, 10);
+    if (entries.length > 0) {
+      const last = entries.slice().sort((a,b) => (b.period || '').localeCompare(a.period || ''))[0];
+      if (last && last.period) {
+        const d = new Date(last.period);
+        if (!isNaN(d.getTime())) {
+          if (gran === 'dag') d.setDate(d.getDate() + 1);
+          else if (gran === 'månad') d.setMonth(d.getMonth() + 1);
+          else d.setDate(d.getDate() + 7);
+          suggestedDate = d.toISOString().slice(0, 10);
+        }
+      }
+    }
+    const entry = { id, period: suggestedDate, utlagt: 0, levererat: 0, tf1: 0, tf2: 0, tf3: 0, perRole: {} };
     state.roles.forEach(r => { entry.perRole[r.id] = 0; });
     state.utfall.entries.push(entry);
     saveState();
