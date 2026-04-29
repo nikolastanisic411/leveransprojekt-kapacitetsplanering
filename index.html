@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.12-KOMBO" aria-busy="true">
+<body data-build="2026-04-29-G1.13-ROBUST" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.12-KOMBO</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.13-ROBUST</span>
   </div>
 
 </div>
@@ -6714,6 +6714,33 @@
       }
       footerHtml += '<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.2);font-size:13px">';
       footerHtml += '<strong style="color:#fff">Prognos med nuvarande bemanning:</strong> klart <strong style="color:#fff">' + fmt(lastRole.actualFinish) + '</strong> (' + prognosText + ').';
+      // G1.13: Robusthets-flagga — hur tight är planen?
+      const marginalDays = -projectFinishDelta; // positivt = marginal, negativt = försening
+      let robustEmoji, robustLabel, robustColor;
+      if (marginalDays >= 14) { robustEmoji = '🟢'; robustLabel = 'Robust plan'; robustColor = '#A8E6C2'; }
+      else if (marginalDays >= 7) { robustEmoji = '🟡'; robustLabel = 'OK med viss risk'; robustColor = '#FFE6A0'; }
+      else if (marginalDays >= 1) { robustEmoji = '🟠'; robustLabel = 'Tight plan'; robustColor = '#FFC68A'; }
+      else if (marginalDays === 0) { robustEmoji = '⚠️'; robustLabel = 'Precis i tid — ingen marginal'; robustColor = '#FFD6F0'; }
+      else { robustEmoji = '🔴'; robustLabel = 'Försenad'; robustColor = '#FFD6F0'; }
+      footerHtml += '<br><span style="color:' + robustColor + ';font-weight:600">' + robustEmoji + ' ' + robustLabel + '</span>';
+      // G1.13: Stresstest — vid vilken handover-ökning eller hitrate-fall spricker planen?
+      if (marginalDays > 0) {
+        const stressBits = [];
+        // Handover-stresstest: hur många dagar kan handover öka innan deadline missas?
+        stressBits.push('handover-ökning upp till <strong style="color:#fff">+' + marginalDays + ' d</strong>');
+        // Hitrate-stresstest: vid vilken global hitrate spricker planen?
+        const currentHitrate = (typeof state.hitrate === 'number') ? state.hitrate : 100;
+        const totalWorkDaysCal = data.reduce((s, dd) => s + (dd.ownRate > 0 ? (V / dd.ownRate) * 7 / 5 : 0), 0);
+        if (totalWorkDaysCal > 0 && currentHitrate > 0) {
+          const breakEvenHitrate = Math.max(0, Math.floor(currentHitrate * totalWorkDaysCal / (totalWorkDaysCal + marginalDays)));
+          if (breakEvenHitrate < currentHitrate) {
+            stressBits.push('hitrate-fall ner till <strong style="color:#fff">' + breakEvenHitrate + ' %</strong> (idag ' + currentHitrate + ' %)');
+          }
+        }
+        if (stressBits.length > 0) {
+          footerHtml += ' <span style="opacity:0.85;font-size:12px">— tål ' + stressBits.join(' eller ') + ' innan deadline missas.</span>';
+        }
+      }
       footerHtml += '</div>';
 
       // G1.10: Smart sensitivitetsanalys — alternativ till mer bemanning
