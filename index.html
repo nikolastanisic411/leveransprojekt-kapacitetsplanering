@@ -4547,6 +4547,7 @@
     updateApplyCtaState();
     updateNextActionBanner();
     updateActiveRolesIndicator();
+    updateDocumentTitle();
     updateActivityLabels();
   }
 
@@ -6204,6 +6205,16 @@
     }
   }
   autoFocusFirstEmpty();
+
+    // Uppdaterar document.title med målvolym så användaren ser i flik-listan
+  function updateDocumentTitle() {
+    const base = 'Leveransprojekt — Kapacitetsplanering';
+    if (+state.onskadVolym > 0) {
+      document.title = state.onskadVolym + ' st • ' + base;
+    } else {
+      document.title = base;
+    }
+  }
 
     // Sync mellan flikar — om annan flik ändrar samma state, ladda om i denna flik
   window.addEventListener('storage', (e) => {
