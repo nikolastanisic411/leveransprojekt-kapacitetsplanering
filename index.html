@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.8-APPLY-ALL" aria-busy="true">
+<body data-build="2026-04-29-G1.9-BUFFER" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.8-APPLY-ALL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.9-BUFFER</span>
   </div>
 
 </div>
@@ -6563,6 +6563,28 @@
       data[i].requiredEffDay = requiredEffDay;
     }
 
+    // G1.9: Forward-simulering — när blir varje roll FAKTISKT klar med nuvarande bemanning?
+    // Burst-modellen kedjas framåt från refStart. Buffer = klarSenast - actualFinish.
+    {
+      const today0 = new Date(); today0.setHours(0,0,0,0);
+      const refStart = projektStartDate || today0;
+      let chainStartMs = refStart.getTime();
+      for (let i = 0; i < data.length; i++) {
+        if (i > 0) {
+          // Kan börja när föregående är klar + handover till denna roll
+          const ho = (typeof data[i-1].role.handoverToNext === 'number') ? data[i-1].role.handoverToNext : 0;
+          chainStartMs = data[i-1].actualFinish.getTime() + ho * dayMs;
+        }
+        data[i].actualStart = new Date(chainStartMs);
+        const daysNeeded = data[i].ownRate > 0 ? (V / data[i].ownRate) * 7 / 5 : Infinity;
+        data[i].actualFinish = isFinite(daysNeeded)
+          ? new Date(chainStartMs + daysNeeded * dayMs)
+          : new Date(8.64e15);
+        // Buffer i kalenderdagar (positivt = marginal, negativt = försening)
+        data[i].bufferDays = Math.round((data[i].klarSenast.getTime() - data[i].actualFinish.getTime()) / dayMs);
+      }
+    }
+
     const bottleneck = data.find(d => d.isBottleneck);
     // Bygg roll-cards
     let html = '';
@@ -6613,6 +6635,10 @@
         if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
           html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
         }
+        // G1.9: Visa konkret konsekvens om vi INTE gör något
+        if (d.actualFinish && isFinite(d.bufferDays) && d.bufferDays < 0) {
+          html += '<br><span style="color:#FFD6F0;font-weight:600">Utan ändring: klar ' + fmt(d.actualFinish) + ' (' + Math.abs(d.bufferDays) + ' dagars försening mot klar-senast).</span>';
+        }
         // Apply-knapp för att tillämpa rekommendationen direkt
         html += '<button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + ' personer</button>';
         html += '<button class="ho-copy-btn" onclick="copyRoleRecommendation(\'' + d.role.id + '\')" type="button" title="Kopiera rekommendation som text för att skicka till resursägaren">Kopiera till urklipp</button>';
@@ -6621,6 +6647,14 @@
         // OK — bemanning räcker
         html += '<div class="ho-action ok">';
         html += '<strong>OK:</strong> ' + d.role.count + ' personer räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
+        // G1.9: Visa förväntat slutdatum + buffer-marginal
+        if (d.actualFinish && isFinite(d.bufferDays)) {
+          const buf = d.bufferDays;
+          const marginalText = buf > 0
+            ? '<span style="color:#A8E6C2;font-weight:600">' + buf + ' dagars marginal</span>'
+            : (buf === 0 ? '<span style="opacity:0.85">precis i tid</span>' : '<span style="color:#FFD6F0;font-weight:600">' + Math.abs(buf) + ' dagars försening</span>');
+          html += '<br><span style="opacity:0.9">Förväntat klart: <strong>' + fmt(d.actualFinish) + '</strong> (' + marginalText + ').</span>';
+        }
         html += '</div>';
       }
       html += '</div>';
@@ -6629,6 +6663,20 @@
 
     let footerHtml = 'Total volym: <strong style="color:#fff">' + Math.round(V) + ' st</strong> till deadline <strong style="color:#fff">' + fmt(deadline) +
       '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '');
+    // G1.9: Förväntat projektslut idag (sista rollens actualFinish) + delta mot deadline
+    const lastRole = data[data.length - 1];
+    if (lastRole && lastRole.actualFinish) {
+      const projectFinishDelta = Math.round((lastRole.actualFinish.getTime() - deadline.getTime()) / dayMs);
+      let prognosText;
+      if (projectFinishDelta <= 0) {
+        prognosText = '<span style="color:#A8E6C2;font-weight:700">' + Math.abs(projectFinishDelta) + ' dagars marginal</span>';
+      } else {
+        prognosText = '<span style="color:#FFD6F0;font-weight:700">' + projectFinishDelta + ' dagar efter deadline</span>';
+      }
+      footerHtml += '<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.2);font-size:13px">';
+      footerHtml += '<strong style="color:#fff">Prognos med nuvarande bemanning:</strong> klart <strong style="color:#fff">' + fmt(lastRole.actualFinish) + '</strong> (' + prognosText + ').';
+      footerHtml += '</div>';
+    }
     // Konsoliderad åtgärdsplan när det inte hinns
     const overshoots = data.filter(d => d.overshoots);
     const additions = data.filter(d => d.additionalNeeded > 0 && isFinite(d.requiredHeadcount));
