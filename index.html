@@ -4039,6 +4039,13 @@
         const handler = (e) => {
           const v = +e.target.value;
           state.typfallMix[key] = isNaN(v) || v < 0 ? 0 : v;
+          // I mix-läge: auto-synka onskadVolym med summan så de aldrig glider isär
+          if (state.leadtimeDays === 'mix') {
+            const mixSum = (+state.typfallMix.tf1 || 0) + (+state.typfallMix.tf2 || 0) + (+state.typfallMix.tf3 || 0);
+            state.onskadVolym = mixSum;
+            const ovEl = document.getElementById('onskad-volym');
+            if (ovEl) ovEl.value = mixSum;
+          }
           saveState();
           updateMixSummary();
           renderRoles();
