@@ -2378,17 +2378,17 @@
     <div class="handover-fields">
       <div class="handover-field">
         <label><span class="tt" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
-        <input type="number" id="handover-order" min="0" step="0.5" value="3">
+        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
         <label><span class="tt" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
-        <input type="number" id="handover-arch" min="0" step="0.5" value="5">
+        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
         <label><span class="tt" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
-        <input type="number" id="handover-tek" min="0" step="0.5" value="10">
+        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10">
         <span class="handover-unit">dgr</span>
       </div>
     </div>
