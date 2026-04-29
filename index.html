@@ -3767,7 +3767,7 @@
   function getCumulativeUtfall() {
     if (!state.utfall || !Array.isArray(state.utfall.entries)) return [];
     const sorted = [...state.utfall.entries]
-      .filter(e => e.period)
+      .filter(e => e.period && !isNaN(new Date(e.period).getTime()))
       .sort((a, b) => a.period.localeCompare(b.period));
     let acc = 0;
     return sorted.map(e => {
