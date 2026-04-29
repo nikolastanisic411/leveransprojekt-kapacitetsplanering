@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.54-RENAME-EASIEST" aria-busy="true">
+<body data-build="2026-04-29-G1.55-CALIBRATE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.54-RENAME-EASIEST</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.55-CALIBRATE</span>
   </div>
 
 </div>
@@ -6490,6 +6490,22 @@
     showToast(role.name + ' satt till ' + cap + ' personer');
   }
 
+  // G1.55: Kalibrera plan-hitrate till verklighetens hitrate (auto-kalibrering)
+  function calibratePlanFromActual(actualHitrate) {
+    const newHr = Math.max(1, Math.min(100, Math.round(+actualHitrate || 0)));
+    if (!newHr) return;
+    const oldHr = state.hitrate;
+    state.hitrate = newHr;
+    // Synkronisera UI-input
+    const input = document.getElementById('hitrate');
+    if (input) input.value = newHr;
+    const valEl = document.getElementById('hitrate-v');
+    if (valEl) valEl.textContent = newHr + ' %';
+    saveState();
+    recalc();
+    showToast('Plan-hitrate kalibrerad: ' + oldHr + ' % → ' + newHr + ' %');
+  }
+
   // G1.51: Kopiera scenario-rekommendation som text för delning till resursägare
   function copyScenarioRecommendation(scenarioId) {
     const scen = (state.scenarios || []).find(s => s.id === scenarioId);
@@ -7210,6 +7226,10 @@
             realityHtml += '<br><span style="color:#A8E6C2;font-weight:600">Hitrate ligger ' + Math.abs(hrDelta) + ' procentenheter ÖVER plan</span> — kapaciteten är förmodligen större än vad planen visar.';
           } else {
             realityHtml += '<br><span style="color:#A8E6C2">Inom rimligt avvikelseintervall (±5 procentenheter) — kalkylen ser representativ ut.</span>';
+          }
+          // G1.55: Kalibrerings-CTA — om signifikant avvikelse, erbjud auto-kalibrering med ett klick
+          if (Math.abs(hrDelta) >= 5 && actualHitrate > 0 && actualHitrate <= 100) {
+            realityHtml += '<div style="margin-top:8px"><button class="ho-apply-btn" onclick="calibratePlanFromActual(' + actualHitrate + ')" type="button" title="Sätt plan-hitrate till verklighetens ' + actualHitrate + ' % så att alla beräkningar matchar utfallet">Kalibrera plan till verklighetens ' + actualHitrate + ' %</button></div>';
           }
           // G1.19: Hitrate-trend över sista 3 perioder
           {
