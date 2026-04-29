@@ -3652,7 +3652,7 @@
 
   function bindGlobalInputs() {
     document.getElementById('hitrate').addEventListener('input', (e) => {
-      state.hitrate = +e.target.value; saveState(); updateApplyCtaState(); recalc();
+      state.hitrate = +e.target.value; document.getElementById('hitrate-v').textContent = state.hitrate + '%'; saveState(); updateApplyCtaState(); recalc();
     });
     document.getElementById('rampMonths').addEventListener('input', (e) => {
       state.rampMonths = +e.target.value; saveState(); updateApplyCtaState(); recalc();
