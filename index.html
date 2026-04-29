@@ -4294,7 +4294,18 @@
 
   // Säker wrapper runt recalc — fångar fel så de inte tar ner hela UI:t
   function safeRecalc() {
-    try { recalc(); } catch (err) { console.error('recalc error:', err); }
+    try { recalc(); }
+    catch (err) {
+      console.error('recalc error:', err);
+      // Visa felet för användaren så de inte hamnar i tysta dödläget
+      try {
+        const el = document.getElementById('next-action-banner');
+        if (el) {
+          el.style.display = 'flex';
+          el.innerHTML = '<span class="nab-icon">⚠</span><span>Kalkylen kraschade: ' + (err && err.message ? err.message : 'okänt fel') + '. Ladda om sidan eller exportera setupen och kontakta support.</span>';
+        }
+      } catch (_) {}
+    }
   }
 
   function recalc() {
