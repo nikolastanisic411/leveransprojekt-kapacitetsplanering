@@ -5821,16 +5821,37 @@
     svg.appendChild(dLine);
 
     const deadlineDate = new Date(state.deadline);
-    const deadlineStr = deadlineDate.toLocaleDateString('sv-SE');
+    const deadlineStr = deadlineDate.toLocaleDateString('sv-SE', {day:'numeric',month:'short',year:'numeric'});
+
+    // DEADLINE-label överst — två rader (label + datum) med pille-bakgrund
+    const labelW = 110, labelH = 32;
+    const dLblBg = document.createElementNS(ns, 'rect');
+    dLblBg.setAttribute('x', Math.max(M.left, Math.min(W - M.right - labelW, dx - labelW/2)));
+    dLblBg.setAttribute('y', M.top - labelH - 4);
+    dLblBg.setAttribute('width', labelW); dLblBg.setAttribute('height', labelH);
+    dLblBg.setAttribute('rx', 4);
+    dLblBg.setAttribute('fill', '#fbe8e8');
+    dLblBg.setAttribute('stroke', '#9a2424');
+    dLblBg.setAttribute('stroke-width', '0.5');
+    svg.appendChild(dLblBg);
 
     const dLbl = document.createElementNS(ns, 'text');
-    dLbl.setAttribute('x', dx); dLbl.setAttribute('y', M.top - 10);
-    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '10');
-    dLbl.setAttribute('fill', '#9a2424'); dLbl.setAttribute('font-weight', '600');
+    const dLblX = Math.max(M.left + labelW/2, Math.min(W - M.right - labelW/2, dx));
+    dLbl.setAttribute('x', dLblX); dLbl.setAttribute('y', M.top - labelH + 9);
+    dLbl.setAttribute('text-anchor', 'middle'); dLbl.setAttribute('font-size', '9');
+    dLbl.setAttribute('fill', '#9a2424'); dLbl.setAttribute('font-weight', '700');
     dLbl.setAttribute('font-family', 'inherit');
-    dLbl.setAttribute('letter-spacing', '0.04em');
+    dLbl.setAttribute('letter-spacing', '0.06em');
     dLbl.textContent = 'DEADLINE';
     svg.appendChild(dLbl);
+
+    const dDate = document.createElementNS(ns, 'text');
+    dDate.setAttribute('x', dLblX); dDate.setAttribute('y', M.top - labelH + 22);
+    dDate.setAttribute('text-anchor', 'middle'); dDate.setAttribute('font-size', '10');
+    dDate.setAttribute('fill', '#9a2424'); dDate.setAttribute('font-weight', '500');
+    dDate.setAttribute('font-family', 'inherit');
+    dDate.textContent = deadlineStr;
+    svg.appendChild(dDate);
 
     // Antal punkter för kurvritning (används av snapshot, target och huvudlinje)
     const numPoints = 80;
