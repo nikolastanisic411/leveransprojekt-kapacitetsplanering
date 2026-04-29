@@ -2968,7 +2968,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.48-TF-INFO" aria-busy="true">
+<body data-build="2026-04-29-G1.49-SCEN-TARGET" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3395,7 +3395,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.48-TF-INFO</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.49-SCEN-TARGET</span>
   </div>
 
 </div>
@@ -4256,6 +4256,9 @@
 
     // G1.47: Total nuvarande bemanning för delta-beräkningar
     const totalHeadcount = active.reduce((s, r) => s + (+r.count || 0), 0);
+    // G1.49: Identifiera bottleneck-rollen för riktad rekommendation
+    const roleEffs = active.map(r => ({ role: r, eff: roleEffectivePerDay(r) }));
+    const bottleneckRole = roleEffs.reduce((b, r) => (b === null || r.eff < b.eff) ? r : b, null);
     state.scenarios.forEach(scen => {
       const verdict = document.getElementById('verdict-' + scen.id);
       const gap = document.getElementById('gap-' + scen.id);
@@ -4273,6 +4276,21 @@
           const requiredHC = Math.ceil(totalHeadcount * factor);
           const extraHC = requiredHC - totalHeadcount;
           deltaText = ' · skalfaktor ×' + factor.toFixed(2) + ' (≈ ' + requiredHC + ' personer, +' + extraHC + ')';
+          // G1.49: Riktad rekommendation — vad behövs på bottleneck-rollen?
+          if (bottleneckRole && bottleneckRole.role.count > 0 && bottleneckRole.eff > 0) {
+            // newRate per person = bottleneck.eff / bottleneck.count, total ny rate = target × scale
+            // För att bottleneck inte ska vara flaskhalsen krävs: (count+k) × per-person >= target
+            // i nuvarande enhet
+            const perPerson = bottleneckRole.eff / bottleneckRole.role.count;
+            const targetEffDay = target / (perUnit(u) / eff); // target i samma enhet som eff
+            // Förenkla: behov i bottleneck-enhet (per dag) = target × eff_dag / target_unit_eff
+            const targetPerDay = (u === 'dag') ? target : (u === 'vecka') ? target / 5 : (u === 'år') ? target / 252 : target / 21;
+            const requiredCountAtBottleneck = perPerson > 0 ? Math.ceil(targetPerDay / perPerson) : Infinity;
+            const extraAtBottleneck = Math.max(0, requiredCountAtBottleneck - bottleneckRole.role.count);
+            if (extraAtBottleneck > 0 && isFinite(requiredCountAtBottleneck)) {
+              deltaText += '. Riktat: <strong>+' + extraAtBottleneck + ' till ' + escapeHtml(bottleneckRole.role.name) + '</strong> (flaskhals)';
+            }
+          }
         } else if (factor < 1) {
           const minHC = Math.max(1, Math.ceil(totalHeadcount * factor));
           const sparHC = totalHeadcount - minHC;
@@ -4285,13 +4303,13 @@
         verdict.textContent = 'JA';
         verdict.className = 'verdict v-ok';
         const overshoot = eff - target;
-        gap.textContent = (overshoot > 0
+        gap.innerHTML = (overshoot > 0
           ? '+' + overshoot.toFixed(decimals) + lbl + ' marginal'
           : 'precis på gränsen') + deltaText;
       } else {
         verdict.textContent = 'NEJ';
         verdict.className = 'verdict v-fail';
-        gap.textContent = 'saknar ' + (target - eff).toFixed(decimals) + lbl + deltaText;
+        gap.innerHTML = 'saknar ' + (target - eff).toFixed(decimals) + lbl + deltaText;
       }
     });
   }
