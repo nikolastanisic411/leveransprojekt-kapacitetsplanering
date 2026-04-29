@@ -6214,6 +6214,100 @@
     }, 50);
   }
 
+    // Applicera alla per-roll-rekommendationer på en gång
+  function applyAllRecommendations(applyDataStr) {
+    if (!applyDataStr) return;
+    const pairs = applyDataStr.split(';').filter(s => s.includes(':'));
+    let changed = 0;
+    pairs.forEach(p => {
+      const [roleId, countStr] = p.split(':');
+      const role = state.roles.find(r => r.id === roleId);
+      if (!role) return;
+      const newCount = Math.min(role.max || 50, Math.max(1, +countStr || 1));
+      if (role.count !== newCount) {
+        role.count = newCount;
+        role.countMin = Math.max(1, newCount - 1);
+        role.countMax = Math.min(role.max || 50, newCount + 1);
+        changed++;
+      }
+    });
+    if (changed > 0) {
+      state.suggestionApplied = true;
+      saveState();
+      applyStateToInputs();
+      renderRoles();
+      updateApplyCtaState();
+      updateNextActionBanner();
+      updateStepProgress();
+      recalc();
+      showToast(changed + ' roller uppdaterade');
+    } else {
+      showToast('Inga ändringar — bemanning redan i mål');
+    }
+  }
+
+  // Kopierar hela åtgärdsplanen som strukturerad text
+  function copyConsolidatedPlan() {
+    const target = +state.onskadVolym || 0;
+    const deadline = state.deadline ? new Date(state.deadline) : null;
+    if (!target || !deadline || isNaN(deadline.getTime())) {
+      alert('Sätt mål och deadline först.');
+      return;
+    }
+    const fmt = d => d.toLocaleDateString('sv-SE');
+    const active = activeRoles();
+    if (active.length === 0) { alert('Inga aktiva roller.'); return; }
+    
+    // Återanvänd burst-modell-beräkningen
+    const dayMs = 1000 * 60 * 60 * 24;
+    const today0 = new Date(); today0.setHours(0,0,0,0);
+    const projektStartDate = (state.projektStart && state.projektStart.length >= 8 && !isNaN(new Date(state.projektStart).getTime())) ? new Date(state.projektStart) : today0;
+    const refStart = projektStartDate;
+    refStart.setHours(0,0,0,0);
+    const V = target;
+    const effTakts = active.map(r => roleEffectivePerDay(r));
+    let cm = Infinity;
+    const data = active.map((r, i) => { const o = effTakts[i]; cm = Math.min(cm, o); return { role: r, ownRate: o, effectiveRate: cm }; });
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (i === data.length - 1) data[i].klarSenast = new Date(deadline);
+      else {
+        const ds = data[i+1];
+        const dwd = ds.effectiveRate > 0 ? (V / ds.effectiveRate) * 7 / 5 : 0;
+        const ho = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
+        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (dwd + ho) * dayMs);
+      }
+      const acd = Math.max(0, (data[i].klarSenast.getTime() - refStart.getTime()) / dayMs);
+      const awd = acd * 5 / 7;
+      const reqEff = awd > 0 ? V / awd : Infinity;
+      const ppe = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
+      data[i].requiredHeadcount = (ppe > 0 && isFinite(reqEff)) ? Math.ceil(reqEff / ppe) : Infinity;
+    }
+    
+    let txt = 'ÅTGÄRDSPLAN — Leveransprojektet (deadline ' + fmt(deadline) + ', ' + V + ' st)\n';
+    txt += '═══════════════════════════════════════════════════════\n\n';
+    data.forEach((d, i) => {
+      const reqCount = isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count;
+      const additional = Math.max(0, reqCount - d.role.count);
+      txt += (i+1) + '. ' + d.role.name.toUpperCase() + '\n';
+      txt += '   Bemanning: ' + reqCount + ' personer (idag: ' + d.role.count + (additional > 0 ? ', behov: +' + additional : ', ok') + ')\n';
+      txt += '   Start senast: ' + fmt(d.mastBorjaSenast || refStart) + '\n';
+      txt += '   Klar senast:  ' + fmt(d.klarSenast) + '\n';
+      txt += '   Volym:        ' + V + ' st\n';
+      txt += '   Takt:         ' + d.ownRate.toFixed(1) + '/dag (effektiv)\n\n';
+    });
+    
+    const totalAdd = data.reduce((s, d) => s + Math.max(0, (isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count) - d.role.count), 0);
+    txt += '═══════════════════════════════════════════════════════\n';
+    txt += 'TOTALT: +' + totalAdd + ' personer behövs för att hålla deadline ' + fmt(deadline) + '.\n';
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => showToast('Hela åtgärdsplanen kopierad'))
+        .catch(() => prompt('Kopiera följande text:', txt));
+    } else {
+      prompt('Kopiera följande text:', txt);
+    }
+  }
+
     // Genererar och kopierar en färdig rekommendations-text till urklipp för delning till resursägaren
   function copyRoleRecommendation(roleId) {
     const role = state.roles.find(r => r.id === roleId);
