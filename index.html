@@ -5002,6 +5002,19 @@
     return { needed };
   }
 
+  // Föreslå ramptid automatiskt baserat på hur långt fram projektstart ligger
+  function suggestRampMonths() {
+    if (!state.projektStart) return 1; // okänt projektstart — anta 1 månad ramp
+    const today = new Date();
+    const start = new Date(state.projektStart);
+    const monthsToStart = (start - today) / (1000 * 60 * 60 * 24 * 30);
+    // Ju senare start, desto mer tid har vi för planering — kortare ramp behövs
+    if (monthsToStart >= 6) return 1;   // gott om planeringstid
+    if (monthsToStart >= 3) return 2;   // måttligt
+    if (monthsToStart >= 1) return 3;   // begränsad framförhållning
+    return 3; // minimi-ramp för seriös uppstart
+  }
+
   function applySuggestion() {
     document.body.style.cursor = 'wait';
     setTimeout(() => { document.body.style.cursor = ''; }, 600);
@@ -5047,6 +5060,14 @@
     }, 50);
     currentSuggestion = needed;
     state.suggestionApplied = true;
+    // Auto-räkna ramp om användaren inte explicit har satt den (= 0)
+    if (!state.rampMonths || state.rampMonths === 0) {
+      state.rampMonths = suggestRampMonths();
+      const rampInput = document.getElementById('rampMonths');
+      if (rampInput) rampInput.value = state.rampMonths;
+      const rampV = document.getElementById('rampMonths-v');
+      if (rampV) rampV.textContent = state.rampMonths + ' mån';
+    }
     saveState();
     applyStateToInputs();
     renderRoles();
