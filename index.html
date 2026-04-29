@@ -301,6 +301,20 @@
     border-radius: 4px;
   }
 
+  .active-roles-indicator {
+    font-size: 11px;
+    color: #6b6b66;
+    font-weight: 500;
+    background: #f4f2eb;
+    border: 0.5px solid #d8d6cf;
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-left: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .active-roles-indicator.zero { background: #fff4e6; color: #b8410e; border-color: #f4d4a8; }
+  .active-roles-indicator:empty { display: none; }
   .step-num {
     display: inline-flex;
     align-items: center;
@@ -4497,6 +4511,7 @@
     updateStepProgress();
     updateApplyCtaState();
     updateNextActionBanner();
+    updateActiveRolesIndicator();
     updateActivityLabels();
   }
 
@@ -4878,7 +4893,25 @@
     if (currentEl) currentEl.classList.add('is-current');
   }
 
-  // Visa varning om deadline ligger före projektstart
+  // Visa antal aktiva roller i step-4 headern
+  function updateActiveRolesIndicator() {
+    const el = document.getElementById('active-roles-indicator');
+    if (!el) return;
+    const total = state.roles ? state.roles.length : 0;
+    const active = activeRoles().length;
+    if (total === 0) {
+      el.textContent = '';
+      el.className = 'active-roles-indicator';
+    } else if (active === 0) {
+      el.textContent = '0 aktiva — kontrollera typfall/inkluderade';
+      el.className = 'active-roles-indicator zero';
+    } else {
+      el.textContent = active + ' av ' + total + ' aktiva';
+      el.className = 'active-roles-indicator';
+    }
+  }
+
+    // Visa varning om deadline ligger före projektstart
   function checkDateSanity() {
     const w = document.getElementById('deadline-warn');
     if (!w) return;
@@ -6083,6 +6116,7 @@
   updateStepProgress();
   updateApplyCtaState();
   updateNextActionBanner();
+  updateActiveRolesIndicator();
 
   // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
   document.addEventListener('keydown', (e) => {
