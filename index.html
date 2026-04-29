@@ -19,7 +19,7 @@
     --telia-purple-dark: #4a0a76;
     --bg: #FAFAF7;
     --surface: #ffffff;
-    --surface-soft: #fdfcf8;
+    --surface-soft: #FCFAFD;
     --border: #d8d6cf;
     --text: #1a1a1a;
     --text-muted: #6b6b66;
@@ -98,10 +98,10 @@
   /* Scrollbar styling */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #c8c6bf #f8f6f0;
+    scrollbar-color: #c8c6bf #F8F5FB;
   }
   *::-webkit-scrollbar { width: 8px; height: 8px; }
-  *::-webkit-scrollbar-track { background: #f8f6f0; }
+  *::-webkit-scrollbar-track { background: #F8F5FB; }
   *::-webkit-scrollbar-thumb { background: #c8c6bf; border-radius: 4px; }
   *::-webkit-scrollbar-thumb:hover { background: #a8a6a0; }
   ::-moz-selection { background: rgba(92,14,146,0.20); color: #1a1a1a; }
@@ -514,7 +514,7 @@
   .klart-per-roll {
     margin: -16px 0 24px;
     padding: 10px 16px;
-    background: linear-gradient(180deg, #fdfcf8 0%, #F4F0F7 100%);
+    background: linear-gradient(180deg, #FCFAFD 0%, #F4F0F7 100%);
     border: 0.5px solid #e5e3dc;
     border-radius: 10px;
     font-size: 12px;
@@ -773,7 +773,7 @@
     flex: 1;
   }
   .apply-suggestion-cta.disabled {
-    background: #fdfcf8;
+    background: #FCFAFD;
     border-color: #e5e3dc;
   }
   .apply-suggestion-cta.disabled .apply-suggestion-btn {
@@ -835,7 +835,7 @@
     gap: 12px;
     margin: 4px 0 14px;
     padding: 10px 14px;
-    background: #fdfcf8;
+    background: #FCFAFD;
     border: 0.5px solid #e5e3dc;
     border-radius: 8px;
   }
@@ -1249,7 +1249,7 @@
   .handover-group {
     margin: 14px 0;
     padding: 14px 16px;
-    background: #fdfcf8;
+    background: #FCFAFD;
     border: 0.5px solid #e5e3dc;
     border-radius: 10px;
   }
@@ -1737,7 +1737,7 @@
     font-size: 13px;
     text-align: center;
     line-height: 1.6;
-    background: #f8f6f0;
+    background: #F8F5FB;
     border-radius: 10px;
   }
   .handover-card {
@@ -2660,7 +2660,7 @@
   .exec-view {
     margin: 16px 0 32px;
     padding: 24px;
-    background: linear-gradient(135deg, #ffffff 0%, #fdfcf8 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #FCFAFD 100%);
     border: 0.5px solid #d8d6cf;
     border-radius: 14px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -2743,7 +2743,7 @@
   }
   .exec-status {
     padding: 14px 18px;
-    background: #f8f6f0;
+    background: #F8F5FB;
     border-left: 3px solid #5C0E92;
     border-radius: 4px;
     font-size: 13.5px;
@@ -3948,7 +3948,7 @@
     const container = document.getElementById('scenarios-grid');
     container.innerHTML = '';
     if (!state.scenarios || state.scenarios.length === 0) {
-      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#8a8a85;font-size:13px;background:#f8f6f0;border-radius:10px;font-style:italic">Inga scenarier lagts till än. Klicka <strong>+ Lägg till scenario</strong> för att testa olika mål-takter mot din nuvarande setup.</div>';
+      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#8a8a85;font-size:13px;background:#F8F5FB;border-radius:10px;font-style:italic">Inga scenarier lagts till än. Klicka <strong>+ Lägg till scenario</strong> för att testa olika mål-takter mot din nuvarande setup.</div>';
       // Behåll add-card så användaren ser hur de lägger till
       const addCard = document.createElement('div');
       addCard.className = 'scen add-scenario';
@@ -6402,7 +6402,7 @@
     const bg = document.createElementNS(ns, 'rect');
     bg.setAttribute('x', 0); bg.setAttribute('y', 0);
     bg.setAttribute('width', 800); bg.setAttribute('height', 240);
-    bg.setAttribute('fill', '#f8f6f0');
+    bg.setAttribute('fill', '#F8F5FB');
     bg.setAttribute('rx', 8);
     svg.appendChild(bg);
     const txt = document.createElementNS(ns, 'text');
@@ -6418,7 +6418,7 @@
   function drawMatrixEmptyState(message) {
     const c = document.getElementById('roles-matrix');
     if (!c) return;
-    c.innerHTML = '<div style="padding: 30px 16px; text-align:center; color:#8a8a85; font-size:13px; background:#f8f6f0; border-radius:8px;">' +
+    c.innerHTML = '<div style="padding: 30px 16px; text-align:center; color:#8a8a85; font-size:13px; background:#F8F5FB; border-radius:8px;">' +
       (message || 'Ingen data att visa.') + '</div>';
   }
 
