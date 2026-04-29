@@ -5727,21 +5727,38 @@
 
     // === HORISONTELLA RUTNÄTSLINJER + Y-AXEL ETIKETTER ===
     const yTicks = niceTicks(0, yMax, 5);
-    yTicks.forEach(t => {
+    yTicks.forEach((t, i) => {
       const y = yScale(t);
       const line = document.createElementNS(ns, 'line');
       line.setAttribute('x1', M.left); line.setAttribute('x2', M.left + innerW);
       line.setAttribute('y1', y); line.setAttribute('y2', y);
-      line.setAttribute('stroke', '#ebe9e2'); line.setAttribute('stroke-width', '1');
+      // Mörkare baseline, ljusare grid-linjer
+      line.setAttribute('stroke', i === 0 ? '#d8d6cf' : '#ebe9e2');
+      line.setAttribute('stroke-width', i === 0 ? '1' : '0.5');
       svg.appendChild(line);
       const lbl = document.createElementNS(ns, 'text');
       lbl.setAttribute('x', M.left - 10); lbl.setAttribute('y', y + 4);
-      lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('font-size', '10');
-      lbl.setAttribute('fill', '#a8a8a3'); lbl.setAttribute('font-family', 'inherit');
+      lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('font-size', '11');
+      lbl.setAttribute('fill', '#6b6b66'); lbl.setAttribute('font-family', 'inherit');
       lbl.setAttribute('font-variant-numeric', 'tabular-nums');
-      lbl.textContent = Math.round(t);
+      lbl.setAttribute('font-weight', '500');
+      lbl.textContent = Math.round(t).toLocaleString('sv-SE');
       svg.appendChild(lbl);
     });
+
+    // Y-axel-titel
+    const yTitle = document.createElementNS(ns, 'text');
+    yTitle.setAttribute('x', -(M.top + innerH/2));
+    yTitle.setAttribute('y', 18);
+    yTitle.setAttribute('transform', 'rotate(-90)');
+    yTitle.setAttribute('text-anchor', 'middle');
+    yTitle.setAttribute('font-size', '10');
+    yTitle.setAttribute('fill', '#8a8a85');
+    yTitle.setAttribute('font-family', 'inherit');
+    yTitle.setAttribute('letter-spacing', '0.05em');
+    yTitle.setAttribute('text-transform', 'uppercase');
+    yTitle.textContent = 'KUMULATIV VOLYM (st)';
+    svg.appendChild(yTitle);
 
     // === X-AXEL: DATUMETIKETTER ===
     const today = new Date();
