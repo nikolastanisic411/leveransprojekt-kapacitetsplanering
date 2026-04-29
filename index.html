@@ -4222,7 +4222,7 @@
           const ratio = newVol / mixSum;
           state.typfallMix.tf1 = Math.round((+state.typfallMix.tf1 || 0) * ratio);
           state.typfallMix.tf2 = Math.round((+state.typfallMix.tf2 || 0) * ratio);
-          state.typfallMix.tf3 = newVol - state.typfallMix.tf1 - state.typfallMix.tf2;
+          state.typfallMix.tf3 = Math.max(0, newVol - state.typfallMix.tf1 - state.typfallMix.tf2);
           // Uppdatera input-fälten visuellt
           const m1 = document.getElementById('mix-tf1'); if (m1) m1.value = state.typfallMix.tf1;
           const m2 = document.getElementById('mix-tf2'); if (m2) m2.value = state.typfallMix.tf2;
