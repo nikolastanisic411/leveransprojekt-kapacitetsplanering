@@ -2962,7 +2962,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.39-COPY-TIPS-INC" aria-busy="true">
+<body data-build="2026-04-29-G1.40-ROBUST-HELP" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3389,7 +3389,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.39-COPY-TIPS-INC</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.40-ROBUST-HELP</span>
   </div>
 
 </div>
@@ -6871,7 +6871,8 @@
       else if (marginalDays >= 1) { robustEmoji = '🟠'; robustLabel = 'Tight plan'; robustColor = '#FFC68A'; pillVariant = 'orange'; }
       else if (marginalDays === 0) { robustEmoji = '⚠️'; robustLabel = 'Precis i tid — ingen marginal'; robustColor = '#FFD6F0'; pillVariant = 'orange'; }
       else { robustEmoji = '🔴'; robustLabel = 'Försenad'; robustColor = '#FFD6F0'; pillVariant = 'red'; }
-      footerHtml += '<br><span style="color:' + robustColor + ';font-weight:600">' + robustEmoji + ' ' + robustLabel + '</span>';
+      const robustTooltip = 'Robusthets-skala:\n• Robust plan: ≥ 14 dagars marginal\n• OK med viss risk: 7–13 dagar\n• Tight plan: 1–6 dagar\n• Precis i tid: 0 dagar\n• Försenad: under deadline';
+      footerHtml += '<br><span title="' + robustTooltip + '" style="color:' + robustColor + ';font-weight:600;cursor:help">' + robustEmoji + ' ' + robustLabel + '</span>';
       // G1.18: Visa pillen alltid för konsekvent feedback (inkl. grön när robust)
       let pillText;
       const deadlineLabel = fmtDateWithWeek(deadline);
