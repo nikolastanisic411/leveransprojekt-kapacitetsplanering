@@ -2575,14 +2575,24 @@
     h1 { font-size: 20px; }
     .toolbar { flex-direction: column; align-items: stretch; gap: 6px; }
     .toolbar button { width: 100%; justify-content: center; }
-    .step-progress { padding: 6px; }
+    .step-progress { padding: 6px; gap: 3px; }
     .step-progress .sp-step { padding: 3px 6px 3px 3px; font-size: 9px; }
     .step-progress .sp-step .sp-num { width: 16px; height: 16px; font-size: 9px; }
+    .step-progress .sp-step .sp-label { display: none; }
+    .step-progress .sp-step.current .sp-label { display: inline; }
     .target-cell { gap: 4px; }
     .summary-banner { padding: 16px; }
     .handover-fields { grid-template-columns: 1fr !important; }
     .tf-pills { flex-direction: column; }
     .tf-btn { width: 100%; }
+    .exec-grid { grid-template-columns: 1fr; }
+    .exec-charts { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 360px) {
+    .page { padding: 8px; }
+    h1 { font-size: 18px; }
+    .step-progress .sp-step { padding: 2px 4px 2px 2px; }
+    .step-progress .sp-step .sp-num { width: 14px; height: 14px; font-size: 8px; }
   }
 
   /* === LEDNINGSGRUPPSVY === */
