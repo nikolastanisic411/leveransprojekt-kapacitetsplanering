@@ -3435,28 +3435,26 @@
 
     let html = '<table class="utfall-table"><thead><tr>';
     html += '<th>Period</th>';
-    html += '<th class="num tf-col">TF1</th><th class="num tf-col">TF2</th><th class="num tf-col">TF3</th>';
-    html += '<th class="num">Klart</th>';
-    activeRoleList.forEach(r => { html += '<th class="num">' + escapeHtml(r.name) + '</th>'; });
+    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Antal beställningar/orders som lagts ut för leverans under perioden.">Utlagt</span></th>';
+    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Antal leveranser som faktiskt blev klara under perioden.">Levererat</span></th>';
+    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Hitrate = levererat / utlagt × 100. Hög = effektivt flöde, låg = mycket bomkörningar.">Hitrate</span></th>';
     html += '<th></th></tr></thead><tbody>';
 
     sorted.forEach(e => {
-      const total = utfallEntryTotal(e);
+      const utlagt = +e.utlagt || 0;
+      const levererat = +e.levererat || 0;
+      const hitrate = utlagt > 0 ? Math.round((levererat / utlagt) * 100) : 0;
       const periodLabel = formatUtfallPeriod(e.period, gran);
+      const hitClass = hitrate >= 90 ? 'v-ok' : hitrate >= 75 ? '' : 'v-fail';
       html += '<tr>';
       html += '<td class="period-cell"><input type="date" value="' + escapeHtml(e.period || '') +
-              '" data-id="' + e.id + '" data-field="period"> <span style="font-size:11px;color:#6b6b66;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
-      ['tf1','tf2','tf3'].forEach(tf => {
-        html += '<td class="num"><input type="number" min="0" step="1" value="' + (+e[tf] || 0) +
-                '" data-id="' + e.id + '" data-field="' + tf + '" inputmode="numeric"></td>';
-      });
-      html += '<td class="num util-total">' + total + '</td>';
-      activeRoleList.forEach(r => {
-        const v = (e.perRole && e.perRole[r.id]) ? e.perRole[r.id] : 0;
-        html += '<td class="num"><input type="number" min="0" step="1" value="' + v +
-                '" data-id="' + e.id + '" data-field="role-' + r.id + '" inputmode="numeric"></td>';
-      });
-      html += '<td><button class="util-remove" onclick="deleteUtfallEntry(\'' + e.id + '\')" title="Ta bort">×</button></td>';
+              '" data-id="' + e.id + '" data-field="period" aria-label="Period"> <span style="font-size:11px;color:#6b6b66;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
+      html += '<td class="num"><input type="number" min="0" step="1" value="' + utlagt +
+              '" data-id="' + e.id + '" data-field="utlagt" inputmode="numeric" aria-label="Utlagt"></td>';
+      html += '<td class="num"><input type="number" min="0" step="1" value="' + levererat +
+              '" data-id="' + e.id + '" data-field="levererat" inputmode="numeric" aria-label="Levererat"></td>';
+      html += '<td class="num"><span class="' + hitClass + '" style="font-weight:500">' + (utlagt > 0 ? hitrate + '%' : '—') + '</span></td>';
+      html += '<td><button class="util-remove" onclick="deleteUtfallEntry(\'' + e.id + '\')" title="Ta bort" aria-label="Ta bort period">×</button></td>';
       html += '</tr>';
     });
     html += '</tbody></table>';
