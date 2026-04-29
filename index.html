@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.13-ROBUST" aria-busy="true">
+<body data-build="2026-04-29-G1.14-VERKLIGHET" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.13-ROBUST</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.14-VERKLIGHET</span>
   </div>
 
 </div>
@@ -6742,6 +6742,42 @@
         }
       }
       footerHtml += '</div>';
+
+      // G1.14: Verklighet vs plan — jämför rapporterat utfall mot plan
+      if (state.utfall && Array.isArray(state.utfall.entries) && state.utfall.entries.length > 0) {
+        const totalUtlagt = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+        const totalLevererat = state.utfall.entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+        if (totalUtlagt > 0) {
+          const actualHitrate = Math.round((totalLevererat / totalUtlagt) * 100);
+          const planHitrate = (typeof state.hitrate === 'number') ? state.hitrate : 100;
+          const hrDelta = planHitrate - actualHitrate;
+          let realityHtml = '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.06);border-radius:8px;font-size:13px;line-height:1.6">';
+          realityHtml += '<strong style="color:#fff">Verklighet vs plan:</strong> ';
+          realityHtml += '<strong style="color:#fff">' + fmtNum(totalUtlagt) + '</strong> st utlagt, <strong style="color:#fff">' + fmtNum(totalLevererat) + '</strong> levererat — faktisk hitrate <strong style="color:#fff">' + actualHitrate + ' %</strong> (plan: ' + planHitrate + ' %).';
+          if (hrDelta >= 10) {
+            // Allvarlig avvikelse — räkna om bemanningsbehov vid faktisk hitrate
+            realityHtml += '<br><span style="color:#FFD6F0;font-weight:600">⚠️ Faktisk hitrate ligger ' + hrDelta + ' procentenheter under plan.</span>';
+            // Räkna om effektiv kapacitet om planen användes med faktisk hitrate
+            if (planHitrate > 0 && actualHitrate > 0) {
+              const factor = planHitrate / actualHitrate;
+              realityHtml += ' <span style="opacity:0.9">Om hitraten håller i sig behöver kapaciteten skalas upp med faktor <strong style="color:#fff">×' + factor.toFixed(2) + '</strong> för att klara volymen — uppdatera kalkylen med rätt hitrate eller addera bemanning.</span>';
+            }
+          } else if (hrDelta >= 5) {
+            realityHtml += '<br><span style="color:#FFE6A0;font-weight:600">⚠️ Hitrate ligger ' + hrDelta + ' procentenheter under plan</span> — överväg att uppdatera kalkylen med faktisk hitrate.';
+          } else if (hrDelta <= -5) {
+            realityHtml += '<br><span style="color:#A8E6C2;font-weight:600">Hitrate ligger ' + Math.abs(hrDelta) + ' procentenheter ÖVER plan</span> — kapaciteten är förmodligen större än vad planen visar.';
+          } else {
+            realityHtml += '<br><span style="color:#A8E6C2">Inom rimligt avvikelseintervall (±5 procentenheter) — kalkylen ser representativ ut.</span>';
+          }
+          // Volym-progress mot mål
+          if (V > 0) {
+            const pct = Math.min(100, Math.round((totalLevererat / V) * 100));
+            realityHtml += '<br><span style="opacity:0.85;font-size:12px">Levererat ' + pct + ' % av målet (' + fmtNum(totalLevererat) + ' / ' + fmtNum(V) + ' st).</span>';
+          }
+          realityHtml += '</div>';
+          footerHtml += realityHtml;
+        }
+      }
 
       // G1.10: Smart sensitivitetsanalys — alternativ till mer bemanning
       if (projectFinishDelta > 0) {
