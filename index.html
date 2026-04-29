@@ -3509,10 +3509,10 @@
 
   function bindGlobalInputs() {
     document.getElementById('hitrate').addEventListener('input', (e) => {
-      state.hitrate = +e.target.value; saveState(); recalc();
+      state.hitrate = +e.target.value; saveState(); updateApplyCtaState(); recalc();
     });
     document.getElementById('rampMonths').addEventListener('input', (e) => {
-      state.rampMonths = +e.target.value; saveState(); recalc();
+      state.rampMonths = +e.target.value; saveState(); updateApplyCtaState(); recalc();
     });
     // Centraliserad refresh efter datum-ändringar
     const refreshAfterDateChange = () => {
@@ -3566,7 +3566,7 @@
     onskadEl.addEventListener('input', onskadHandler);
     onskadEl.addEventListener('change', onskadHandler);
     document.getElementById('margin').addEventListener('input', (e) => {
-      state.margin = +e.target.value; saveState(); recalc();
+      state.margin = +e.target.value; saveState(); updateApplyCtaState(); recalc();
     });
     document.getElementById('notes').addEventListener('input', (e) => {
       state.notes = e.target.value; saveState();
