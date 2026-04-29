@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.73-CLARIFY-CALIBRATE" aria-busy="true">
+<body data-build="2026-04-29-G1.74-COPY-ROLE-PESSIMISTIC" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.73-CLARIFY-CALIBRATE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.74-COPY-ROLE-PESSIMISTIC</span>
   </div>
 
 </div>
@@ -6819,6 +6819,20 @@
             ? '  • Prognos utan ändring: klar ' + fmt(d.actualFinish) + ' (' + d.bufferDays + ' dagars marginal)\n'
             : '  • Prognos utan ändring: klar ' + fmt(d.actualFinish) + ' (' + Math.abs(d.bufferDays) + ' dagars FÖRSENING mot klar-senast)\n')
         : '') +
+      ((function() {
+        // G1.74: Pessimistisk prognos om utfall avviker från plan
+        const f = getActualVsPlanFactor();
+        if (f === 1 || !d.actualFinish) return '';
+        const refMs_r = refStart.getTime();
+        const altFinishMs_r = refMs_r + (d.actualFinish.getTime() - refMs_r) / f;
+        const altFinish_r = new Date(altFinishMs_r);
+        const tu_r = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+        const tl_r = state.utfall.entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+        const aHr_r = tu_r > 0 ? Math.round((tl_r / tu_r) * 100) : 0;
+        const altBuf = Math.round((d.klarSenast.getTime() - altFinish_r.getTime()) / dayMs);
+        return '  • Vid faktisk hitrate ' + aHr_r + ' %: klar ' + fmt(altFinish_r) +
+          ' (' + (altBuf >= 0 ? altBuf + ' dagars marginal' : Math.abs(altBuf) + ' dagars FÖRSENING') + ')\n';
+      })()) +
       '\n' +
       'Kan du bekräfta att vi har detta tillgängligt?\n\nMvh\nProjektledningen';
 
