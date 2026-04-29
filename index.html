@@ -4517,14 +4517,13 @@
   }
 
   function getTotalLedtimeForTypfall(typfall) {
-    const h = getHandover();
     const lt = getTypfallLedtider();
-    // typfall är legacy-värdet (10/60/100) — översätt till tf-key
-    if (typfall === 10) return h.orderHandover + lt.tf1;
-    if (typfall === 60) return h.orderHandover + h.archHandover + h.tekStartup + lt.tf2;
-    if (typfall === 100) return h.orderHandover + h.archHandover + h.tekStartup + lt.tf3;
-    // Direktvärde som fallback (för custom)
-    return typfall + h.orderHandover;
+    // Total handover = summa av alla roll-handoverToNext (utom sista rollen)
+    const totalHandover = (state.roles || []).slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+    if (typfall === 10) return totalHandover + lt.tf1;
+    if (typfall === 60) return totalHandover + lt.tf2;
+    if (typfall === 100) return totalHandover + lt.tf3;
+    return typfall + totalHandover;
   }
 
   function getEffectiveLeadtime() {
