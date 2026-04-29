@@ -2103,8 +2103,10 @@
     display: inline-block;
     letter-spacing: 0.02em;
   }
-  .v-ok { background: #DDF0E0; color: #1d6e35; }
-  .v-fail { background: #F7DBDB; color: #9a2424; }
+  .v-ok { background: #DDF0E0; color: #1d6e35; transition: background 0.15s; }
+  .v-fail { background: #F7DBDB; color: #9a2424; transition: background 0.15s; }
+  .v-ok:hover { background: #c7e8cd; }
+  .v-fail:hover { background: #f4cdcd; }
   .gap { font-size: 12px; color: #6b6b66; margin-top: 8px; text-align: center; }
   .scen .scen-remove-btn {
     position: absolute;
