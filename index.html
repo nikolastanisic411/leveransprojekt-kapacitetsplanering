@@ -2454,15 +2454,15 @@
     <div class="mix-fields">
       <div class="mix-field">
         <span class="mix-lbl">Typfall 1<small>10 dagar</small></span>
-        <input type="number" id="mix-tf1" min="0" step="1" value="0">
+        <input type="number" id="mix-tf1" min="0" step="1" value="0" inputmode="numeric">
       </div>
       <div class="mix-field">
         <span class="mix-lbl">Typfall 2<small>60 dagar</small></span>
-        <input type="number" id="mix-tf2" min="0" step="1" value="0">
+        <input type="number" id="mix-tf2" min="0" step="1" value="0" inputmode="numeric">
       </div>
       <div class="mix-field">
         <span class="mix-lbl">Typfall 3<small>100 dagar</small></span>
-        <input type="number" id="mix-tf3" min="0" step="1" value="0">
+        <input type="number" id="mix-tf3" min="0" step="1" value="0" inputmode="numeric">
       </div>
       <div class="mix-summary" id="mix-summary">summa: 0 / 0 · viktad ledtid: — dagar</div>
     </div>
@@ -2496,17 +2496,17 @@
     <div class="handover-fields">
       <div class="handover-field">
         <label><span class="tt" tabindex="0" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
-        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3">
+        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3" inputmode="decimal">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
         <label><span class="tt" tabindex="0" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
-        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5">
+        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5" inputmode="decimal">
         <span class="handover-unit">dgr</span>
       </div>
       <div class="handover-field">
         <label><span class="tt" tabindex="0" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
-        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10">
+        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10" inputmode="decimal">
         <span class="handover-unit">dgr</span>
       </div>
     </div>
@@ -3011,21 +3011,21 @@
           <span id="count-${role.id}">${role.count}</span>
           <span class="snitt" id="snitt-${role.id}" style="display:none">—</span>
         </div>
-        <input type="number" value="${role.takt}" min="0" step="0.5" data-id="${role.id}" data-field="takt">
+        <input type="number" value="${role.takt}" min="0" step="0.5" data-id="${role.id}" data-field="takt" inputmode="decimal">
         <select class="unit-select" data-id="${role.id}" data-field="unit">
           <option value="dag" ${role.unit === 'dag' ? 'selected' : ''}>/dag</option>
           <option value="vecka" ${role.unit === 'vecka' ? 'selected' : ''}>/vecka</option>
           <option value="månad" ${role.unit === 'månad' ? 'selected' : ''}>/månad</option>
         </select>
-        <input type="number" class="role-cap-input" value="${capVal}" min="0" step="0.5" placeholder="—" data-id="${role.id}" data-field="cap" title="Hårt tak i ${role.unit === 'vecka' ? '/vecka' : role.unit === 'månad' ? '/månad' : '/dag'} (lämna tomt = inget tak)">
-        <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="100" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent — hur realistiskt rollen hinner sin takt. Tom = 100% (rollen hinner sin nominella takt). Den globala hitraten i parametrar-sektionen multipliceras alltid ovanpå.">
+        <input type="number" class="role-cap-input" value="${capVal}" min="0" step="0.5" placeholder="—" data-id="${role.id}" data-field="cap" title="Hårt tak i ${role.unit === 'vecka' ? '/vecka' : role.unit === 'månad' ? '/månad' : '/dag'} (lämna tomt = inget tak)" inputmode="decimal">
+        <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="100" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent — hur realistiskt rollen hinner sin takt. Tom = 100% (rollen hinner sin nominella takt). Den globala hitraten i parametrar-sektionen multipliceras alltid ovanpå." inputmode="numeric">
         <div class="cap" id="cap-${role.id}">—</div>
         <div class="role-tf-group">${tfPill('tf1', 'TF1')}${tfPill('tf2', 'TF2')}${tfPill('tf3', 'TF3')}</div>
         <div class="role-spann">
           <span class="spann-sublabel">min</span>
           <span class="spann-sublabel">max</span>
-          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMin !== undefined && role.countMin !== null ? role.countMin : role.count}" data-id="${role.id}" data-field="countMin" title="Min antal personer (lägsta-scenario)">
-          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMax !== undefined && role.countMax !== null ? role.countMax : role.count}" data-id="${role.id}" data-field="countMax" title="Max antal personer (högsta-scenario)">
+          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMin !== undefined && role.countMin !== null ? role.countMin : role.count}" data-id="${role.id}" data-field="countMin" title="Min antal personer (lägsta-scenario)" inputmode="numeric">
+          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMax !== undefined && role.countMax !== null ? role.countMax : role.count}" data-id="${role.id}" data-field="countMax" title="Max antal personer (högsta-scenario)" inputmode="numeric">
         </div>
         <button class="remove-btn" data-id="${role.id}" title="Ta bort roll">×</button>
       `;
@@ -3265,13 +3265,13 @@
               '" data-id="' + e.id + '" data-field="period"> <span style="font-size:11px;color:#6b6b66;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
       ['tf1','tf2','tf3'].forEach(tf => {
         html += '<td class="num"><input type="number" min="0" step="1" value="' + (+e[tf] || 0) +
-                '" data-id="' + e.id + '" data-field="' + tf + '"></td>';
+                '" data-id="' + e.id + '" data-field="' + tf + '" inputmode="numeric"></td>';
       });
       html += '<td class="num util-total">' + total + '</td>';
       activeRoleList.forEach(r => {
         const v = (e.perRole && e.perRole[r.id]) ? e.perRole[r.id] : 0;
         html += '<td class="num"><input type="number" min="0" step="1" value="' + v +
-                '" data-id="' + e.id + '" data-field="role-' + r.id + '"></td>';
+                '" data-id="' + e.id + '" data-field="role-' + r.id + '" inputmode="numeric"></td>';
       });
       html += '<td><button class="util-remove" onclick="deleteUtfallEntry(\'' + e.id + '\')" title="Ta bort">×</button></td>';
       html += '</tr>';
@@ -3386,7 +3386,7 @@
       div.innerHTML = `
         <button class="scen-remove-btn" data-id="${scen.id}" title="Ta bort scenario">×</button>
         <input type="text" class="scen-name-input" value="${escapeHtml(scen.name)}" data-id="${scen.id}" data-field="name">
-        <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target">
+        <input type="number" class="scen-target-input" value="${scen.target}" min="1" step="1" data-id="${scen.id}" data-field="target" inputmode="numeric">
         <div class="target-suffix">
           <span>leveranser /</span>
           <select class="scen-unit-select" data-id="${scen.id}" data-field="unit">
