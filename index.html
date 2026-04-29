@@ -760,6 +760,40 @@
     content: '⚠ ';
     margin-right: 2px;
   }
+  /* Avancerade parametrar — synliga endast när body har .ui-mode-advanced */
+  body:not(.ui-mode-advanced) .advanced-params { display: none; }
+  body.ui-mode-advanced .advanced-params {
+    margin: 18px 0;
+    padding: 16px 18px;
+    background: linear-gradient(180deg, rgba(92,14,146,0.04) 0%, rgba(92,14,146,0.01) 100%);
+    border: 0.5px solid #d8c5e8;
+    border-radius: 10px;
+    animation: ap-fade-in 0.2s ease;
+  }
+  @keyframes ap-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.ui-mode-advanced .advanced-params { animation: none; }
+  }
+  .advanced-params-title {
+    font-size: 12px;
+    color: #5C0E92;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .advanced-params-hint {
+    font-weight: 400;
+    color: #8a8a85;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+    font-size: 11px;
+  }
+
   .ui-mode-toggle {
     display: flex;
     align-items: center;
@@ -2494,7 +2528,7 @@
   <div class="next-action-banner" id="next-action-banner" role="status" aria-live="polite" style="display:none"></div>
   <div class="step-progress" id="step-progress" role="navigation" aria-label="Steg-navigering">
     <div class="sp-step" data-step="1" onclick="scrollToStep(1)" tabindex="0" role="button" aria-label="Gå till steg 1: Mål" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(1);}"><span class="sp-num">1</span><span class="sp-label">Mål</span></div>
-    <div class="sp-step" data-step="2" onclick="scrollToStep(2)" tabindex="0" role="button" aria-label="Gå till steg 2: Parametrar" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(2);}"><span class="sp-num">2</span><span class="sp-label">Parametrar</span></div>
+    <div class="sp-step" data-step="2" onclick="scrollToStep(2)" tabindex="0" role="button" aria-label="Gå till steg 2: Tid" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(2);}"><span class="sp-num">2</span><span class="sp-label">Tid</span></div>
     <div class="sp-step" data-step="3" onclick="scrollToStep(3)" tabindex="0" role="button" aria-label="Gå till steg 3: Förslag" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(3);}"><span class="sp-num">3</span><span class="sp-label">Förslag</span></div>
     <div class="sp-step" data-step="4" onclick="scrollToStep(4)" tabindex="0" role="button" aria-label="Gå till steg 4: Bemanning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(4);}"><span class="sp-num">4</span><span class="sp-label">Bemanning</span></div>
     <div class="sp-step" data-step="5" onclick="scrollToStep(5)" tabindex="0" role="button" aria-label="Gå till steg 5: Resultat" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(5);}"><span class="sp-num">5</span><span class="sp-label">Resultat</span></div>
@@ -2574,49 +2608,10 @@
   </div>
 
   <div class="next-step-row">
-    <button class="next-step-btn" onclick="scrollToStep(2)">Nästa steg: Parametrar →</button>
+    <button class="next-step-btn" onclick="scrollToStep(2)">Nästa steg: Tid →</button>
   </div>
 
-  <div class="section" id="step-2"><span class="step-num">2</span>Parametrar <span class="section-hint">— hitrate, ramp och deadline för projektet</span></div>
-
-  <div class="global-row">
-    <div class="role-name"><span class="tt" tabindex="0" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
-      <span class="hint">% av total kapacitet som lyckas — appliceras ovanpå per-roll-värden</span>
-    </div>
-    <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
-    <div class="count" id="hitrate-v">90%</div>
-    <div class="hitrate-detail" id="hitrate-detail">—</div>
-  </div>
-
-  <div class="global-row">
-    <div class="role-name"><span class="tt" tabindex="0" data-tip="Antal månader det tar innan leveranstakten är uppe i full kapacitet. Användbart vid uppstart av nya projekt — det tar tid innan team, processer och flöde stabiliseras. Sätt 0 för pågående projekt i full drift.">Rampperiod</span>
-      <span class="hint">månader till full takt vid uppstart</span>
-    </div>
-    <input type="range" id="rampMonths" aria-label="Antal månaders ramp-upp" min="0" max="12" value="0" step="1">
-    <div class="count" id="rampMonths-v">0 mån</div>
-  </div>
-
-  <div class="handover-group">
-    <div class="handover-label">Handover-tider mellan roller <span class="hint">— standardtider för varje övergång i pipelinen</span></div>
-    <div class="handover-fields">
-      <div class="handover-field">
-        <label><span class="tt" tabindex="0" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
-        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3" inputmode="decimal" aria-label="Order-handover i dagar">
-        <span class="handover-unit">dgr</span>
-      </div>
-      <div class="handover-field">
-        <label><span class="tt" tabindex="0" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
-        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5" inputmode="decimal" aria-label="Arkitekt-handover i dagar">
-        <span class="handover-unit">dgr</span>
-      </div>
-      <div class="handover-field">
-        <label><span class="tt" tabindex="0" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
-        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10" inputmode="decimal" aria-label="Tekniker-startup i dagar">
-        <span class="handover-unit">dgr</span>
-      </div>
-    </div>
-    <div class="handover-summary" id="handover-summary"></div>
-  </div>
+  <div class="section" id="step-2"><span class="step-num">2</span>Tid <span class="section-hint">— när startar projektet och när ska allt vara klart?</span></div>
 
   <div class="target-cell">
     <label>Projektstart
@@ -2639,7 +2634,7 @@
     <button class="next-step-btn" onclick="scrollToStep(3)">Nästa steg: Förslag på setup →</button>
   </div>
 
-  <div class="section" id="step-3"><span class="step-num">3</span>Förslag på setup <span class="section-hint">— verktyget räknar fram en föreslagen bemanning baserat på mål och parametrar; använd den som utgångspunkt eller justera själv i nästa steg</span></div>
+  <div class="section" id="step-3"><span class="step-num">3</span>Förslag på setup <span class="section-hint">— verktyget räknar fram en föreslagen bemanning baserat på mål och deadline; använd den som utgångspunkt eller justera själv i nästa steg</span></div>
 
   <div class="suggest-card" id="suggest-card">
     <div class="head">
@@ -2680,7 +2675,7 @@
       <span id="ui-mode-icon">⚙</span>
       <span id="ui-mode-label">Visa avancerat</span>
     </button>
-    <span class="ui-mode-hint">Standardvyn fokuserar på antal personer per roll. Avancerat visar tak, hitrate, spann och typfall för fininställning.</span>
+    <span class="ui-mode-hint">Standardvyn fokuserar på antal personer per roll. Avancerat visar tak, hit %, spann, typfall plus globala parametrar (hitrate, ramp, handover).</span>
   </div>
 
   <div class="role-header">
@@ -2710,6 +2705,49 @@
   <div class="process-flow">
     <div class="pf-title"><span class="tt" tabindex="0" data-tip="Kapacitet per steg. Flaskhals markerad i rött.">Kapacitet per steg i leveranskedjan</span></div>
     <div class="pf-row" id="pf-row"></div>
+  </div>
+
+  <div class="advanced-params" id="advanced-params">
+    <div class="advanced-params-title">Avancerade parametrar <span class="advanced-params-hint">— synliga endast i Avancerat-läge</span></div>
+
+    <div class="global-row">
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
+      <span class="hint">% av total kapacitet som lyckas — appliceras ovanpå per-roll-värden</span>
+    </div>
+    <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
+    <div class="count" id="hitrate-v">90%</div>
+    <div class="hitrate-detail" id="hitrate-detail">—</div>
+  </div>
+
+  <div class="global-row">
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Antal månader det tar innan leveranstakten är uppe i full kapacitet. Användbart vid uppstart av nya projekt — det tar tid innan team, processer och flöde stabiliseras. Sätt 0 för pågående projekt i full drift.">Rampperiod</span>
+      <span class="hint">månader till full takt vid uppstart</span>
+    </div>
+    <input type="range" id="rampMonths" aria-label="Antal månaders ramp-upp" min="0" max="12" value="0" step="1">
+    <div class="count" id="rampMonths-v">0 mån</div>
+  </div>
+
+  <div class="handover-group">
+    <div class="handover-label">Handover-tider mellan roller <span class="hint">— standardtider för varje övergång i pipelinen</span></div>
+    <div class="handover-fields">
+      <div class="handover-field">
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från orderläggning tills nästa roll (Tekniker för TF1, Nätarkitekt för TF2/TF3) tar emot ärendet.">Order → nästa roll</span></label>
+        <input type="number" id="handover-order" min="0" max="365" step="0.5" value="3" inputmode="decimal" aria-label="Order-handover i dagar">
+        <span class="handover-unit">dgr</span>
+      </div>
+      <div class="handover-field">
+        <label><span class="tt" tabindex="0" data-tip="Antal dagar från att Nätarkitekt är klar tills Tekniker tar över (gäller TF2 och TF3).">Nätarkitekt → Tekniker</span></label>
+        <input type="number" id="handover-arch" min="0" max="365" step="0.5" value="5" inputmode="decimal" aria-label="Arkitekt-handover i dagar">
+        <span class="handover-unit">dgr</span>
+      </div>
+      <div class="handover-field">
+        <label><span class="tt" tabindex="0" data-tip="Tekniker behöver tid för startup/uppstart innan själva leveransarbetet börjar (gäller TF2 och TF3).">Tekniker startup</span></label>
+        <input type="number" id="handover-tek" min="0" max="365" step="0.5" value="10" inputmode="decimal" aria-label="Tekniker-startup i dagar">
+        <span class="handover-unit">dgr</span>
+      </div>
+    </div>
+    <div class="handover-summary" id="handover-summary"></div>
+  </div>
   </div>
 
   <div class="section" id="step-5"><span class="step-num">5</span>Resultat — aktuell takt <span class="section-hint">— vad ger din setup för utfall?</span></div>
