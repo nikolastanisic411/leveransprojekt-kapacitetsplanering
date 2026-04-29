@@ -3611,7 +3611,17 @@
   }
 
   function resetAll() {
-    if (!confirm('Återställ alla värden, roller, scenarier och anteckningar? Detta kan inte ångras.')) return;
+    const utfallCount = (state.utfall && Array.isArray(state.utfall.entries)) ? state.utfall.entries.length : 0;
+    let warning = 'Återställ alla värden? Detta kan inte ångras.\n\nFöljande raderas:\n';
+    warning += '• Mål, deadline, projektstart\n';
+    warning += '• Alla roller och deras inställningar\n';
+    warning += '• Alla scenarier (' + (state.scenarios ? state.scenarios.length : 0) + ' st)\n';
+    warning += '• Alla anteckningar och begränsningar\n';
+    if (utfallCount > 0) {
+      warning += '• ' + utfallCount + ' rapporterade utfalls-perioder\n';
+    }
+    warning += '\nFortsätta?';
+    if (!confirm(warning)) return;
     // Rensa state i minnet först (säkerhetsnät om reload försenas)
     state.snapshot = null;
     state.roles = defaultRoles.map(r => ({...r}));
