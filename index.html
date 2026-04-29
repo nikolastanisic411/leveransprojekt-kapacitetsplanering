@@ -1023,6 +1023,7 @@
     border-radius: 4px;
     transition: all 0.15s;
   }
+  .role-row .remove-btn:focus-visible { outline: none; color: #9a2424; background: #FBE8E8; box-shadow: 0 0 0 2px rgba(154,36,36,0.3); }
   .role-row .remove-btn:hover { color: #9a2424; background: #FBE8E8; }
 
   .role-row .role-checkbox {
@@ -1712,7 +1713,7 @@
   .utfall-table input[type=date]:focus { outline: none; border-color: #1a1a1a; background: #ffffff; }
   .utfall-table .util-total { font-weight: 600; color: #1a1a1a; }
   .utfall-table .util-remove { background: transparent; border: none; color: #c8c6bf; cursor: pointer; padding: 4px 6px; font-size: 14px; line-height: 1; border-radius: 4px; }
-  .utfall-table .util-remove:hover { color: #9a2424; background: #FBE8E8; }
+  .utfall-table .util-remove:hover, .utfall-table .util-remove:focus-visible { color: #9a2424; background: #FBE8E8; outline: none; box-shadow: 0 0 0 2px rgba(154,36,36,0.3); }
   .utfall-actions { margin-top: 12px; display: flex; gap: 8px; }
   .utfall-summary { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid #e5e3dc; font-size: 12px; color: #4a4a45; line-height: 1.5; }
   .utfall-summary strong { color: #1a1a1a; }
@@ -2152,7 +2153,7 @@
     border-radius: 4px;
     transition: all 0.15s;
   }
-  .scen .scen-remove-btn:hover { color: #9a2424; background: #FBE8E8; }
+  .scen .scen-remove-btn:hover, .scen .scen-remove-btn:focus-visible { color: #9a2424; background: #FBE8E8; outline: none; box-shadow: 0 0 0 2px rgba(154,36,36,0.3); }
   .scen.add-scenario {
     border-style: dashed;
     border-color: #a8a6a0;
