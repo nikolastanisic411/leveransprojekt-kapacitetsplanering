@@ -5509,7 +5509,177 @@
     }
   }
 
-  // Scrolla mjukt till ett steg och fokusera primärt fält så användaren kan börja skriva direkt
+  // === LEDNINGSGRUPPSVY ===
+  function drawDoughnut(svgId, value, max, color, label, secondaryColor) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.innerHTML = '';
+    const ns = 'http://www.w3.org/2000/svg';
+    const cx = 100, cy = 100, r = 70, sw = 22;
+    // Bakgrund (hela cirkeln)
+    const bg = document.createElementNS(ns, 'circle');
+    bg.setAttribute('cx', cx); bg.setAttribute('cy', cy); bg.setAttribute('r', r);
+    bg.setAttribute('fill', 'none');
+    bg.setAttribute('stroke', secondaryColor || '#f0eee7');
+    bg.setAttribute('stroke-width', sw);
+    svg.appendChild(bg);
+    // Andelen som visas
+    const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
+    if (pct > 0.001) {
+      const circ = 2 * Math.PI * r;
+      const arc = document.createElementNS(ns, 'circle');
+      arc.setAttribute('cx', cx); arc.setAttribute('cy', cy); arc.setAttribute('r', r);
+      arc.setAttribute('fill', 'none');
+      arc.setAttribute('stroke', color);
+      arc.setAttribute('stroke-width', sw);
+      arc.setAttribute('stroke-dasharray', (pct * circ) + ' ' + circ);
+      arc.setAttribute('stroke-dashoffset', circ / 4);
+      arc.setAttribute('transform', 'rotate(-90 ' + cx + ' ' + cy + ')');
+      arc.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(arc);
+    }
+    // Center-text
+    const tt = document.createElementNS(ns, 'text');
+    tt.setAttribute('x', cx); tt.setAttribute('y', cy + 6);
+    tt.setAttribute('text-anchor', 'middle');
+    tt.setAttribute('font-size', '24');
+    tt.setAttribute('font-weight', '500');
+    tt.setAttribute('fill', '#1a1a1a');
+    tt.setAttribute('font-family', 'inherit');
+    tt.setAttribute('font-variant-numeric', 'tabular-nums');
+    tt.setAttribute('letter-spacing', '-0.02em');
+    tt.textContent = label;
+    svg.appendChild(tt);
+  }
+
+  function drawDoughnutMulti(svgId, segments, centerLabel) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.innerHTML = '';
+    const ns = 'http://www.w3.org/2000/svg';
+    const cx = 100, cy = 100, r = 70, sw = 22;
+    const total = segments.reduce((s, x) => s + (x.value || 0), 0);
+    if (total <= 0) {
+      const bg = document.createElementNS(ns, 'circle');
+      bg.setAttribute('cx', cx); bg.setAttribute('cy', cy); bg.setAttribute('r', r);
+      bg.setAttribute('fill', 'none'); bg.setAttribute('stroke', '#f0eee7'); bg.setAttribute('stroke-width', sw);
+      svg.appendChild(bg);
+    } else {
+      const circ = 2 * Math.PI * r;
+      let acc = 0;
+      segments.forEach(seg => {
+        const pct = seg.value / total;
+        if (pct <= 0) return;
+        const arc = document.createElementNS(ns, 'circle');
+        arc.setAttribute('cx', cx); arc.setAttribute('cy', cy); arc.setAttribute('r', r);
+        arc.setAttribute('fill', 'none'); arc.setAttribute('stroke', seg.color); arc.setAttribute('stroke-width', sw);
+        arc.setAttribute('stroke-dasharray', (pct * circ) + ' ' + circ);
+        arc.setAttribute('stroke-dashoffset', (circ / 4) - (acc * circ));
+        arc.setAttribute('transform', 'rotate(-90 ' + cx + ' ' + cy + ')');
+        svg.appendChild(arc);
+        acc += pct;
+      });
+    }
+    const tt = document.createElementNS(ns, 'text');
+    tt.setAttribute('x', cx); tt.setAttribute('y', cy + 6);
+    tt.setAttribute('text-anchor', 'middle');
+    tt.setAttribute('font-size', '20');
+    tt.setAttribute('font-weight', '500');
+    tt.setAttribute('fill', '#1a1a1a');
+    tt.setAttribute('font-family', 'inherit');
+    tt.setAttribute('font-variant-numeric', 'tabular-nums');
+    tt.textContent = centerLabel;
+    svg.appendChild(tt);
+  }
+
+  function updateExecView() {
+    const view = document.getElementById('exec-view');
+    if (!view) return;
+    const target = +state.onskadVolym || 0;
+    const active = activeRoles();
+    const totalHeadcount = state.roles ? state.roles.reduce((s, r) => s + (r.enabled !== false ? (+r.count || 0) : 0), 0) : 0;
+    const minEffDay = active.length > 0 ? Math.min(...active.map(r => roleEffectivePerDay(r))) : 0;
+    const monthlyRate = minEffDay * 21;
+    const bottleneck = active.length > 0 ? active.reduce((b, r) => roleEffectivePerDay(r) < roleEffectivePerDay(b) ? r : b) : null;
+    
+    // Beräkna projected volume mot deadline
+    const today = new Date();
+    const deadline = state.deadline ? new Date(state.deadline) : null;
+    const projektStartDate = (state.projektStart && !isNaN(new Date(state.projektStart).getTime())) ? new Date(state.projektStart) : today;
+    let projected = 0;
+    if (deadline && !isNaN(deadline.getTime()) && deadline > today && minEffDay > 0) {
+      const monthsAvailable = Math.max(0, (deadline - projektStartDate) / (1000 * 60 * 60 * 24 * 30));
+      const ramp = +state.rampMonths || 0;
+      const eff = monthsAvailable >= ramp ? (monthsAvailable - 0.5 * ramp) : (0.5 * monthsAvailable * monthsAvailable / Math.max(ramp, 0.001));
+      projected = monthlyRate * eff;
+    }
+
+    // KPI: Mål till deadline
+    const pctToTarget = target > 0 ? Math.min(100, Math.round((projected / target) * 100)) : 0;
+    document.getElementById('exec-progress-pct').textContent = target > 0 ? pctToTarget + '%' : '—';
+    document.getElementById('exec-progress-sub').textContent = target > 0
+      ? fmtNum(Math.round(projected)) + ' av ' + fmtNum(target) + ' st projicerat'
+      : 'Sätt mål för att se måluppfyllnad';
+
+    // KPI: Bemanning
+    document.getElementById('exec-headcount').textContent = totalHeadcount + ' pers';
+    document.getElementById('exec-headcount-sub').textContent = active.length + ' av ' + (state.roles || []).length + ' aktiva roller';
+
+    // KPI: Effektiv takt
+    document.getElementById('exec-rate').textContent = fmtNum(Math.round(monthlyRate)) + '/mån';
+    document.getElementById('exec-rate-sub').textContent = minEffDay.toFixed(1) + '/dag · ' + state.hitrate + '% hitrate';
+
+    // KPI: Flaskhals
+    document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : '—';
+    document.getElementById('exec-bottleneck-sub').textContent = bottleneck ? roleEffectivePerDay(bottleneck).toFixed(1) + '/dag sätter taket' : 'inga aktiva roller';
+
+    // Doughnut: Måluppfyllnad
+    const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
+    drawDoughnut('exec-doughnut-progress', projected, target || 1, progColor, target > 0 ? pctToTarget + '%' : '—');
+    document.getElementById('exec-doughnut-progress-caption').textContent = target > 0
+      ? (pctToTarget >= 100 ? 'I mål' : pctToTarget >= 80 ? 'Nära mål' : 'Ej i mål')
+      : 'Inget mål satt';
+
+    // Doughnut: Bemanning per roll
+    const palette = ['#5C0E92', '#990AE3', '#C266F0', '#E0BCF5', '#1d6e35'];
+    const segments = (state.roles || []).filter(r => r.enabled !== false && (+r.count || 0) > 0)
+      .map((r, i) => ({ name: r.name, value: +r.count, color: palette[i % palette.length] }));
+    drawDoughnutMulti('exec-doughnut-roles', segments, totalHeadcount + '');
+    const breakdown = segments.map(s => s.name + ' ' + s.value).join(' · ');
+    document.getElementById('exec-doughnut-roles-caption').textContent = breakdown || 'Inga roller';
+
+    // Doughnut: Hitrate (faktisk om utfall finns, annars planerad)
+    const utfallEntries = (state.utfall && state.utfall.entries) || [];
+    let actualHitrate = state.hitrate;
+    let hitrateLabel = 'planerad';
+    if (utfallEntries.length > 0) {
+      const tu = utfallEntries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+      const tl = utfallEntries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+      if (tu > 0) {
+        actualHitrate = Math.round((tl / tu) * 100);
+        hitrateLabel = 'faktisk';
+      }
+    }
+    const hitColor = actualHitrate >= 90 ? '#1d6e35' : actualHitrate >= 75 ? '#5C0E92' : '#b8410e';
+    drawDoughnut('exec-doughnut-hitrate', actualHitrate, 100, hitColor, actualHitrate + '%');
+    document.getElementById('exec-doughnut-hitrate-caption').textContent = hitrateLabel + ' hitrate';
+
+    // Status-rad
+    const statusEl = document.getElementById('exec-status');
+    if (target <= 0) {
+      statusEl.innerHTML = '<strong>Status:</strong> Sätt mål och deadline för en komplett bedömning.';
+    } else if (!deadline || deadline <= today) {
+      statusEl.innerHTML = '<strong>Status:</strong> Sätt en framtida deadline.';
+    } else if (pctToTarget >= 100) {
+      statusEl.innerHTML = '<strong style="color:#1d6e35">Status: I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st till ' + deadline.toLocaleDateString('sv-SE') + '.';
+    } else if (pctToTarget >= 80) {
+      statusEl.innerHTML = '<strong style="color:#5C0E92">Status: Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Överväg att höja kapacitet på flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong>.';
+    } else {
+      statusEl.innerHTML = '<strong style="color:#b8410e">Status: Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras.';
+    }
+  }
+
+    // Scrolla mjukt till ett steg och fokusera primärt fält så användaren kan börja skriva direkt
   function scrollToStep(n) {
     const el = document.getElementById('step-' + n);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
