@@ -4678,13 +4678,16 @@
     if (!needed || typeof needed !== 'object' || !Object.keys(needed).length) {
       const result = computeSuggestion();
       if (result && result.error) {
-        alert('Kan inte räkna förslag: ' + result.message);
+        // Använd inline-feedback i banner istället för alert som irriterar
+        updateNextActionBanner();
+        const msgEl = document.getElementById('next-action-banner');
+        if (msgEl) msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       if (result && result.needed) needed = result.needed;
     }
     if (!needed) {
-      alert('Förslaget kan inte beräknas. Kontrollera mål, deadline och roller.');
+      updateNextActionBanner();
       return;
     }
     state.roles.forEach(r => {
