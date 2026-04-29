@@ -1459,7 +1459,15 @@
   .utfall-actions { margin-top: 12px; display: flex; gap: 8px; }
   .utfall-summary { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid #e5e3dc; font-size: 12px; color: #4a4a45; line-height: 1.5; }
   .utfall-summary strong { color: #1a1a1a; }
-  .utfall-empty { color: #a8a8a3; font-style: italic; padding: 20px 8px; font-size: 12px; }
+  .utfall-empty {
+    color: #6b6b66;
+    padding: 32px 16px;
+    font-size: 13px;
+    text-align: center;
+    line-height: 1.6;
+    background: #f8f6f0;
+    border-radius: 10px;
+  }
   .handover-card {
     background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
     color: #ffffff;
@@ -3090,7 +3098,12 @@
     const gran = state.utfall.granularity || 'vecka';
     const entries = state.utfall.entries || [];
     if (entries.length === 0) {
-      wrap.innerHTML = '<div class="utfall-empty">Inga rapporterade utfall ännu. Klicka på "+ Rapportera ny period" för att börja.</div>';
+      wrap.innerHTML = '<div class="utfall-empty">' +
+        '<div style="font-size:32px;margin-bottom:8px">📊</div>' +
+        '<strong style="display:block;margin-bottom:6px;color:#1a1a1a">Inga rapporterade utfall ännu</strong>' +
+        'Klicka <em>+ Rapportera ny period</em> nedan när du vill registrera vad ni faktiskt levererat under en vecka eller månad.<br>' +
+        '<span style="font-size:11px;color:#a8a8a3">Utfallsdata visualiseras som en grön linje i kumulativ-volym-grafen så du ser plan vs verklighet.</span>' +
+        '</div>';
       if (summary) summary.innerHTML = '';
       return;
     }
