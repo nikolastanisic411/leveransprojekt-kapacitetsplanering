@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.10-SMARTTIPS" aria-busy="true">
+<body data-build="2026-04-29-G1.11-LEVERAGE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.10-SMARTTIPS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.11-LEVERAGE</span>
   </div>
 
 </div>
@@ -6738,6 +6738,28 @@
           if (newHitrate > currentHitrate && newHitrate <= 100) {
             tips.push('Höj global hitrate från <strong style="color:#fff">' + currentHitrate + '%</strong> till <strong style="color:#fff">' + newHitrate + '%</strong> → klarar deadline med samma bemanning.');
           }
+        }
+        // G1.11: Hävstångsanalys — vilken roll ger mest tidsvinst per extra person?
+        // Sparad kalendertid om +1 person till roll i = V/ownRate × 7/5 × (1/(count+1))
+        const leverages = data.map(dd => {
+          const cnt = dd.role.count > 0 ? dd.role.count : 1;
+          const saved = (dd.ownRate > 0) ? (V / dd.ownRate) * 7 / 5 * (1 / (cnt + 1)) : 0;
+          return { name: dd.role.name, saved: Math.round(saved), count: dd.role.count };
+        }).filter(x => x.saved > 0).sort((a, b) => b.saved - a.saved);
+        if (leverages.length > 0) {
+          const best = leverages[0];
+          let leverageText = 'Bäst hävstång per extra person: <strong style="color:#fff">+1 till ' + escapeHtml(best.name) + '</strong> sparar <strong style="color:#fff">' + best.saved + ' dagar</strong>';
+          if (best.saved >= projectFinishDelta) {
+            leverageText += ' — räcker för att klara deadline';
+          } else {
+            leverageText += ' (täcker ' + Math.min(100, Math.round(best.saved / projectFinishDelta * 100)) + ' % av förseningen)';
+          }
+          leverageText += '.';
+          // Ranking-rad om fler än 1 roll
+          if (leverages.length > 1) {
+            leverageText += '<br><span style="opacity:0.85;font-size:12px">Ranking: ' + leverages.map(l => escapeHtml(l.name) + ' (' + l.saved + 'd)').join(' · ') + '</span>';
+          }
+          tips.push(leverageText);
         }
         if (tips.length > 0) {
           footerHtml += '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.08);border-radius:8px;font-size:13px;line-height:1.6">';
