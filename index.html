@@ -2228,6 +2228,23 @@
     background: #990AE3;
   }
 
+  /* G1.50: Apply-knapp i scenario-kort */
+  .scen-apply-btn {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background: #5C0E92;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .scen-apply-btn:hover { background: #4a0a76; transform: translateY(-1px); }
+  .scen-apply-btn:focus { outline: 2px solid rgba(92, 14, 146, 0.4); outline-offset: 1px; }
   .scenarios-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2968,7 +2985,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.49-SCEN-TARGET" aria-busy="true">
+<body data-build="2026-04-29-G1.50-SCEN-APPLY" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3395,7 +3412,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.49-SCEN-TARGET</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.50-SCEN-APPLY</span>
   </div>
 
 </div>
@@ -4287,8 +4304,12 @@
             const targetPerDay = (u === 'dag') ? target : (u === 'vecka') ? target / 5 : (u === 'år') ? target / 252 : target / 21;
             const requiredCountAtBottleneck = perPerson > 0 ? Math.ceil(targetPerDay / perPerson) : Infinity;
             const extraAtBottleneck = Math.max(0, requiredCountAtBottleneck - bottleneckRole.role.count);
-            if (extraAtBottleneck > 0 && isFinite(requiredCountAtBottleneck)) {
+            if (extraAtBottleneck > 0 && isFinite(requiredCountAtBottleneck) && requiredCountAtBottleneck <= (bottleneckRole.role.max || 50)) {
               deltaText += '. Riktat: <strong>+' + extraAtBottleneck + ' till ' + escapeHtml(bottleneckRole.role.name) + '</strong> (flaskhals)';
+              // G1.50: Applicera-knapp som sätter bottleneck-bemanning direkt
+              deltaText += ' <button class="scen-apply-btn" onclick="applyScenarioRecommendation(\'' + bottleneckRole.role.id + '\', ' + requiredCountAtBottleneck + ')" type="button" title="Sätt ' + bottleneckRole.role.name + ' till ' + requiredCountAtBottleneck + ' personer">Applicera</button>';
+            } else if (extraAtBottleneck > 0 && requiredCountAtBottleneck > (bottleneckRole.role.max || 50)) {
+              deltaText += '. Riktat: <strong>över max</strong> (' + bottleneckRole.role.name + ' max=' + (bottleneckRole.role.max || 50) + ', behovet är ' + requiredCountAtBottleneck + ')';
             }
           }
         } else if (factor < 1) {
@@ -6348,6 +6369,25 @@
   }
 
     // Applicera alla per-roll-rekommendationer på en gång
+  // G1.50: Applicera scenario-rekommendation — sätt bottleneck-rollens count direkt
+  function applyScenarioRecommendation(roleId, newCount) {
+    const role = state.roles.find(r => r.id === roleId);
+    if (!role) return;
+    const cap = Math.min(role.max || 50, Math.max(1, +newCount || 1));
+    role.count = cap;
+    role.countMin = Math.max(1, cap - 1);
+    role.countMax = Math.min(role.max || 50, cap + 1);
+    state.suggestionApplied = true;
+    saveState();
+    applyStateToInputs();
+    renderRoles();
+    updateApplyCtaState();
+    updateNextActionBanner();
+    updateStepProgress();
+    recalc();
+    showToast(role.name + ' satt till ' + cap + ' personer');
+  }
+
   function applyAllRecommendations(applyDataStr) {
     if (!applyDataStr) return;
     document.body.setAttribute('aria-busy', 'true');
