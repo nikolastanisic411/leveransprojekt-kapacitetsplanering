@@ -3276,6 +3276,14 @@
         if (!state.utfall || typeof state.utfall !== 'object') state.utfall = { granularity: 'vecka', entries: [] };
         if (!state.utfall.granularity) state.utfall.granularity = 'vecka';
         if (!Array.isArray(state.utfall.entries)) state.utfall.entries = [];
+        // Migration: gamla entries med tf1/tf2/tf3 men utan utlagt/levererat — synka levererat=tfsum
+        state.utfall.entries.forEach(e => {
+          if (e.utlagt === undefined && e.levererat === undefined) {
+            const tfsum = (+e.tf1 || 0) + (+e.tf2 || 0) + (+e.tf3 || 0);
+            e.levererat = tfsum;
+            e.utlagt = tfsum;
+          }
+        });
         if (!state.handover || typeof state.handover !== 'object') state.handover = { orderHandover: 3, archHandover: 5, tekStartup: 10 };
         if (state.handover.orderHandover === undefined) state.handover.orderHandover = 3;
         if (state.handover.archHandover === undefined) state.handover.archHandover = 5;
@@ -4622,6 +4630,14 @@
         if (!state.utfall || typeof state.utfall !== 'object') state.utfall = { granularity: 'vecka', entries: [] };
         if (!state.utfall.granularity) state.utfall.granularity = 'vecka';
         if (!Array.isArray(state.utfall.entries)) state.utfall.entries = [];
+        // Migration: gamla entries med tf1/tf2/tf3 men utan utlagt/levererat — synka levererat=tfsum
+        state.utfall.entries.forEach(e => {
+          if (e.utlagt === undefined && e.levererat === undefined) {
+            const tfsum = (+e.tf1 || 0) + (+e.tf2 || 0) + (+e.tf3 || 0);
+            e.levererat = tfsum;
+            e.utlagt = tfsum;
+          }
+        });
         if (!state.handover || typeof state.handover !== 'object') state.handover = { orderHandover: 3, archHandover: 5, tekStartup: 10 };
         if (!state.typfallLedtider || typeof state.typfallLedtider !== 'object') state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
         if (state.suggestionApplied === undefined) state.suggestionApplied = false;
