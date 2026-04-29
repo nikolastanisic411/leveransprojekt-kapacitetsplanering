@@ -4100,12 +4100,14 @@
     const active = activeRoles();
     if (active.length === 0) return;
 
-    const caps = active.map(r => ({ id: r.id, name: r.name, val: roleCapPerDay(r) }));
+    // Använd effektiv kapacitet (inkl per-roll hitrate) för konsekvent flaskhals-identifiering
+    const caps = active.map(r => ({ id: r.id, name: r.name, val: roleEffectivePerDay(r), raw: roleCapPerDay(r) }));
     const minCap = Math.min(...caps.map(c => c.val));
 
     active.forEach((role, idx) => {
       const cap = roleCapPerDay(role);
-      const isBottleneck = cap === minCap;
+      const effCap = roleEffectivePerDay(role);
+      const isBottleneck = Math.abs(effCap - minCap) < 1e-9;
 
       const step = document.createElement('div');
       step.className = 'pf-step' + (isBottleneck ? ' bottleneck' : '');
