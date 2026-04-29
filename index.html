@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.53-SCEN-RANK" aria-busy="true">
+<body data-build="2026-04-29-G1.54-RENAME-EASIEST" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.53-SCEN-RANK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.54-RENAME-EASIEST</span>
   </div>
 
 </div>
@@ -4419,18 +4419,18 @@
     if (failing.length === 0) {
       html = '<strong>✓ Alla ' + scenarios.length + ' scenarier räcker</strong> med nuvarande bemanning.';
     } else {
-      const cheapest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount) && bottleneckRole && a.requiredCount <= (bottleneckRole.role.max || 50))
-                              .sort((a, b) => a.extra - b.extra)[0];
-      const tuffest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount))
-                             .sort((a, b) => b.extra - a.extra)[0];
+      const easiest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount) && bottleneckRole && a.requiredCount <= (bottleneckRole.role.max || 50))
+                             .sort((a, b) => a.extra - b.extra)[0];
+      const toughest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount))
+                              .sort((a, b) => b.extra - a.extra)[0];
       html = '<strong>' + failing.length + ' av ' + scenarios.length + ' scenarier kräver mer bemanning.</strong>';
       if (reaching.length > 0) html += ' (' + reaching.length + ' räcker redan.)';
-      if (cheapest) {
-        html += ' Billigaste: <strong>' + escapeHtml(cheapest.scen.name) + '</strong> (+' + cheapest.extra + ' till ' + escapeHtml(cheapest.bottleneckName) + ').';
-        html += ' <button class="ss-cta" type="button" onclick="applyScenarioRecommendation(\'' + bottleneckRole.role.id + '\', ' + cheapest.requiredCount + ')" title="Applicera bemanningen som krävs för billigaste scenariot">Applicera billigaste</button>';
+      if (easiest) {
+        html += ' Lättast att uppnå: <strong>' + escapeHtml(easiest.scen.name) + '</strong> (+' + easiest.extra + ' till ' + escapeHtml(easiest.bottleneckName) + ').';
+        html += ' <button class="ss-cta" type="button" onclick="applyScenarioRecommendation(\'' + bottleneckRole.role.id + '\', ' + easiest.requiredCount + ')" title="Applicera bemanningen som krävs för det scenario som kräver minst förändring">Applicera lättaste</button>';
       }
-      if (tuffest && cheapest && tuffest.scen.id !== cheapest.scen.id) {
-        html += ' Tuffaste: <strong>' + escapeHtml(tuffest.scen.name) + '</strong> (+' + tuffest.extra + ').';
+      if (toughest && easiest && toughest.scen.id !== easiest.scen.id) {
+        html += ' Tuffast: <strong>' + escapeHtml(toughest.scen.name) + '</strong> (+' + toughest.extra + ').';
       }
     }
     summary.innerHTML = html;
