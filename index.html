@@ -4125,7 +4125,13 @@
     document.getElementById('rampMonths-v').textContent = state.rampMonths + ' mån';
 
     const active = activeRoles();
-    if (active.length === 0) return;
+    if (active.length === 0) {
+      // Fortfarande uppdatera banner/CTA/step-progress så användaren får guidning
+      updateStepProgress();
+      updateApplyCtaState();
+      updateNextActionBanner();
+      return;
+    }
 
     // Med per-roll hitrate: flaskhalsen är rollen med lägsta EFFEKTIVA takt (kap × hitrate),
     // inte den med lägsta råa kapacitet — eftersom 5/dag × 60% < 4/dag × 90%.
