@@ -4975,6 +4975,11 @@
       if (stepDone[step]) el.classList.add('done');
       else if (step === currentStep) el.classList.add('current');
       else el.classList.add('upcoming');
+      if (step === currentStep) {
+        el.setAttribute('aria-current', 'step');
+      } else {
+        el.removeAttribute('aria-current');
+      }
     });
 
     // Highlight current section
