@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.65-DUAL-PROGNOS" aria-busy="true">
+<body data-build="2026-04-29-G1.66-PESSIMISTIC-PILL" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.65-DUAL-PROGNOS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.66-PESSIMISTIC-PILL</span>
   </div>
 
 </div>
@@ -7253,13 +7253,34 @@
         }
       }
       // G1.13: Robusthets-flagga — hur tight är planen?
-      const marginalDays = -projectFinishDelta; // positivt = marginal, negativt = försening
+      const planMarginalDays = -projectFinishDelta; // positivt = marginal, negativt = försening
+      // G1.66: Använd pessimistisk syn — om utfall visar sämre verklighet än plan, låt det styra pill-status
+      let actualMarginalDays = planMarginalDays;
+      let actualHrUsed = null;
+      if (state.utfall && Array.isArray(state.utfall.entries) && state.utfall.entries.length > 0) {
+        const tu_pill = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+        const tl_pill = state.utfall.entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+        if (tu_pill > 0) {
+          const aHr = (tl_pill / tu_pill) * 100;
+          const pHr = (typeof state.hitrate === 'number') ? state.hitrate : 100;
+          if (pHr > 0 && aHr > 0 && Math.abs(aHr - pHr) >= 5) {
+            const rateF = pHr / aHr;
+            const refStart_pill = (projektStartDate || new Date()).getTime();
+            const altFinishMs = refStart_pill + (lastRole.actualFinish.getTime() - refStart_pill) * rateF;
+            actualMarginalDays = Math.round((deadline.getTime() - altFinishMs) / dayMs);
+            actualHrUsed = Math.round(aHr);
+          }
+        }
+      }
+      const marginalDays = Math.min(planMarginalDays, actualMarginalDays); // pessimistisk
+      const usedActual = actualMarginalDays < planMarginalDays;
       let robustEmoji, robustLabel, robustColor, pillVariant;
       if (marginalDays >= 14) { robustEmoji = '🟢'; robustLabel = 'Robust plan'; robustColor = '#A8E6C2'; pillVariant = 'green'; }
       else if (marginalDays >= 7) { robustEmoji = '🟡'; robustLabel = 'OK med viss risk'; robustColor = '#FFE6A0'; pillVariant = 'yellow'; }
       else if (marginalDays >= 1) { robustEmoji = '🟠'; robustLabel = 'Tight plan'; robustColor = '#FFC68A'; pillVariant = 'orange'; }
       else if (marginalDays === 0) { robustEmoji = '⚠️'; robustLabel = 'Precis i tid — ingen marginal'; robustColor = '#FFD6F0'; pillVariant = 'orange'; }
       else { robustEmoji = '🔴'; robustLabel = 'Försenad'; robustColor = '#FFD6F0'; pillVariant = 'red'; }
+      if (usedActual) robustLabel += ' (vid faktisk hitrate ' + actualHrUsed + ' %)';
       const robustTooltip = 'Robusthets-skala:\n• Robust plan: ≥ 14 dagars marginal\n• OK med viss risk: 7–13 dagar\n• Tight plan: 1–6 dagar\n• Precis i tid: 0 dagar\n• Försenad: under deadline';
       footerHtml += '<br><span title="' + robustTooltip + '" style="color:' + robustColor + ';font-weight:600;cursor:help">' + robustEmoji + ' ' + robustLabel + '</span>';
       // G1.18: Visa pillen alltid för konsekvent feedback (inkl. grön när robust)
