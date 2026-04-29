@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.67-PESSIMISTIC-TIPS" aria-busy="true">
+<body data-build="2026-04-29-G1.68-PESSIMISTIC-SCEN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.67-PESSIMISTIC-TIPS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.68-PESSIMISTIC-SCEN</span>
   </div>
 
 </div>
@@ -4317,8 +4317,8 @@
       });
       return;
     }
-    // Effektiv takt per dag = kapacitet × per-roll-hitrate × global-hitrate × rework-faktor; flaskhals = min av dessa
-    const effDay = Math.min(...active.map(r => roleEffectivePerDayWithRework(r)));
+    // G1.68: Effektiv takt per dag — pessimistisk (rework + actual-vs-plan-faktor); reflekterar verkligheten
+    const effDay = Math.min(...active.map(r => roleEffectivePessimistic(r)));
     const perUnit = (u) => {
       if (u === 'dag') return effDay;
       if (u === 'vecka') return effDay * 5;
@@ -4329,8 +4329,8 @@
 
     // G1.47: Total nuvarande bemanning för delta-beräkningar
     const totalHeadcount = active.reduce((s, r) => s + (+r.count || 0), 0);
-    // G1.49: Identifiera bottleneck-rollen för riktad rekommendation
-    const roleEffs = active.map(r => ({ role: r, eff: roleEffectivePerDay(r) }));
+    // G1.49/G1.68: Identifiera bottleneck-rollen för riktad rekommendation (pessimistisk takt)
+    const roleEffs = active.map(r => ({ role: r, eff: roleEffectivePessimistic(r) }));
     const bottleneckRole = roleEffs.reduce((b, r) => (b === null || r.eff < b.eff) ? r : b, null);
     state.scenarios.forEach(scen => {
       const verdict = document.getElementById('verdict-' + scen.id);
@@ -5164,6 +5164,27 @@
       return base * (target / (target + rwVol));
     }
     return base;
+  }
+
+  // G1.68: Pessimistisk multiplikator baserat på utfall — om verklig hitrate < plan-hitrate,
+  // returnera actualHr / planHr (< 1) så takt-baserade bedömningar blir realistiska.
+  // Returnerar 1 om utfall saknas eller avvikelse är inom 5 procentenheter.
+  function getActualVsPlanFactor() {
+    if (!state.utfall || !Array.isArray(state.utfall.entries) || state.utfall.entries.length === 0) return 1;
+    const tu = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+    const tl = state.utfall.entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+    if (tu <= 0) return 1;
+    const aHr = (tl / tu) * 100;
+    const pHr = (typeof state.hitrate === 'number') ? state.hitrate : 100;
+    if (pHr <= 0 || aHr <= 0) return 1;
+    if (Math.abs(aHr - pHr) < 5) return 1;
+    return aHr / pHr;
+  }
+
+  // G1.68: Pessimistisk effektiv takt — withRework × actualVsPlan-faktor.
+  // Används där prognoser och bedömningar ska reflektera verkligheten när utfall finns.
+  function roleEffectivePessimistic(role) {
+    return roleEffectivePerDayWithRework(role) * getActualVsPlanFactor();
   }
   // Returnerar kapacitet per dag givet ett alternativt antal personer (för min/max-scenarier)
   function roleCapPerDayWithCount(role, alternativeCount) {
