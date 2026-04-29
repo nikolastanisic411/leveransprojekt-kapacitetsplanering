@@ -2942,7 +2942,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.20-COPY-TIPS" aria-busy="true">
+<body data-build="2026-04-29-G1.21-PROGRESSBAR" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3369,7 +3369,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.20-COPY-TIPS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.21-PROGRESSBAR</span>
   </div>
 
 </div>
@@ -6883,10 +6883,12 @@
               }
             }
           }
-          // Volym-progress mot mål
+          // Volym-progress mot mål — med visuell progressbar
           if (V > 0) {
             const pct = Math.min(100, Math.round((totalLevererat / V) * 100));
-            realityHtml += '<br><span style="opacity:0.85;font-size:12px">Levererat ' + pct + ' % av målet (' + fmtNum(totalLevererat) + ' / ' + fmtNum(V) + ' st).</span>';
+            const barColor = pct >= 75 ? '#A8E6C2' : pct >= 40 ? '#FFE6A0' : '#FFD6F0';
+            realityHtml += '<div style="margin-top:6px"><div style="font-size:12px;opacity:0.85;margin-bottom:3px">Levererat ' + pct + ' % av målet (' + fmtNum(totalLevererat) + ' / ' + fmtNum(V) + ' st)</div>';
+            realityHtml += '<div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + barColor + ';transition:width 0.3s"></div></div></div>';
           }
           // G1.15: Leveranstakts-prognos — vart landar vi vid deadline om takten håller?
           if (V > 0) {
