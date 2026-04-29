@@ -3115,7 +3115,7 @@
           <span class="snitt" id="snitt-${role.id}" style="display:none">—</span>
         </div>
         <input type="number" value="${role.takt}" min="0" step="0.5" data-id="${role.id}" data-field="takt" inputmode="decimal">
-        <select class="unit-select" data-id="${role.id}" data-field="unit">
+        <select class="unit-select" data-id="${role.id}" data-field="unit" aria-label="Tidsenhet för takt">
           <option value="dag" ${role.unit === 'dag' ? 'selected' : ''}>/dag</option>
           <option value="vecka" ${role.unit === 'vecka' ? 'selected' : ''}>/vecka</option>
           <option value="månad" ${role.unit === 'månad' ? 'selected' : ''}>/månad</option>
