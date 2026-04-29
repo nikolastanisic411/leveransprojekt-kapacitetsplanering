@@ -3991,6 +3991,14 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      // Visa kort bekräftelse i indikatorn
+      const ind = document.getElementById('saved-indicator');
+      if (ind) {
+        const orig = ind.textContent;
+        ind.textContent = '📤 exporterad ' + filename;
+        ind.style.color = '#1d6e35';
+        setTimeout(() => { ind.textContent = orig; ind.style.color = '#c8c6bf'; }, 3500);
+      }
     } catch (e) {
       alert('Kunde inte exportera: ' + e.message);
     }
