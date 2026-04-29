@@ -3833,7 +3833,7 @@
 
     if (target <= 0) {
       summary.classList.remove('warning');
-      summary.innerHTML = 'summa: <strong>' + sum + '</strong>' + breakdownStr +
+      summary.innerHTML = 'summa: <strong>' + fmtNum(sum) + '</strong>' + breakdownStr +
         ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>' +
         ' <span style="color:#a8a8a3">(sätt mål-volym ovan för att jämföra)</span>';
       return;
