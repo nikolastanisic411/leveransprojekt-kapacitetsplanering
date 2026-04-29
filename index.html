@@ -3164,6 +3164,16 @@
   function renderScenarios() {
     const container = document.getElementById('scenarios-grid');
     container.innerHTML = '';
+    if (!state.scenarios || state.scenarios.length === 0) {
+      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#8a8a85;font-size:13px;background:#f8f6f0;border-radius:10px;font-style:italic">Inga scenarier lagts till än. Klicka <strong>+ Lägg till scenario</strong> för att testa olika mål-takter mot din nuvarande setup.</div>';
+      // Behåll add-card så användaren ser hur de lägger till
+      const addCard = document.createElement('div');
+      addCard.className = 'scen add-scenario';
+      addCard.textContent = '+ Lägg till scenario';
+      addCard.onclick = addScenario;
+      container.appendChild(addCard);
+      return;
+    }
     state.scenarios.forEach(scen => {
       const div = document.createElement('div');
       div.className = 'scen';
