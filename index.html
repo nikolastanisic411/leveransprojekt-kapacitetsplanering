@@ -6465,6 +6465,15 @@
       data[i].reworkVolume = rwVol;
       data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
       data[i].overshoots = data[i].mastBorjaSenast < projStart;
+      // Action: rekommenderad bemanning för att hinna med start från projektStart/idag
+      const today0_m = new Date(); today0_m.setHours(0,0,0,0);
+      const refStart_m = projStart || today0_m;
+      const availCalDays_m = Math.max(0, (data[i].klarSenast.getTime() - refStart_m.getTime()) / dayMs);
+      const availWorkDays_m = availCalDays_m * 5 / 7;
+      const requiredEffDay_m = availWorkDays_m > 0 ? effV / availWorkDays_m : Infinity;
+      const perPersonEff_m = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
+      data[i].requiredHeadcount = (perPersonEff_m > 0 && isFinite(requiredEffDay_m)) ? Math.ceil(requiredEffDay_m / perPersonEff_m) : Infinity;
+      data[i].additionalNeeded = Math.max(0, data[i].requiredHeadcount - data[i].role.count);
     }
 
     // Längsta tidsspannet styr bar-skalningen
