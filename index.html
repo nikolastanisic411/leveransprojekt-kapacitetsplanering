@@ -4292,12 +4292,11 @@
     return startT + leadtimeMonths;
   }
 
-  // Säker wrapper runt recalc — fångar fel så de inte tar ner hela UI:t
-  function safeRecalc() {
-    try { recalc(); }
+  // Säker wrapper: alla recalc()-anrop går genom här. Vid fel visas tydlig banner istället för tyst dödläge.
+  function recalc() {
+    try { _recalc(); }
     catch (err) {
       console.error('recalc error:', err);
-      // Visa felet för användaren så de inte hamnar i tysta dödläget
       try {
         const el = document.getElementById('next-action-banner');
         if (el) {
@@ -4307,8 +4306,10 @@
       } catch (_) {}
     }
   }
+  // Bakåtkompatibel alias
+  function safeRecalc() { recalc(); }
 
-  function recalc() {
+  function _recalc() {
     const hitrate = state.hitrate / 100;
     const margin = state.margin / 100;
 
