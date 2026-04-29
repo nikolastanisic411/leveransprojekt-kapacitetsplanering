@@ -4527,6 +4527,7 @@
       let capPerDay;
       if (role.unit === 'vecka') capPerDay = capRaw / 5;
       else if (role.unit === 'månad') capPerDay = capRaw / 21;
+      else if (role.unit === 'år') capPerDay = capRaw / 252;
       else capPerDay = capRaw; // 'dag' default
       return Math.min(raw, capPerDay);
     }
