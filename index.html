@@ -3049,13 +3049,13 @@
       info.classList.add('has-snapshot');
       revertBtn.style.display = 'inline-flex';
       clearBtn.style.display = 'inline-flex';
-      snapshotBtn.textContent = '📌 Uppdatera nuläge';
+      snapshotBtn.textContent = 'Uppdatera nuläge';
     } else {
       info.textContent = 'inget nuläge markerat';
       info.classList.remove('has-snapshot');
       revertBtn.style.display = 'none';
       clearBtn.style.display = 'none';
-      snapshotBtn.textContent = '📌 Markera som nuläge';
+      snapshotBtn.textContent = 'Markera som nuläge';
     }
   }
 
@@ -4299,7 +4299,7 @@
         const el = document.getElementById('next-action-banner');
         if (el) {
           el.style.display = 'flex';
-          el.innerHTML = '<span class="nab-icon">⚠</span><span>Kalkylen kraschade: ' + (err && err.message ? err.message : 'okänt fel') + '. Ladda om sidan eller exportera setupen och kontakta support.</span>';
+          el.innerHTML = '<span>⚠ Kalkylen kraschade: ' + (err && err.message ? err.message : 'okänt fel') + '. Ladda om sidan eller exportera setupen och kontakta support.</span>';
         }
       } catch (_) {}
     }
@@ -5004,7 +5004,7 @@
     if (result.error === 'no_goal') scrollTarget = 1;
     else if (result.error === 'no_deadline' || result.error === 'invalid_deadline' || result.error === 'no_time') scrollTarget = 2;
     else if (result.error === 'no_active_roles') scrollTarget = 4;
-    el.innerHTML = '<span class="nab-icon">💡</span><span>' + result.message + '</span><button onclick="scrollToStep(' + scrollTarget + ')">Gå dit →</button>';
+    el.innerHTML = '<span>' + result.message + '</span><button onclick="scrollToStep(' + scrollTarget + ')">Gå dit →</button>';
     el.style.display = 'flex';
   }
 
