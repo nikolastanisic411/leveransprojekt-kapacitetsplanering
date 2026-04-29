@@ -5674,12 +5674,20 @@
     const tf1 = h.orderHandover + lt.tf1;
     const tf2 = h.orderHandover + h.archHandover + h.tekStartup + lt.tf2;
     const tf3 = h.orderHandover + h.archHandover + h.tekStartup + lt.tf3;
-    el.innerHTML =
+    let html =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">' +
         '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + h.orderHandover + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
         '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
         '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + h.orderHandover + ' + ' + h.archHandover + ' + ' + h.tekStartup + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
       '</div>';
+    const rwVol = getReworkVolume();
+    const rwRate = (+state.reworkRate || 0);
+    if (rwRate > 0) {
+      html += '<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid #e5e3dc;font-size:11px;color:#9a2424">' +
+        '<strong>Rework:</strong> ' + rwRate + '% av TF1-volymen (' + fmtNum(rwVol) + ' st) eskaleras till Nätarkitekt för omdesign — extra last utöver TF2/TF3.' +
+        '</div>';
+    }
+    el.innerHTML = html;
   }
 
   // === GUIDAD STEG-INDIKATOR ===
