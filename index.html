@@ -4488,6 +4488,8 @@
         if (!state.utfall.granularity) state.utfall.granularity = 'vecka';
         if (!Array.isArray(state.utfall.entries)) state.utfall.entries = [];
         if (!state.handover || typeof state.handover !== 'object') state.handover = { orderHandover: 3, archHandover: 5, tekStartup: 10 };
+        if (!state.typfallLedtider || typeof state.typfallLedtider !== 'object') state.typfallLedtider = { tf1: 10, tf2: 60, tf3: 100 };
+        if (state.suggestionApplied === undefined) state.suggestionApplied = false;
         if (!Array.isArray(state.constraints)) state.constraints = [];
         if (!Array.isArray(state.scenarios)) state.scenarios = [];
         // Säkerställ enabled/unit på roller och clampa numeriska värden
