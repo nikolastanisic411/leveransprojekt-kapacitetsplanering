@@ -6281,4 +6281,16 @@
     }
   });
 
-    // Tangentbordsgenväg: Ctrl/Cmd+Enter = 
+    // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      applySuggestion();
+    }
+  });
+  updateSnapshotUI();
+  recalc();
+</script>
+
+</body>
+</html>
