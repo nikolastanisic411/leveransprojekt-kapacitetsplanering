@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.71-PESSIMISTIC-RECALC" aria-busy="true">
+<body data-build="2026-04-29-G1.72-COPY-PESSIMISTIC" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.71-PESSIMISTIC-RECALC</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.72-COPY-PESSIMISTIC</span>
   </div>
 
 </div>
@@ -6704,6 +6704,18 @@
       txt += 'PROGNOS UTAN ÅTGÄRD: klart ' + fmt(lastFinish) + ' (' + projDelta + ' dagar EFTER deadline).\n';
     } else {
       txt += 'PROGNOS UTAN ÅTGÄRD: klart ' + fmt(lastFinish) + ' (' + Math.abs(projDelta) + ' dagars marginal).\n';
+    }
+    // G1.72: Lägg till pessimistic-prognos om verklighet skiljer sig från plan
+    const factor_pess = getActualVsPlanFactor();
+    if (factor_pess !== 1) {
+      const refMs = refStart.getTime();
+      const altFinishMs = refMs + (lastFinish.getTime() - refMs) / factor_pess;
+      const altFinish = new Date(altFinishMs);
+      const altDelta = Math.round((altFinish.getTime() - deadline.getTime()) / dayMs);
+      const tu_c = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+      const tl_c = state.utfall.entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+      const aHr_c = tu_c > 0 ? Math.round((tl_c / tu_c) * 100) : 0;
+      txt += 'VID FAKTISK HITRATE (' + aHr_c + ' %): klart ' + fmt(altFinish) + ' (' + (altDelta > 0 ? altDelta + ' dagar EFTER deadline' : Math.abs(altDelta) + ' dagars marginal') + ').\n';
     }
     txt += 'TOTALT: +' + totalAdd + ' personer behövs för att hålla deadline ' + fmt(deadline) + '.\n';
     // G1.39: Inkludera smart-tips (alternativ till mer bemanning) när planen släpar
