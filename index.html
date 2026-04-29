@@ -4714,6 +4714,7 @@
 
   // === GUIDAD STEG-INDIKATOR ===
   function updateStepProgress() {
+    checkDateSanity();
     const hasGoal = +state.onskadVolym > 0;
     const hasDeadline = !!(state.deadline && state.deadline.length >= 8 && !isNaN(new Date(state.deadline).getTime()));
     const hasRoles = state.roles && state.roles.length > 0;
@@ -4757,6 +4758,24 @@
     document.querySelectorAll('.section.is-current').forEach(el => el.classList.remove('is-current'));
     const currentEl = document.getElementById('step-' + currentStep);
     if (currentEl) currentEl.classList.add('is-current');
+  }
+
+  // Visa varning om deadline ligger före projektstart
+  function checkDateSanity() {
+    const w = document.getElementById('deadline-warn');
+    if (!w) return;
+    const ps = state.projektStart;
+    const dl = state.deadline;
+    if (ps && dl && new Date(dl) < new Date(ps)) {
+      w.style.display = 'block';
+      w.textContent = '⚠ Deadline ligger före projektstart. Kontrollera datumen.';
+    } else if (dl && new Date(dl) < new Date()) {
+      w.style.display = 'block';
+      w.textContent = '⚠ Deadline har passerat. Tiden är negativ — sätt ett framtida datum.';
+    } else {
+      w.style.display = 'none';
+      w.textContent = '';
+    }
   }
 
   // Scrolla mjukt till ett steg
