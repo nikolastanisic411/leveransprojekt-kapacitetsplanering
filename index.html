@@ -2959,7 +2959,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.34-SPARKLINE" aria-busy="true">
+<body data-build="2026-04-29-G1.35-MARGIN-BAR" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3386,7 +3386,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.34-SPARKLINE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.35-MARGIN-BAR</span>
   </div>
 
 </div>
@@ -6865,6 +6865,13 @@
       } else {
         pillText = '<strong>Försenad ' + Math.abs(marginalDays) + ' dagar</strong> mot deadline ' + deadlineLabel + ' &mdash; gå till Sammanfattning för åtgärdsförslag.';
       }
+      // G1.35: Visuell marginal-bar i pillen
+      const totalCalSpan = Math.max(1, Math.round((deadline.getTime() - refStart.getTime()) / dayMs));
+      const fillPctRaw = marginalDays >= 0 ? (marginalDays / totalCalSpan) * 100 : 0;
+      const fillPct = Math.max(0, Math.min(100, Math.round(fillPctRaw)));
+      const barColor = pillVariant === 'green' ? '#88C9A2' : pillVariant === 'yellow' ? '#E8C870' : pillVariant === 'orange' ? '#E8B57A' : '#E89AB5';
+      const barTrack = 'rgba(0,0,0,0.08)';
+      pillText += '<div style="margin-top:6px;height:5px;background:' + barTrack + ';border-radius:3px;overflow:hidden" aria-hidden="true"><div style="height:100%;width:' + fillPct + '%;background:' + barColor + '"></div></div>';
       updatePlanStatusPill({ show: true, variant: pillVariant, icon: robustEmoji, text: pillText });
       // G1.13: Stresstest — vid vilken handover-ökning eller hitrate-fall spricker planen?
       if (marginalDays > 0) {
