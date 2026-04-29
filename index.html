@@ -2896,7 +2896,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.11-LEVERAGE" aria-busy="true">
+<body data-build="2026-04-29-G1.12-KOMBO" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3321,7 +3321,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.11-LEVERAGE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.12-KOMBO</span>
   </div>
 
 </div>
@@ -6760,6 +6760,31 @@
             leverageText += '<br><span style="opacity:0.85;font-size:12px">Ranking: ' + leverages.map(l => escapeHtml(l.name) + ' (' + l.saved + 'd)').join(' · ') + '</span>';
           }
           tips.push(leverageText);
+        }
+        // G1.12: Kombo-sökare — minsta-paket-lösningar när enskild åtgärd inte räcker
+        if (leverages.length > 0 && leverages[0].saved < projectFinishDelta) {
+          const combos = [];
+          const best = leverages[0];
+          const remaining = projectFinishDelta - best.saved;
+          // Kombo A: +1 till best + korta handover
+          if (totalHandover >= remaining) {
+            combos.push('<strong>+1 till ' + escapeHtml(best.name) + '</strong> (sparar ' + best.saved + 'd) + <strong>korta handover med ' + remaining + ' dagar</strong> (av ' + totalHandover + ' tillgängliga) → klarar deadline.');
+          }
+          // Kombo B: +1 till best + starta tidigare
+          combos.push('<strong>+1 till ' + escapeHtml(best.name) + '</strong> (sparar ' + best.saved + 'd) + <strong>starta ' + remaining + ' dagar tidigare</strong> → klarar deadline.');
+          // Kombo C: +1 till topp 2 om summan räcker
+          if (leverages.length >= 2) {
+            const top2Saved = leverages[0].saved + leverages[1].saved;
+            if (top2Saved >= projectFinishDelta) {
+              combos.push('<strong>+1 till ' + escapeHtml(leverages[0].name) + ' + +1 till ' + escapeHtml(leverages[1].name) + '</strong> → sparar ' + top2Saved + 'd (täcker hela förseningen på ' + projectFinishDelta + 'd).');
+            }
+          }
+          if (combos.length > 0) {
+            const comboHtml = '<div style="margin-top:6px;padding:8px 10px;background:rgba(255,255,255,0.06);border-radius:6px;font-size:12px;line-height:1.5"><strong style="color:#fff">Kombo-förslag:</strong><ul style="margin:4px 0 0 16px;padding:0;list-style:circle">' +
+              combos.map(c => '<li style="margin:2px 0">' + c + '</li>').join('') +
+              '</ul></div>';
+            tips.push(comboHtml);
+          }
         }
         if (tips.length > 0) {
           footerHtml += '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.08);border-radius:8px;font-size:13px;line-height:1.6">';
