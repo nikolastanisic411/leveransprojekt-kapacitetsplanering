@@ -2957,7 +2957,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.28-WEEKNUM" aria-busy="true">
+<body data-build="2026-04-29-G1.30-CONSOLIDATE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3384,7 +3384,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.28-WEEKNUM</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.30-CONSOLIDATE</span>
   </div>
 
 </div>
@@ -5402,7 +5402,8 @@
         'Flaskhals: <strong>' + bottleneck.name + '</strong>. Bemanning: ' + totalPersonal + ' pers.';
     }
     document.getElementById('banner-headline').innerHTML = bannerHeadline;
-    document.getElementById('banner-date').textContent = 'Genererad: ' + new Date().toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'});
+    const genDate = new Date();
+    document.getElementById('banner-date').textContent = 'Genererad: ' + genDate.toLocaleString('sv-SE', {dateStyle: 'short', timeStyle: 'short'}) + ' (v.' + getISOWeek(genDate) + ')';
     const hasProjektStart = state.projektStart && state.projektStart.length >= 8;
     const periodLen = monthsLeft > 0 ? '   ·   ' + monthsLeft.toFixed(1) + ' mån' : '';
     if (hasProjektStart) {
