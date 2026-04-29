@@ -2245,6 +2245,23 @@
   }
   .scen-apply-btn:hover { background: #4a0a76; transform: translateY(-1px); }
   .scen-apply-btn:focus { outline: 2px solid rgba(92, 14, 146, 0.4); outline-offset: 1px; }
+  /* G1.51: Copy-knapp i scenario-kort (outline-stil) */
+  .scen-copy-btn {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 2px 8px;
+    background: transparent;
+    color: #5C0E92;
+    border: 1px solid #5C0E92;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+  .scen-copy-btn:hover { background: #5C0E92; color: #fff; }
+  .scen-copy-btn:focus { outline: 2px solid rgba(92, 14, 146, 0.4); outline-offset: 1px; }
   .scenarios-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2985,7 +3002,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.50-SCEN-APPLY" aria-busy="true">
+<body data-build="2026-04-29-G1.51-SCEN-COPY" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3412,7 +3429,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.50-SCEN-APPLY</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.51-SCEN-COPY</span>
   </div>
 
 </div>
@@ -4308,6 +4325,7 @@
               deltaText += '. Riktat: <strong>+' + extraAtBottleneck + ' till ' + escapeHtml(bottleneckRole.role.name) + '</strong> (flaskhals)';
               // G1.50: Applicera-knapp som sätter bottleneck-bemanning direkt
               deltaText += ' <button class="scen-apply-btn" onclick="applyScenarioRecommendation(\'' + bottleneckRole.role.id + '\', ' + requiredCountAtBottleneck + ')" type="button" title="Sätt ' + bottleneckRole.role.name + ' till ' + requiredCountAtBottleneck + ' personer">Applicera</button>';
+              deltaText += ' <button class="scen-copy-btn" onclick="copyScenarioRecommendation(\'' + scen.id + '\')" type="button" title="Kopiera scenariots åtgärdstext för delning">Kopiera</button>';
             } else if (extraAtBottleneck > 0 && requiredCountAtBottleneck > (bottleneckRole.role.max || 50)) {
               deltaText += '. Riktat: <strong>över max</strong> (' + bottleneckRole.role.name + ' max=' + (bottleneckRole.role.max || 50) + ', behovet är ' + requiredCountAtBottleneck + ')';
             }
@@ -6386,6 +6404,47 @@
     updateStepProgress();
     recalc();
     showToast(role.name + ' satt till ' + cap + ' personer');
+  }
+
+  // G1.51: Kopiera scenario-rekommendation som text för delning till resursägare
+  function copyScenarioRecommendation(scenarioId) {
+    const scen = (state.scenarios || []).find(s => s.id === scenarioId);
+    if (!scen) return;
+    const active = activeRoles();
+    if (active.length === 0) { alert('Inga aktiva roller.'); return; }
+    const u = scen.unit || 'månad';
+    const unitLbl = u === 'dag' ? '/dag' : u === 'vecka' ? '/vecka' : u === 'år' ? '/år' : '/månad';
+    const effDay = Math.min(...active.map(r => roleEffectivePerDay(r)));
+    const eff = u === 'dag' ? effDay : u === 'vecka' ? effDay * 5 : u === 'år' ? effDay * 252 : effDay * 21;
+    const target = +scen.target || 0;
+    const reaches = eff >= target;
+    const roleEffs = active.map(r => ({ role: r, eff: roleEffectivePerDay(r) }));
+    const bottleneck = roleEffs.reduce((b, r) => (b === null || r.eff < b.eff) ? r : b, null);
+    const decimals = u === 'dag' ? 1 : 0;
+    let txt = 'SCENARIO — ' + scen.name + '\n';
+    txt += '═══════════════════════════════════════════\n\n';
+    txt += '  • Mål: ' + target + ' leveranser ' + unitLbl + '\n';
+    txt += '  • Nuvarande effektiv kapacitet: ' + eff.toFixed(decimals) + unitLbl + '\n';
+    txt += '  • Bedömning: ' + (reaches ? 'JA — kapaciteten räcker' : 'NEJ — saknar ' + (target - eff).toFixed(decimals) + unitLbl) + '\n';
+    if (!reaches && bottleneck && bottleneck.role.count > 0 && bottleneck.eff > 0) {
+      const perPerson = bottleneck.eff / bottleneck.role.count;
+      const targetPerDay = u === 'dag' ? target : u === 'vecka' ? target / 5 : u === 'år' ? target / 252 : target / 21;
+      const requiredCount = perPerson > 0 ? Math.ceil(targetPerDay / perPerson) : Infinity;
+      const extra = Math.max(0, requiredCount - bottleneck.role.count);
+      if (extra > 0 && isFinite(requiredCount)) {
+        txt += '\nÅTGÄRDSFÖRSLAG (riktat på flaskhalsen):\n';
+        txt += '  • Sätt ' + bottleneck.role.name + ' till ' + requiredCount + ' personer (idag ' + bottleneck.role.count + ', +' + extra + ')\n';
+        if (requiredCount > (bottleneck.role.max || 50)) {
+          txt += '  • OBS: behovet (' + requiredCount + ') överstiger rollens max (' + (bottleneck.role.max || 50) + ') — kapaciteten kan inte skalas tillräckligt med enbart denna roll.\n';
+        }
+      }
+    }
+    txt += '\nMvh\nProjektledningen';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => showToast('Scenario kopierat till urklipp')).catch(() => prompt('Kopiera följande text:', txt));
+    } else {
+      prompt('Kopiera följande text:', txt);
+    }
   }
 
   function applyAllRecommendations(applyDataStr) {
