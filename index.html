@@ -6277,10 +6277,29 @@
       html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
       html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + '</strong></div>';
       html += '<div class="ho-period">';
-      const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(omöjligt — datum passerat)</span>' : '';
+      const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
       html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + startWarn + '<br>';
       html += '<strong>Måste vara klar senast:</strong> ' + fmt(d.klarSenast);
       html += '</div>';
+      // Action-rekommendation: vad krävs för att hinna med start från idag/projektstart
+      if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
+        // Use refStart for start-date display
+        const refStartDate = projektStartDate || (new Date());
+        refStartDate.setHours(0,0,0,0);
+        const startStr = fmt(refStartDate);
+        html += '<div class="ho-action">';
+        html += '<strong>Åtgärd:</strong> Behöver <strong>' + d.requiredHeadcount + ' personer</strong> ';
+        html += '(<span style="color:#FFD6F0">+' + d.additionalNeeded + '</span> mot nuvarande ' + d.role.count + ') ';
+        html += 'som startar <strong>' + startStr + '</strong> och är klara <strong>' + fmt(d.klarSenast) + '</strong>.';
+        html += '</div>';
+      } else if (isFinite(d.requiredHeadcount) && d.requiredHeadcount === d.role.count && d.availWorkDays > 0) {
+        const refStartDate = projektStartDate || (new Date());
+        refStartDate.setHours(0,0,0,0);
+        const startStr = fmt(refStartDate);
+        html += '<div class="ho-action ok">';
+        html += '<strong>OK:</strong> ' + d.role.count + ' personer räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
+        html += '</div>';
+      }
       html += '</div>';
     });
     content.innerHTML = html;
