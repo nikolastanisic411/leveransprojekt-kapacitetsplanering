@@ -3713,8 +3713,7 @@
         }
       }
     }
-    const entry = { id, period: suggestedDate, utlagt: 0, levererat: 0, tf1: 0, tf2: 0, tf3: 0, perRole: {} };
-    state.roles.forEach(r => { entry.perRole[r.id] = 0; });
+    const entry = { id, period: suggestedDate, utlagt: 0, levererat: 0 };
     state.utfall.entries.push(entry);
     saveState();
     renderUtfallTable();
