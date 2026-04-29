@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.56-INPUT-VALID" aria-busy="true">
+<body data-build="2026-04-29-G1.57-AUDIT-FIX" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.56-INPUT-VALID</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.57-AUDIT-FIX</span>
   </div>
 
 </div>
@@ -6859,7 +6859,11 @@
         const handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
         data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
       }
-      const daysNeeded = data[i].effectiveRate > 0 ? V / data[i].effectiveRate : Infinity;
+      // G1.57: Rework-konsistens — Nätarkitekt får extra volym (samma logik som drawRolesMatrix + updateHandoverPanel)
+      const isArch_sw = /arkitekt/i.test(data[i].role.name || '');
+      const rwVol_sw = isArch_sw ? getReworkVolume() : 0;
+      const effV_sw = V + rwVol_sw;
+      const daysNeeded = data[i].effectiveRate > 0 ? effV_sw / data[i].effectiveRate : Infinity;
       data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
       data[i].overshoots = data[i].mastBorjaSenast < refStart;
     }
