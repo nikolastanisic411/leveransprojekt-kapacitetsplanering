@@ -6025,11 +6025,11 @@
     } else if (!deadline || deadline <= today) {
       statusEl.innerHTML = '<strong>Status:</strong> Sätt en framtida deadline.';
     } else if (pctToTarget >= 100) {
-      statusEl.innerHTML = '<strong style="color:#1d6e35">Status: I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st till ' + deadline.toLocaleDateString('sv-SE') + '.';
+      statusEl.innerHTML = '<strong style="color:#1d6e35">●</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st till ' + deadline.toLocaleDateString('sv-SE') + '.';
     } else if (pctToTarget >= 80) {
-      statusEl.innerHTML = '<strong style="color:#5C0E92">Status: Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Överväg att höja kapacitet på flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong>.';
+      statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Överväg att höja kapacitet på flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong>.';
     } else {
-      statusEl.innerHTML = '<strong style="color:#b8410e">Status: Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras.';
+      statusEl.innerHTML = '<strong style="color:#b8410e">●</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras.';
     }
   }
 
