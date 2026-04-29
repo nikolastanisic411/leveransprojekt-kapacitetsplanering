@@ -2391,7 +2391,7 @@
     <div class="role-name"><span class="tt" data-tip="Projektets snitt-loss-faktor. Andel av total kapacitet som levereras på första försöket. Resten är 'bomkörningar' som äter kapacitet — extenderar projektet eller skapar gap mot deadline. Multipliceras alltid ovanpå rollernas egna hitrate-värden.">Hitrate (global loss-faktor)</span>
       <span class="hint">% av total kapacitet som lyckas — appliceras ovanpå per-roll-värden</span>
     </div>
-    <input type="range" id="hitrate" min="50" max="100" value="90" step="1">
+    <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
     <div class="count" id="hitrate-v">90%</div>
     <div class="hitrate-detail" id="hitrate-detail">—</div>
   </div>
@@ -2400,7 +2400,7 @@
     <div class="role-name"><span class="tt" data-tip="Antal månader det tar innan leveranstakten är uppe i full kapacitet. Användbart vid uppstart av nya projekt — det tar tid innan team, processer och flöde stabiliseras. Sätt 0 för pågående projekt i full drift.">Rampperiod</span>
       <span class="hint">månader till full takt vid uppstart</span>
     </div>
-    <input type="range" id="rampMonths" min="0" max="12" value="0" step="1">
+    <input type="range" id="rampMonths" aria-label="Antal månaders ramp-upp" min="0" max="12" value="0" step="1">
     <div class="count" id="rampMonths-v">0 mån</div>
   </div>
 
@@ -2458,7 +2458,7 @@
       <label><span class="tt" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
         <span class="hint">buffert utöver minimum</span>
       </label>
-      <input type="range" id="margin" min="0" max="50" value="10" step="5">
+      <input type="range" id="margin" aria-label="Säkerhetsmarginal i procent" min="0" max="50" value="10" step="5">
       <div class="val" id="margin-v">10%</div>
     </div>
 
