@@ -3871,6 +3871,14 @@
       if (ha) ha.value = state.handover.archHandover ?? 5;
       if (ht) ht.value = state.handover.tekStartup ?? 10;
     }
+    if (state.typfallLedtider) {
+      const lt1 = document.getElementById('lt-tf1');
+      const lt2 = document.getElementById('lt-tf2');
+      const lt3 = document.getElementById('lt-tf3');
+      if (lt1) lt1.value = state.typfallLedtider.tf1 ?? 10;
+      if (lt2) lt2.value = state.typfallLedtider.tf2 ?? 60;
+      if (lt3) lt3.value = state.typfallLedtider.tf3 ?? 100;
+    }
     if (state.utfall && state.utfall.granularity) {
       ['dag', 'vecka', 'månad'].forEach(g => {
         const btn = document.getElementById('utfall-gran-' + g);
@@ -3907,7 +3915,21 @@
     recalc();
   }
 
-  function updateTypfallButtons() {
+  // Uppdatera labels på TF-pillar med aktuella ledtider från state
+  function updateTypfallButtonLabels() {
+    const lt = getTypfallLedtider();
+    const b1 = document.getElementById('tf-1');
+    const b2 = document.getElementById('tf-2');
+    const b3 = document.getElementById('tf-3');
+    if (b1) b1.innerHTML = 'Typfall 1<span>' + lt.tf1 + ' dagar</span>';
+    if (b2) b2.innerHTML = 'Typfall 2<span>' + lt.tf2 + ' dagar</span>';
+    if (b3) b3.innerHTML = 'Typfall 3<span>' + lt.tf3 + ' dagar</span>';
+    if (b1) b1.setAttribute('aria-label', 'Typfall 1 — ' + lt.tf1 + ' dagar ledtid');
+    if (b2) b2.setAttribute('aria-label', 'Typfall 2 — ' + lt.tf2 + ' dagar ledtid');
+    if (b3) b3.setAttribute('aria-label', 'Typfall 3 — ' + lt.tf3 + ' dagar ledtid');
+  }
+
+    function updateTypfallButtons() {
     const btn1 = document.getElementById('tf-1');
     const btn2 = document.getElementById('tf-2');
     const btn3 = document.getElementById('tf-3');
