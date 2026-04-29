@@ -6382,6 +6382,15 @@
     }
   });
 
+    // Liten intro i konsolen för dev/support
+  try {
+    if (window && window.console && console.log) {
+      console.log('%cLeveransprojekt — Kapacitetsplanering', 'color: #5C0E92; font-weight: 600; font-size: 14px');
+      console.log('Build:', document.body.dataset.build || 'unknown');
+      console.log('Local data: localStorage[' + STORAGE_KEY + ']');
+    }
+  } catch (_) {}
+
     // Tangentbordsgenväg: Ctrl/Cmd+Enter = Använd förslaget
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
