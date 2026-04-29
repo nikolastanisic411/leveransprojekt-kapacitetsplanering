@@ -2720,6 +2720,13 @@
     return n;
   }
 
+  // Formaterar tal med tusentalsavskiljare (svenska: 1 234)
+  function fmtNum(n, decimals) {
+    if (!isFinite(n)) return '—';
+    const d = (decimals === undefined) ? 0 : decimals;
+    return Number(n).toLocaleString('sv-SE', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
