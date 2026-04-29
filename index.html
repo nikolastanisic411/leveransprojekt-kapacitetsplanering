@@ -2957,7 +2957,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.27-PULSE" aria-busy="true">
+<body data-build="2026-04-29-G1.28-WEEKNUM" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3384,7 +3384,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.27-PULSE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.28-WEEKNUM</span>
   </div>
 
 </div>
@@ -6596,6 +6596,19 @@
     }, 350);
   }
 
+  // G1.28: ISO-veckonummer för svensk kontext
+  function getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+  function fmtDateWithWeek(date) {
+    if (!date || isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('sv-SE') + ' (v.' + getISOWeek(date) + ')';
+  }
+
   // G1.20: Kopiera smart-tips som plain text
   function copySmartTips() {
     const box = document.getElementById('handover-footer');
@@ -6835,12 +6848,13 @@
       footerHtml += '<br><span style="color:' + robustColor + ';font-weight:600">' + robustEmoji + ' ' + robustLabel + '</span>';
       // G1.18: Visa pillen alltid för konsekvent feedback (inkl. grön när robust)
       let pillText;
+      const deadlineLabel = fmtDateWithWeek(deadline);
       if (marginalDays > 0) {
-        pillText = '<strong>' + robustLabel + '</strong> &mdash; ' + marginalDays + ' dagars marginal till deadline ' + fmt(deadline) + '.';
+        pillText = '<strong>' + robustLabel + '</strong> &mdash; ' + marginalDays + ' dagars marginal till deadline ' + deadlineLabel + '.';
       } else if (marginalDays === 0) {
-        pillText = '<strong>Precis i tid</strong> &mdash; ingen marginal till deadline ' + fmt(deadline) + '.';
+        pillText = '<strong>Precis i tid</strong> &mdash; ingen marginal till deadline ' + deadlineLabel + '.';
       } else {
-        pillText = '<strong>Försenad ' + Math.abs(marginalDays) + ' dagar</strong> mot deadline ' + fmt(deadline) + ' &mdash; gå till Sammanfattning för åtgärdsförslag.';
+        pillText = '<strong>Försenad ' + Math.abs(marginalDays) + ' dagar</strong> mot deadline ' + deadlineLabel + ' &mdash; gå till Sammanfattning för åtgärdsförslag.';
       }
       updatePlanStatusPill({ show: true, variant: pillVariant, icon: robustEmoji, text: pillText });
       // G1.13: Stresstest — vid vilken handover-ökning eller hitrate-fall spricker planen?
