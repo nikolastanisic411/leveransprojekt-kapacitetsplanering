@@ -2647,15 +2647,22 @@
     } catch (e) { console.warn('Kunde inte ladda:', e); }
   }
 
+  // Debouncad save: skriv till localStorage max var 250ms — minskar I/O vid snabba inputs
+  let _saveDebounceTimer = null;
   function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      const ind = document.getElementById('saved-indicator');
-      ind.textContent = 'sparat';
-      ind.style.color = '#1d6e35';
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => { ind.style.color = '#c8c6bf'; }, 1500);
-    } catch (e) { console.warn('Kunde inte spara:', e); }
+    clearTimeout(_saveDebounceTimer);
+    _saveDebounceTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const ind = document.getElementById('saved-indicator');
+        if (ind) {
+          ind.textContent = 'sparat';
+          ind.style.color = '#1d6e35';
+          clearTimeout(saveTimer);
+          saveTimer = setTimeout(() => { ind.style.color = '#c8c6bf'; }, 1500);
+        }
+      } catch (e) { console.warn('Kunde inte spara:', e); }
+    }, 250);
   }
 
   function markSnapshot() {
