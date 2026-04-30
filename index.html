@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="Kapacitetsplanering för leveransprojekt — beräkna bemanning, takter och flaskhalsar för Telia Order/Nätarkitekt/Tekniker-flöden.">
+<meta name="description" content="Kapacitetsplanering för leveransprojekt — beräkna bemanning, takter och flaskhalsar för Telia Order/Nätarkitekt/Entreprenör-flöden.">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -3262,7 +3262,7 @@
     <div class="advanced-params-title">Avancerade parametrar <span class="advanced-params-hint">— synliga endast i Avancerat-läge</span></div>
 
     <div class="global-row">
-    <div class="role-name"><span class="tt" tabindex="0" data-tip="Andel leveranser som lyckas på första försöket. Resten är bomkörningar — t.ex. tekniker som åker hem utan att ha kunnat avsluta jobbet (saknar fiber, inget signalrör, kund hemma men inte avtalat tid). 90% är ett rimligt riktvärde. Per-roll-justeringar görs i Avancerat-läget.">Hitrate</span>
+    <div class="role-name"><span class="tt" tabindex="0" data-tip="Andel leveranser som lyckas på första försöket. Resten är bomkörningar — t.ex. entreprenörer som åker hem utan att ha kunnat avsluta jobbet (saknar fiber, inget signalrör, kund hemma men inte avtalat tid). 90% är ett rimligt riktvärde. Per-roll-justeringar görs i Avancerat-läget.">Hitrate</span>
       <span class="hint">andel leveranser som lyckas — speglar generell bomkörning</span>
     </div>
     <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
@@ -3464,7 +3464,7 @@
   <div class="analysis-block">
     <h3>Anteckningar &amp; beslut</h3>
     <div class="desc">Frågor att ta ställning till, beslut, ägarskap, åtgärder.</div>
-    <textarea class="constraints-textarea" id="notes" aria-label="Anteckningar och åtgärder" placeholder="t.ex. NOC måste höjas till 8/dag — ägare X, klart Y. Tekniker behöver utökas senast Z..."></textarea>
+    <textarea class="constraints-textarea" id="notes" aria-label="Anteckningar och åtgärder" placeholder="t.ex. NOC måste höjas till 8/dag — ägare X, klart Y. Entreprenör behöver utökas senast Z..."></textarea>
   </div>
 
 
@@ -3483,7 +3483,7 @@
   const defaultRoles = [
     { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true } },
     { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, handoverToNext: 15, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r3', name: 'Tekniker', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r3', name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true } },
   ];
   const defaultScenarios = [
     { id: 's1', name: 'Scenario 1', target: 0, unit: 'månad' },
@@ -3792,7 +3792,7 @@
     state.roles = [
       { id: 'r1-' + Date.now(), name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
       { id: 'r2-' + Date.now(), name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-      { id: 'r3-' + Date.now(), name: 'Tekniker', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+      { id: 'r3-' + Date.now(), name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
     ];
     saveState();
     renderRoles();
@@ -6205,10 +6205,10 @@
         const downstreamName = (roles[idx+1].name || '').toLowerCase();
         if (/order/.test(upstreamName) && /(arkitekt|nät)/.test(downstreamName)) {
           hint = 'Typiskt: 3 dgr (orderläggning + skicka vidare).';
-        } else if (/(arkitekt|nät)/.test(upstreamName) && /tekniker/.test(downstreamName)) {
-          hint = 'Typiskt: 5 dgr design-överlämning + 10 dgr tekniker-uppstart = 15 dgr.';
-        } else if (/order/.test(upstreamName) && /tekniker/.test(downstreamName)) {
-          hint = 'Typiskt: 3 dgr (direkt från order till tekniker).';
+        } else if (/(arkitekt|nät)/.test(upstreamName) && /(tekniker|entreprenör)/.test(downstreamName)) {
+          hint = 'Typiskt: 5 dgr design-överlämning + 10 dgr entreprenör-uppstart = 15 dgr.';
+        } else if (/order/.test(upstreamName) && /(tekniker|entreprenör)/.test(downstreamName)) {
+          hint = 'Typiskt: 3 dgr (direkt från order till entreprenör).';
         }
       }
       field.innerHTML =
@@ -7769,7 +7769,7 @@
     // === BACKWARD: per roll, räkna "klar senast" och "måste börja senast" ===
     // BURST-modell: Varje roll måste vara klar med sista item innan nästa roll börjar sin batch.
     // Detta speglar verkligheten där roller arbetar i faser vid stora volymer (nätarkitekter
-    // ritar klart innan tekniker börjar bygga).
+    // ritar klart innan entreprenör börjar bygga).
     // klar_N = deadline. klar_i = klar_(i+1) - V/rate_(i+1) - handover_(i→i+1)
     const h = getHandover();
     for (let i = data.length - 1; i >= 0; i--) {
@@ -7787,8 +7787,8 @@
           const downName = (downstream.role.name || '').toLowerCase();
           const thisName = (data[i].role.name || '').toLowerCase();
           if (/order/.test(thisName) && /arkitekt/.test(downName)) handoverDays = h.orderHandover;
-          else if (/order/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.orderHandover;
-          else if (/arkitekt/.test(thisName) && /tekniker/.test(downName)) handoverDays = h.archHandover + h.tekStartup;
+          else if (/order/.test(thisName) && /(tekniker|entreprenör)/.test(downName)) handoverDays = h.orderHandover;
+          else if (/arkitekt/.test(thisName) && /(tekniker|entreprenör)/.test(downName)) handoverDays = h.archHandover + h.tekStartup;
           else handoverDays = 1;
         }
         data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
