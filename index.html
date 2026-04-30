@@ -3043,7 +3043,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.79-GANTT-VIEW" aria-busy="true">
+<body data-build="2026-04-29-G1.82-PREP-PER-TF" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3472,7 +3472,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.79-GANTT-VIEW</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.82-PREP-PER-TF</span>
   </div>
 
 </div>
@@ -3481,9 +3481,9 @@
   const STORAGE_KEY = 'maxtakt-state-v7';
 
   const defaultRoles = [
-    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true } },
-    { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, handoverToNext: 15, typfalls: { tf1: false, tf2: true, tf3: true } },
-    { id: 'r3', name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true } },
+    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+    { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+    { id: 'r3', name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
   ];
   const defaultScenarios = [
     { id: 's1', name: 'Scenario 1', target: 0, unit: 'månad' },
@@ -3603,6 +3603,11 @@
             if (!r.typfalls) r.typfalls = { tf1: true, tf2: true, tf3: true };
             if (r.countMin === undefined || r.countMin === null) r.countMin = r.count;
             if (r.countMax === undefined || r.countMax === null) r.countMax = r.count;
+            // G1.82: Migrera in prepDaysPerTf — entreprenör/tekniker får 10 dgr för TF2/TF3, andra 0
+            if (!r.prepDaysPerTf) {
+              const isEntr = /(entreprenör|tekniker)/i.test(r.name || '');
+              r.prepDaysPerTf = isEntr ? { tf1: 0, tf2: 10, tf3: 10 } : { tf1: 0, tf2: 0, tf3: 0 };
+            }
           });
         }
         // G1.64: Self-heal mix-mismatch — gamla saved states kan ha leadtimeDays='mix'
@@ -3790,9 +3795,9 @@
 
   function addStandardRoles() {
     state.roles = [
-      { id: 'r1-' + Date.now(), name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
-      { id: 'r2-' + Date.now(), name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, typfalls: { tf1: false, tf2: true, tf3: true } },
-      { id: 'r3-' + Date.now(), name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, typfalls: { tf1: true, tf2: true, tf3: true } },
+      { id: 'r1-' + Date.now(), name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+      { id: 'r2-' + Date.now(), name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+      { id: 'r3-' + Date.now(), name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
     ];
     saveState();
     renderRoles();
@@ -4878,10 +4883,22 @@
 
   // G1.76: Handover-summa PER TYPFALL — filtrera roller som hanterar TFen
   // (TF1 går t.ex. inte genom Nätarkitekt, så den handovern ska inte räknas).
+  // G1.82: Inkluderar även prepDaysPerTf[tfKey] för varje roll (förprojektering per TF).
   function getHandoverSumForTypfall(tfKey) {
     const enabledRoles = (state.roles || []).filter(r => r.enabled !== false);
     const tfRoles = enabledRoles.filter(r => (r.typfalls || {tf1:true,tf2:true,tf3:true})[tfKey] !== false);
-    return tfRoles.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+    const handoverSum = tfRoles.slice(0, -1).reduce((s, r) => s + (typeof r.handoverToNext === 'number' ? r.handoverToNext : 0), 0);
+    const prepSum = tfRoles.reduce((s, r) => {
+      const prep = (r.prepDaysPerTf && typeof r.prepDaysPerTf[tfKey] === 'number') ? r.prepDaysPerTf[tfKey] : 0;
+      return s + prep;
+    }, 0);
+    return handoverSum + prepSum;
+  }
+  // G1.82: Hämta prep-dagar för en roll vid ett specifikt TF (eller alla TFs vid mix)
+  function getPrepDaysForRoleAtTypfall(role, tfKey) {
+    if (!role.prepDaysPerTf) return 0;
+    const v = role.prepDaysPerTf[tfKey];
+    return typeof v === 'number' ? v : 0;
   }
   function getTotalLedtimeForTypfall(typfall) {
     const lt = getTypfallLedtider();
@@ -6123,15 +6140,20 @@
     const el = document.getElementById('handover-summary');
     if (!el) return;
     const lt = getTypfallLedtider();
-    // G1.77: Detaljerad breakdown per TF — visa varje segment så användaren förstår var siffrorna kommer från
+    // G1.77/G1.82: Detaljerad breakdown per TF — visa varje segment inkl. prep-dagar
     const buildTfBreakdown = (tfKey, tfLedtid, tfLabel) => {
       const enabledRoles = (state.roles || []).filter(r => r.enabled !== false);
       const tfRoles = enabledRoles.filter(r => (r.typfalls || {tf1:true,tf2:true,tf3:true})[tfKey] !== false);
-      // Alla utom sista bidrar med handoverToNext
       const segments = [];
+      // Alla utom sista bidrar med handoverToNext
       tfRoles.slice(0, -1).forEach(r => {
         const ho = (typeof r.handoverToNext === 'number') ? r.handoverToNext : 0;
         if (ho > 0) segments.push({ label: escapeHtml(r.name) + '-handover', value: ho });
+      });
+      // Per-roll prep-dagar för detta TF
+      tfRoles.forEach(r => {
+        const prep = getPrepDaysForRoleAtTypfall(r, tfKey);
+        if (prep > 0) segments.push({ label: escapeHtml(r.name) + '-förprojektering', value: prep });
       });
       segments.push({ label: tfLabel + '-arbete', value: tfLedtid });
       const total = segments.reduce((s, x) => s + x.value, 0);
@@ -6160,6 +6182,8 @@
     if (!container) return;
     container.innerHTML = '';
     const roles = state.roles || [];
+    // G1.82: Header som förklarar både handover och prep-dagar
+
     roles.forEach((role, idx) => {
       const isLast = idx === roles.length - 1;
       const field = document.createElement('div');
@@ -6184,21 +6208,38 @@
           hint = 'Typiskt: 3 dgr (direkt från order till entreprenör).';
         }
       }
+      // G1.82: Per-TF prep-dagar (förprojektering)
+      const prep = role.prepDaysPerTf || { tf1: 0, tf2: 0, tf3: 0 };
+      const prepRow = '<div class="prep-row" style="grid-column:1/-1;margin-top:6px;padding-top:6px;border-top:1px dashed #E5E2EA;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11px;color:#6B5F75">' +
+        '<span style="font-weight:500" title="Förprojektering: tid rollen behöver att förbereda innan arbetet kan starta. Varierar per typfall — komplexa typfall kräver mer förberedelse.">Förprojektering:</span>' +
+        ['tf1','tf2','tf3'].map(tfKey => {
+          const tfLabel = tfKey.toUpperCase();
+          const v = (typeof prep[tfKey] === 'number') ? prep[tfKey] : 0;
+          return '<label style="display:inline-flex;align-items:center;gap:3px"><span style="color:#5C0E92;font-weight:600">' + tfLabel + '</span><input type="number" min="0" max="365" step="0.5" value="' + v + '" data-role-id="' + role.id + '" data-prep="' + tfKey + '" style="width:48px;padding:2px 4px;font-size:11px" aria-label="Förprojektering ' + tfLabel + ' för ' + escapeHtml(role.name || '') + '"><span style="opacity:0.7">d</span></label>';
+        }).join('') +
+      '</div>';
       field.innerHTML =
         '<label><span class="tt" tabindex="0" data-tip="' + escapeHtml(tipText) + '">' + labelText + '</span></label>' +
         '<input type="number" min="0" max="365" step="0.5" value="' + ho + '" data-role-id="' + role.id + '" data-handover="next" inputmode="decimal" aria-label="Handover-tid för ' + escapeHtml(role.name || '') + '"' + (isLast ? ' disabled' : '') + '>' +
         '<span class="handover-unit">dgr</span>' +
-        (hint ? '<div class="handover-hint" style="grid-column:1/-1;margin-top:4px;font-size:11px;color:#6B5F75;font-style:italic">' + hint + '</div>' : '');
+        (hint ? '<div class="handover-hint" style="grid-column:1/-1;margin-top:4px;font-size:11px;color:#6B5F75;font-style:italic">' + hint + '</div>' : '') +
+        prepRow;
       container.appendChild(field);
     });
-    // Bind input events
+    // Bind input events — handover OCH prep
     container.querySelectorAll('input[data-role-id]').forEach(inp => {
       inp.addEventListener('input', (e) => {
         const id = e.target.dataset.roleId;
         const role = state.roles.find(r => r.id === id);
         if (!role) return;
         const v = +e.target.value;
-        role.handoverToNext = isNaN(v) || v < 0 ? 0 : Math.min(365, v);
+        const cleanedV = isNaN(v) || v < 0 ? 0 : Math.min(365, v);
+        if (e.target.dataset.handover === 'next') {
+          role.handoverToNext = cleanedV;
+        } else if (e.target.dataset.prep) {
+          if (!role.prepDaysPerTf) role.prepDaysPerTf = { tf1: 0, tf2: 0, tf3: 0 };
+          role.prepDaysPerTf[e.target.dataset.prep] = cleanedV;
+        }
         saveState();
         updateHandoverSummary();
         updateApplyCtaState();
