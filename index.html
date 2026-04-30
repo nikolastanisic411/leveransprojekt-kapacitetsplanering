@@ -3835,12 +3835,6 @@
         <input type="number" class="role-hitrate-input" value="${hitrateVal}" min="0" max="100" step="1" placeholder="100" data-id="${role.id}" data-field="hitrate" title="Per-roll hitrate i procent — hur realistiskt rollen hinner sin takt. Tom = 100% (rollen hinner sin nominella takt). Den globala hitraten i parametrar-sektionen multipliceras alltid ovanpå." inputmode="numeric">
         <div class="cap" id="cap-${role.id}">—</div>
         <div class="role-tf-group">${tfPill('tf1', 'TF1')}${tfPill('tf2', 'TF2')}${tfPill('tf3', 'TF3')}</div>
-        <div class="role-spann">
-          <span class="spann-sublabel">min</span>
-          <span class="spann-sublabel">max</span>
-          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMin !== undefined && role.countMin !== null ? role.countMin : role.count}" data-id="${role.id}" data-field="countMin" title="Min antal personer (lägsta-scenario)" inputmode="numeric">
-          <input type="number" min="0" max="${role.max}" step="1" value="${role.countMax !== undefined && role.countMax !== null ? role.countMax : role.count}" data-id="${role.id}" data-field="countMax" title="Max antal personer (högsta-scenario)" inputmode="numeric">
-        </div>
         <button class="remove-btn" data-id="${role.id}" title="Ta bort roll" aria-label="Ta bort rollen ${escapeHtml(role.name)}">×</button>
       `;
       container.appendChild(row);
@@ -3882,14 +3876,7 @@
         }
         else if (field === 'takt') role.takt = +e.target.value;
         else if (field === 'unit') role.unit = e.target.value;
-        else if (field === 'countMin') {
-          const v = +e.target.value;
-          role.countMin = isNaN(v) ? role.count : Math.max(0, Math.min(role.max, v));
-        }
-        else if (field === 'countMax') {
-          const v = +e.target.value;
-          role.countMax = isNaN(v) ? role.count : Math.max(0, Math.min(role.max, v));
-        }
+
         else if (field === 'cap') {
           const v = e.target.value.trim();
           role.cap = (v === '' || +v <= 0) ? null : +v;
@@ -5337,18 +5324,8 @@
       const snittEl = document.getElementById('snitt-' + role.id);
       if (capEl) capEl.textContent = eff.toFixed(1) + ' /dag';
       if (countEl) countEl.textContent = role.count;
-      // Snitt visas bara när spannet är icke-noll
-      if (snittEl) {
-        const mn = (role.countMin === undefined || role.countMin === null) ? role.count : +role.countMin;
-        const mx = (role.countMax === undefined || role.countMax === null) ? role.count : +role.countMax;
-        if (mn !== mx) {
-          const avg = ((mn + mx) / 2);
-          snittEl.textContent = '⌀ ' + (Number.isInteger(avg) ? avg : avg.toFixed(1));
-          snittEl.style.display = '';
-        } else {
-          snittEl.style.display = 'none';
-        }
-      }
+      // G1.81: Snitt-display borttaget tillsammans med min/max-spannet
+      if (snittEl) snittEl.style.display = 'none';
     });
 
     document.getElementById('hitrate-v').textContent = state.hitrate + '%';
@@ -5408,14 +5385,10 @@
     const effDay = minEff;
     const effMonth = effDay * 21;
 
-    // Min/max-scenarier: räkna effDay/effMonth med countMin respektive countMax
-    const lowEffs = active.map(r => roleEffectivePerDayWithCount(r, r.countMin !== undefined && r.countMin !== null ? r.countMin : r.count));
-    const highEffs = active.map(r => roleEffectivePerDayWithCount(r, r.countMax !== undefined && r.countMax !== null ? r.countMax : r.count));
-    const lowEffDay = Math.min(...lowEffs);
-    const highEffDay = Math.min(...highEffs);
-    const lowEffMonth = lowEffDay * 21;
-    const highEffMonth = highEffDay * 21;
-    const hasSpread = (lowEffMonth !== effMonth) || (highEffMonth !== effMonth);
+    // G1.81: Min/max-spannet borttaget — använd effDay/effMonth genomgående
+    const lowEffMonth = effMonth;
+    const highEffMonth = effMonth;
+    const hasSpread = false;
     const hasUtfall = state.utfall && Array.isArray(state.utfall.entries) && state.utfall.entries.length > 0;
     // Snitt-bemanning aggregerat över aktiva roller (för sammanfattning / banner)
     const totalSnittPersonal = active.reduce((sum, r) => sum + roleAvgCount(r), 0);
