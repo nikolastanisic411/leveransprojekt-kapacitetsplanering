@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.77-TF-BREAKDOWN" aria-busy="true">
+<body data-build="2026-04-29-G1.78-HANDOVER-HINTS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.77-TF-BREAKDOWN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.78-HANDOVER-HINTS</span>
   </div>
 
 </div>
@@ -6184,11 +6184,25 @@
         : escapeHtml(role.name) + ' → ' + escapeHtml(roles[idx+1].name || 'nästa');
       const tipText = isLast
         ? 'Sista rollen i pipeline — ingen handover till nästa.'
-        : 'Antal dagar från att ' + (role.name || 'rollen') + ' är klar tills ' + (roles[idx+1].name || 'nästa roll') + ' tar över.';
+        : 'Antal dagar från att ' + (role.name || 'rollen') + ' är klar tills ' + (roles[idx+1].name || 'nästa roll') + ' tar över. Inkluderar både överlämningstid OCH ev. uppstart hos nästa roll om typfall-ledtiden inte täcker det.';
+      // G1.78: Hjälp-hint under fältet med konkret breakdown av vad värdet typiskt innehåller
+      let hint = '';
+      if (!isLast) {
+        const upstreamName = (role.name || '').toLowerCase();
+        const downstreamName = (roles[idx+1].name || '').toLowerCase();
+        if (/order/.test(upstreamName) && /(arkitekt|nät)/.test(downstreamName)) {
+          hint = 'Typiskt: 3 dgr (orderläggning + skicka vidare).';
+        } else if (/(arkitekt|nät)/.test(upstreamName) && /tekniker/.test(downstreamName)) {
+          hint = 'Typiskt: 5 dgr design-överlämning + 10 dgr tekniker-uppstart = 15 dgr.';
+        } else if (/order/.test(upstreamName) && /tekniker/.test(downstreamName)) {
+          hint = 'Typiskt: 3 dgr (direkt från order till tekniker).';
+        }
+      }
       field.innerHTML =
         '<label><span class="tt" tabindex="0" data-tip="' + escapeHtml(tipText) + '">' + labelText + '</span></label>' +
         '<input type="number" min="0" max="365" step="0.5" value="' + ho + '" data-role-id="' + role.id + '" data-handover="next" inputmode="decimal" aria-label="Handover-tid för ' + escapeHtml(role.name || '') + '"' + (isLast ? ' disabled' : '') + '>' +
-        '<span class="handover-unit">dgr</span>';
+        '<span class="handover-unit">dgr</span>' +
+        (hint ? '<div class="handover-hint" style="grid-column:1/-1;margin-top:4px;font-size:11px;color:#6B5F75;font-style:italic">' + hint + '</div>' : '');
       container.appendChild(field);
     });
     // Bind input events
