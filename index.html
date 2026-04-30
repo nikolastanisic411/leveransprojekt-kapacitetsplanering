@@ -3030,7 +3030,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.76-PER-TF-HANDOVER" aria-busy="true">
+<body data-build="2026-04-29-G1.77-TF-BREAKDOWN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3459,7 +3459,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.76-PER-TF-HANDOVER</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.77-TF-BREAKDOWN</span>
   </div>
 
 </div>
@@ -6137,18 +6137,25 @@
     const el = document.getElementById('handover-summary');
     if (!el) return;
     const lt = getTypfallLedtider();
-    // G1.76: Per-TF handover — TF1 räknar bara handover mellan roller som hanterar TF1 etc.
-    const ho1 = getHandoverSumForTypfall('tf1');
-    const ho2 = getHandoverSumForTypfall('tf2');
-    const ho3 = getHandoverSumForTypfall('tf3');
-    const tf1 = ho1 + lt.tf1;
-    const tf2 = ho2 + lt.tf2;
-    const tf3 = ho3 + lt.tf3;
-    let html =
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF1</span> = ' + ho1 + ' + ' + lt.tf1 + ' = <strong>' + tf1 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF2</span> = ' + ho2 + ' + ' + lt.tf2 + ' = <strong>' + tf2 + ' dgr</strong></div>' +
-        '<div><span style="color:#5C0E92;font-weight:600">TF3</span> = ' + ho3 + ' + ' + lt.tf3 + ' = <strong>' + tf3 + ' dgr</strong></div>' +
+    // G1.77: Detaljerad breakdown per TF — visa varje segment så användaren förstår var siffrorna kommer från
+    const buildTfBreakdown = (tfKey, tfLedtid, tfLabel) => {
+      const enabledRoles = (state.roles || []).filter(r => r.enabled !== false);
+      const tfRoles = enabledRoles.filter(r => (r.typfalls || {tf1:true,tf2:true,tf3:true})[tfKey] !== false);
+      // Alla utom sista bidrar med handoverToNext
+      const segments = [];
+      tfRoles.slice(0, -1).forEach(r => {
+        const ho = (typeof r.handoverToNext === 'number') ? r.handoverToNext : 0;
+        if (ho > 0) segments.push({ label: escapeHtml(r.name) + '-handover', value: ho });
+      });
+      segments.push({ label: tfLabel + '-arbete', value: tfLedtid });
+      const total = segments.reduce((s, x) => s + x.value, 0);
+      const formula = segments.map(s => s.value + ' <span style="opacity:0.7;font-size:11px">(' + s.label + ')</span>').join(' + ');
+      return '<div style="padding:8px;background:rgba(92,14,146,0.04);border-radius:6px"><div style="color:#5C0E92;font-weight:600;margin-bottom:2px">' + tfLabel + '</div><div style="font-size:12px;line-height:1.4">' + formula + ' = <strong>' + total + ' dgr</strong></div></div>';
+    };
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">' +
+        buildTfBreakdown('tf1', lt.tf1, 'TF1') +
+        buildTfBreakdown('tf2', lt.tf2, 'TF2') +
+        buildTfBreakdown('tf3', lt.tf3, 'TF3') +
       '</div>';
     const rwVol = getReworkVolume();
     const rwRate = (+state.reworkRate || 0);
