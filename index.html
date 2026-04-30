@@ -293,12 +293,25 @@
   .next-action-banner button:hover { background: #4a0a76; }
   .next-action-banner button:active { transform: scale(0.98); }
   .next-action-banner button:hover { background: #6B0FA8; }
+  /* G1.79: Gantt-schema för Detaljerad planering */
+  .gantt-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+  .gantt-svg {
+    width: 100%;
+    min-width: 720px;
+    height: auto;
+    display: block;
+  }
   @media print {
     .plan-status-pill { display: flex !important; break-inside: avoid; animation: none !important; box-shadow: none !important; position: static !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
     .plan-status-pill .psp-arrow { display: none; }
     .handover-card { break-inside: avoid; page-break-inside: avoid; }
     .handover-card .ho-role { break-inside: avoid; }
     .ho-apply-all-btn, .ho-apply-btn, .ho-copy-btn { display: none !important; }
+    .gantt-container { break-inside: avoid; page-break-inside: avoid; }
   }
   /* G1.16: Plan-status-pill — proaktiv early warning högst upp */
   .plan-status-pill {
@@ -3030,7 +3043,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.78-HANDOVER-HINTS" aria-busy="true">
+<body data-build="2026-04-29-G1.79-GANTT-VIEW" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3343,7 +3356,7 @@
   </div>
 
   <div class="chart-card">
-    <div class="chart-title">Detaljerad planering — per roll <span class="chart-subtitle">backward-schemalagt: när varje roll måste börja och vara klar för att hinna med deadline</span></div>
+    <div class="chart-title">Detaljerad planering — Gantt <span class="chart-subtitle">tidslinje för varje roll: när de måste börja och vara klara, beroenden och handovers visualiserade</span></div>
     <div id="roles-matrix"></div>
   </div>
 
@@ -3459,7 +3472,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.78-HANDOVER-HINTS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.79-GANTT-VIEW</span>
   </div>
 
 </div>
@@ -7818,26 +7831,6 @@
     flow.innerHTML = flowHtml;
     container.appendChild(flow);
 
-    // Bygg tabell
-    const tbl = document.createElement('table');
-    tbl.className = 'planning-matrix';
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-      <tr>
-        <th class="num">#</th>
-        <th>Roll</th>
-        <th class="num">Antal</th>
-        <th>Egen takt</th>
-        <th>Effektiv takt</th>
-        <th>Måste börja senast</th>
-        <th>Klar senast</th>
-        <th>Sista beställning</th>
-        <th class="timebar-cell">Tidsspann ↔ deadline</th>
-      </tr>
-    `;
-    tbl.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
     const fmt = d => d.toLocaleDateString('sv-SE');
 
     // Sista beställningsdatum för Nätarkitekt — beräknas PER SUBSET (per aktivt typfall).
@@ -7865,48 +7858,123 @@
       archLastOrderDate = archSubsetDates.reduce((earliest, x) => x.date < earliest ? x.date : earliest, archSubsetDates[0].date);
     }
 
-    data.forEach((d, i) => {
-      const tr = document.createElement('tr');
-      if (d.isBottleneck) tr.classList.add('bottleneck');
-      if (d.overshoots) tr.classList.add('overshoots');
-
-      const effLabel = d.isLimitedByUpstream
-        ? d.effectiveRate.toFixed(1) + '/dag <span class="takt-detail">(begr. uppströms)</span>'
-        : d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' <span class="takt-detail">(flaskhals)</span>' : '');
-      const barPct = isFinite(d.daysNeeded) ? Math.min(100, (d.daysNeeded / maxDays) * 100) : 0;
-
-      const isArch = (d === archRole);
-      let sistaCell;
-      if (isArch && archSubsetDates.length > 1) {
-        // Mix med flera TFs där Nätarkitekt deltar — visa alla
-        const lines = archSubsetDates.map(s =>
-          '<div style="font-size:11px;line-height:1.3"><strong>' + s.tfName + ':</strong> ' + fmt(s.date) + '</div>'
-        ).join('');
-        sistaCell = '<td class="last-order-cell">' + lines + '</td>';
-      } else if (isArch && archLastOrderDate) {
-        sistaCell = '<td class="last-order-cell">' + fmt(archLastOrderDate) + '</td>';
+    // === GANTT-SVG: visuell pipeline mellan projektstart och deadline ===
+    // Tidsaxel: tidigaste mastBorjaSenast (eller projStart om planen är tight) till deadline
+    const earliestStart = data.reduce((min, d) => d.mastBorjaSenast < min ? d.mastBorjaSenast : min, projStart);
+    const ganttStart = earliestStart < projStart ? earliestStart : projStart;
+    const ganttEnd = new Date(deadline);
+    const totalSpanMs = Math.max(1, ganttEnd.getTime() - ganttStart.getTime());
+    const today_g = new Date(); today_g.setHours(0,0,0,0);
+    
+    const archRoleSet = archRole ? archRole.role.id : null;
+    const archDateMap = {}; // roleId → siste-orderdatum-text
+    if (archRole && archSubsetDates.length > 0) {
+      if (archSubsetDates.length === 1) {
+        archDateMap[archRole.role.id] = fmt(archSubsetDates[0].date);
       } else {
-        sistaCell = '<td class="last-order-cell muted">—</td>';
+        archDateMap[archRole.role.id] = archSubsetDates.map(s => s.tfName + ': ' + fmt(s.date)).join(' · ');
       }
-      tr.innerHTML = `
-        <td class="num">${i + 1}</td>
-        <td class="role-cell">${escapeHtml(d.role.name)}${d.isBottleneck ? ' ⚑' : ''}</td>
-        <td class="num">${Math.round(V) + (d.reworkVolume > 0 ? ' + ' + d.reworkVolume + ' rework' : '')} st${d.reworkVolume > 0 ? ' <span style="color:#9a2424;font-size:10px">(+rework)</span>' : ''}${d.additionalNeeded > 0 && isFinite(d.requiredHeadcount) ? '<div style="font-size:10px;color:#9a2424;margin-top:2px;font-weight:500">→ ' + d.requiredHeadcount + ' pers behövs (+' + d.additionalNeeded + ')</div>' : ''}</td>
-        <td>${d.ownRate.toFixed(1)}/dag</td>
-        <td>${effLabel}</td>
-        <td>${fmt(d.mastBorjaSenast)}</td>
-        <td>${fmt(d.klarSenast)}</td>
-        ${sistaCell}
-        <td class="timebar-cell">
-          <div class="timebar-track" title="${Math.round(d.daysNeeded)} dagar">
-            <div class="timebar-fill" style="width: ${barPct.toFixed(1)}%;"></div>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(tr);
+    }
+    
+    const rowHeight = 56;
+    const headerHeight = 40;
+    const labelWidth = 200;
+    const padRight = 80;
+    const ganttHeight = headerHeight + data.length * rowHeight + 30;
+    const fmtShort = d => d.toLocaleDateString('sv-SE', {month: 'short', day: 'numeric'});
+    
+    let svg = '<svg class="gantt-svg" viewBox="0 0 1000 ' + ganttHeight + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gantt-schema över rollernas pipeline">';
+    const xFor = (date) => labelWidth + ((date.getTime() - ganttStart.getTime()) / totalSpanMs) * (1000 - labelWidth - padRight);
+    
+    // Tidsaxel-tickar: 5 jämnt fördelade datum
+    svg += '<g class="gantt-axis">';
+    for (let i = 0; i <= 4; i++) {
+      const t = ganttStart.getTime() + (totalSpanMs * i / 4);
+      const x = labelWidth + (i / 4) * (1000 - labelWidth - padRight);
+      const dt = new Date(t);
+      svg += '<line x1="' + x + '" y1="' + (headerHeight - 8) + '" x2="' + x + '" y2="' + (ganttHeight - 20) + '" stroke="#E5E2EA" stroke-width="0.5" stroke-dasharray="2,3"/>';
+      svg += '<text x="' + x + '" y="' + (headerHeight - 12) + '" font-size="10" fill="#6B5F75" text-anchor="middle" font-family="inherit">' + fmtShort(dt) + '</text>';
+    }
+    svg += '</g>';
+    
+    // Idag-linje (grön) om den ligger inom span
+    if (today_g >= ganttStart && today_g <= ganttEnd) {
+      const xToday = xFor(today_g);
+      svg += '<line x1="' + xToday + '" y1="' + headerHeight + '" x2="' + xToday + '" y2="' + (ganttHeight - 20) + '" stroke="#1d6e35" stroke-width="1.5" stroke-dasharray="4,3"/>';
+      svg += '<text x="' + xToday + '" y="' + (ganttHeight - 6) + '" font-size="10" fill="#1d6e35" text-anchor="middle" font-weight="600" font-family="inherit">idag</text>';
+    }
+    // Deadline-linje (röd-lila)
+    const xDeadline = xFor(ganttEnd);
+    svg += '<line x1="' + xDeadline + '" y1="' + headerHeight + '" x2="' + xDeadline + '" y2="' + (ganttHeight - 20) + '" stroke="#9a2424" stroke-width="2"/>';
+    svg += '<text x="' + xDeadline + '" y="' + (ganttHeight - 6) + '" font-size="10" fill="#9a2424" text-anchor="end" font-weight="600" font-family="inherit">deadline ' + fmt(deadline) + '</text>';
+    
+    // Rader per roll
+    data.forEach((d, i) => {
+      const yRow = headerHeight + i * rowHeight;
+      const yBar = yRow + 22;
+      const barH = 20;
+      
+      // Bakgrundsrad (zebra)
+      if (i % 2 === 0) svg += '<rect x="0" y="' + yRow + '" width="1000" height="' + rowHeight + '" fill="#FAFAFD" />';
+      
+      // Roll-label vänster
+      svg += '<text x="12" y="' + (yRow + 18) + '" font-size="13" font-weight="600" fill="#1A1A1F" font-family="inherit">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</text>';
+      const subText = (d.role.count + ' pers · ' + d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' · flaskhals' : ''));
+      svg += '<text x="12" y="' + (yRow + 36) + '" font-size="11" fill="#6B5F75" font-family="inherit">' + escapeHtml(subText) + '</text>';
+      svg += '<text x="12" y="' + (yRow + 50) + '" font-size="10" fill="#9a2424" font-family="inherit">' + (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount) ? '→ ' + d.requiredHeadcount + ' pers behövs (+' + d.additionalNeeded + ')' : (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '')) + '</text>';
+      
+      // Bar mellan mastBorjaSenast och klarSenast
+      const xStart = Math.max(labelWidth, xFor(d.mastBorjaSenast));
+      const xEnd = xFor(d.klarSenast);
+      const barW = Math.max(2, xEnd - xStart);
+      const barColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
+      const barOpacity = d.overshoots ? '0.85' : '0.75';
+      
+      // Pre-projekt-segment (om mastBorjaSenast < projStart) — streckat
+      if (d.mastBorjaSenast < projStart) {
+        const xRealStart = xFor(d.mastBorjaSenast);
+        const xRealCutoff = xFor(projStart);
+        const wPre = Math.max(0, xRealCutoff - xRealStart);
+        if (wPre > 0) {
+          svg += '<rect x="' + xRealStart + '" y="' + yBar + '" width="' + wPre + '" height="' + barH + '" fill="' + barColor + '" opacity="0.25" stroke="' + barColor + '" stroke-width="1" stroke-dasharray="3,2" rx="3"/>';
+        }
+      }
+      
+      svg += '<rect x="' + xStart + '" y="' + yBar + '" width="' + barW + '" height="' + barH + '" fill="' + barColor + '" opacity="' + barOpacity + '" rx="3">';
+      svg += '<title>' + escapeHtml(d.role.name) + ': ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ' (' + Math.round(d.daysNeeded) + ' dagar för ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st)</title>';
+      svg += '</rect>';
+      
+      // Datum-texter på/utanför baren
+      if (barW > 80) {
+        svg += '<text x="' + (xStart + 6) + '" y="' + (yBar + 14) + '" font-size="10" fill="#fff" font-weight="600" font-family="inherit">' + fmt(d.mastBorjaSenast) + '</text>';
+        svg += '<text x="' + (xEnd - 6) + '" y="' + (yBar + 14) + '" font-size="10" fill="#fff" font-weight="600" text-anchor="end" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
+      } else {
+        svg += '<text x="' + (xEnd + 4) + '" y="' + (yBar + 14) + '" font-size="10" fill="#1A1A1F" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
+      }
+      
+      // Handover-gap till nästa roll (streckad linje)
+      if (i < data.length - 1) {
+        const next = data[i+1];
+        const xNextStart = Math.max(labelWidth, xFor(next.mastBorjaSenast));
+        const yNextBar = headerHeight + (i+1) * rowHeight + 22 + barH/2;
+        svg += '<line x1="' + xEnd + '" y1="' + (yBar + barH) + '" x2="' + xNextStart + '" y2="' + yNextBar + '" stroke="#A8A5AD" stroke-width="1" stroke-dasharray="3,2"/>';
+      }
+      
+      // Sista beställning (Nätarkitekt) markerad som lila punkt
+      if (d.role.id === archRoleSet && archLastOrderDate) {
+        const xLast = xFor(archLastOrderDate);
+        if (xLast >= labelWidth && xLast <= 1000 - padRight) {
+          svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
+        }
+      }
     });
-    tbl.appendChild(tbody);
-    container.appendChild(tbl);
+    
+    svg += '</svg>';
+    
+    const ganttDiv = document.createElement('div');
+    ganttDiv.className = 'gantt-container';
+    ganttDiv.innerHTML = svg;
+    container.appendChild(ganttDiv);
 
     // Sammanfattning
     const summary = document.createElement('div');
