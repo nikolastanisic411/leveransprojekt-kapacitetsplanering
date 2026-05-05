@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.560-INSIGHT-DEEP" aria-busy="true">
+<body data-build="2026-04-29-G1.590-POLISH-DEEP" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3424,7 +3424,7 @@
     <div class="exec-charts">
       <div class="exec-chart-card">
         <div class="exec-chart-title">Måluppfyllnad</div>
-        <svg id="exec-doughnut-progress" viewBox="0 0 200 200" role="img" aria-label="Doughnut: hur stor andel av målet som nås"></svg>
+        <svg id="exec-doughnut-progress" viewBox="0 0 200 200" role="img" aria-label="Doughnut: hur stor andel av målet som nås" title="Hur stor andel av målet kan nuvarande setup leverera till deadline?"></svg>
         <div class="exec-chart-caption" id="exec-doughnut-progress-caption">—</div>
       </div>
       <div class="exec-chart-card">
@@ -3439,8 +3439,9 @@
       </div>
     </div>
 
-    <div class="exec-status" id="exec-status" role="status" aria-live="polite">—</div>
+    <div class="exec-status" id="exec-status" role="status" aria-live="polite" title="Status och rekommenderad åtgärd för att nå målet">—</div>
     <div style="text-align:right;margin-top:10px;font-size:11px"><a href="#section-handover" style="color:#5C0E92;text-decoration:none;font-weight:500">→ Se detaljerad sammanfattning per roll</a></div>
+    <div id="exec-print-date" style="display:none;text-align:right;font-size:10px;color:#888590;margin-top:8px;"></div>
     <div id="exec-slack-bar" style="display:none;margin-top:10px;padding:8px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:11px;color:#6B5F75;text-align:center;"></div>
   </div>
 
@@ -3495,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.560-INSIGHT-DEEP</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.590-POLISH-DEEP</span>
   </div>
 
 </div>
@@ -8037,7 +8038,7 @@
       if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
     flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover. Detta är en vattenfalls-modell som överlappar steg parallellt — ingen roll behöver vänta på hela batchen.">Vattenfalls-pipeline — drag för att sortera</span>';
-    flow.innerHTML = flowHtml;
+    flow.innerHTML = flowHtml; flow.setAttribute('aria-label', 'Pipeline-ordning av roller med flaskhals markerad');
     container.appendChild(flow);
 
     // Sista-beställning per Nätarkitekt-subset (samma som tidigare logik)
