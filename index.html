@@ -1855,17 +1855,18 @@
     border-radius: 10px;
   }
   .handover-card {
-    background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
-    color: #ffffff;
+    background: #ffffff;
+    color: #1A1A1F;
+    border: 0.5px solid #E5E2EA;
     border-radius: 14px;
     padding: 24px 28px;
     margin: 6px 0 24px;
-    box-shadow: 0 4px 16px rgba(92,14,146,0.18);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   .handover-card .handover-header {
-    border-bottom: 0.5px solid rgba(255,255,255,0.18);
+    border-bottom: 0.5px solid #E5E2EA;
     padding-bottom: 14px;
     margin-bottom: 18px;
   }
@@ -1878,7 +1879,7 @@
   .handover-card .handover-icon { display: none; }
   .handover-card .handover-subtitle {
     font-size: 12px;
-    color: rgba(255,255,255,0.75);
+    color: #6B5F75;
     line-height: 1.4;
   }
   .handover-card .handover-content {
@@ -1887,8 +1888,8 @@
     gap: 14px;
   }
   .handover-card .ho-role {
-    background: rgba(255,255,255,0.10);
-    border: 0.5px solid rgba(255,255,255,0.18);
+    background: #FCFAFD;
+    border: 0.5px solid #E5E2EA;
     border-radius: 10px;
     padding: 14px 16px;
   }
@@ -1914,11 +1915,11 @@
     border-color: rgba(168,230,194,0.5);
   }
   .handover-card .ho-role .ho-stat-line { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
-  .handover-card .ho-role .ho-pill { background: rgba(255,255,255,0.10); border-radius: 6px; padding: 3px 8px; font-size: 11px; }
-  .handover-card .ho-role .ho-pill strong { color: #fff; font-weight: 700; }
+  .handover-card .ho-role .ho-pill { background: #F0EDF4; border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #6B5F75; }
+  .handover-card .ho-role .ho-pill strong { color: #1A1A1F; font-weight: 600; }
   .handover-card .ho-role .ho-status-line { font-size: 12px; margin: 4px 0; line-height: 1.4; }
   .handover-card .ho-role .ho-status-line .ho-apply-btn { display: inline-block; margin-left: 6px; padding: 2px 8px; font-size: 11px; }
-  .handover-card .ho-role .ho-dates-line { display: flex; gap: 14px; font-size: 11px; opacity: 0.85; margin-top: 4px; padding-top: 6px; border-top: 0.5px solid rgba(255,255,255,0.15); }
+  .handover-card .ho-role .ho-dates-line { display: flex; gap: 14px; font-size: 11px; color: #6B5F75; margin-top: 4px; padding-top: 6px; border-top: 0.5px solid #E5E2EA; }
   .handover-card .ho-role .ho-name {
     font-size: 14px;
     font-weight: 600;
@@ -2976,10 +2977,11 @@
     transform: translateY(-1px);
   }
   .exec-kpi-primary {
-    background: linear-gradient(135deg, #5C0E92 0%, #990AE3 100%);
-    color: #ffffff;
-    border-color: #5C0E92;
-    box-shadow: 0 2px 8px rgba(92,14,146,0.20);
+    background: #ffffff;
+    color: #1A1A1F;
+    border-color: #D8C5E8;
+    border-left: 3px solid #5C0E92;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -2991,7 +2993,7 @@
     font-weight: 500;
     margin-bottom: 6px;
   }
-  .exec-kpi-primary .exec-kpi-label { color: rgba(255,255,255,0.85); }
+  .exec-kpi-primary .exec-kpi-label { color: #5C0E92; font-weight: 600; }
   .exec-kpi-value {
     font-size: 28px;
     font-weight: 500;
@@ -3071,7 +3073,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.916-TAKT-CRAV" aria-busy="true">
+<body data-build="2026-04-29-G1.917-CLEAN-7STEPS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3505,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.916-TAKT-CRAV</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.917-CLEAN-7STEPS</span>
   </div>
 
 </div>
@@ -4125,9 +4127,9 @@
 
     let html = '<table class="utfall-table"><thead><tr>';
     html += '<th>Period</th>';
-    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Antal beställningar/orders som lagts ut för leverans under perioden.">Utlagt</span></th>';
+    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Antal beställningar/orders som registrerats för leverans under perioden.">Registrerat</span></th>';
     html += '<th class="num"><span class="tt" tabindex="0" data-tip="Antal leveranser som faktiskt blev klara under perioden.">Levererat</span></th>';
-    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Hitrate = levererat / utlagt × 100. Hög = effektivt flöde, låg = mycket bomkörningar.">Hitrate</span></th>';
+    html += '<th class="num"><span class="tt" tabindex="0" data-tip="Hitrate = levererat / registrerat × 100. Hög = effektivt flöde, låg = mycket bomkörningar.">Hitrate</span></th>';
     html += '<th></th></tr></thead><tbody>';
 
     sorted.forEach(e => {
@@ -4140,7 +4142,7 @@
       html += '<td class="period-cell"><input type="date" value="' + escapeHtml(e.period || '') +
               '" data-id="' + e.id + '" data-field="period" aria-label="Period"> <span style="font-size:11px;color:#6B6770;margin-left:4px">' + escapeHtml(periodLabel) + '</span></td>';
       html += '<td class="num"><input type="number" min="0" step="1" value="' + utlagt +
-              '" data-id="' + e.id + '" data-field="utlagt" inputmode="numeric" aria-label="Utlagt"></td>';
+              '" data-id="' + e.id + '" data-field="utlagt" inputmode="numeric" aria-label="Registrerat"></td>';
       html += '<td class="num"><input type="number" min="0" step="1" value="' + levererat +
               '" data-id="' + e.id + '" data-field="levererat" inputmode="numeric" aria-label="Levererat"></td>';
       html += '<td class="num"><span class="' + hitClass + '" style="font-weight:500">' + (utlagt > 0 ? hitrate + '%' : '—') + '</span></td>';
@@ -4156,6 +4158,8 @@
         const field = ev.target.dataset.field;
         updateUtfallEntry(id, field, ev.target.value);
       });
+      // G1.919: Tab-flow utan att kräva extra musklick — markera all text vid focus
+      inp.addEventListener('focus', (ev) => { try { ev.target.select(); } catch(_) {} });
     });
 
     if (summary) {
@@ -4165,7 +4169,7 @@
       const periods = entries.length;
       const avg = periods > 0 ? (totalLevererat / periods) : 0;
       const granLabel = gran === 'dag' ? 'dag' : gran === 'månad' ? 'månad' : 'vecka';
-      let h = '<strong>' + fmtNum(totalUtlagt) + '</strong> utlagt · ';
+      let h = '<strong>' + fmtNum(totalUtlagt) + '</strong> registrerat · ';
       h += '<strong>' + fmtNum(totalLevererat) + '</strong> levererat · ';
       h += '<strong>' + (totalUtlagt > 0 ? totalHitrate + '%' : '—') + '</strong> hitrate';
       h += ' · över ' + periods + ' period' + (periods === 1 ? '' : 'er');
@@ -4248,17 +4252,8 @@
     const container = document.getElementById('scenarios-grid');
     container.innerHTML = '';
     if (!state.scenarios || state.scenarios.length === 0) {
-      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#888590;font-size:13px;background:#F8F5FB;border-radius:10px;font-style:italic">Inga scenarier lagts till än. Klicka <strong>+ Lägg till scenario</strong> för att testa olika mål-takter mot din nuvarande setup.</div>';
-      // Behåll add-card så användaren ser hur de lägger till
-      const addCard = document.createElement('div');
-      addCard.className = 'scen add-scenario';
-      addCard.textContent = '+ Lägg till scenario';
-      addCard.tabIndex = 0;
-      addCard.setAttribute('role', 'button');
-      addCard.setAttribute('aria-label', 'Lägg till scenario');
-      addCard.onclick = addScenario;
-      addCard.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addScenario(); } };
-      container.appendChild(addCard);
+      container.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:#888590;font-size:13px;background:#F8F5FB;border-radius:10px;font-style:italic">Scenarier genereras automatiskt baserat på din setup. Klicka <strong>Använd förslag</strong> i steg 3 för att skapa dem.</div>';
+      // G1.917: Auto-scenarier räcker — ingen manuell add-knapp
       return;
     }
     state.scenarios.forEach(scen => {
@@ -4288,15 +4283,8 @@
       container.appendChild(div);
     });
 
-    const addCard = document.createElement('div');
-    addCard.className = 'scen add-scenario';
-    addCard.textContent = '+ Lägg till scenario';
-    addCard.tabIndex = 0;
-    addCard.setAttribute('role', 'button');
-    addCard.setAttribute('aria-label', 'Lägg till scenario');
-    addCard.onclick = addScenario;
-    addCard.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addScenario(); } };
-    container.appendChild(addCard);
+    // G1.917: Manuell '+ Lägg till scenario' borttagen — auto-genererade räcker.
+    // Användaren kan ändra siffran direkt i auto-scenarier.
 
     container.querySelectorAll('input[data-field], select[data-field]').forEach(input => {
       const handler = (e) => {
@@ -6898,7 +6886,7 @@
     const pctToTarget = target > 0 ? Math.min(100, Math.round((projected / target) * 100)) : 0;
     {
       const ppt = document.getElementById('exec-progress-pct');
-      ppt.textContent = target > 0 ? (pctToTarget >= 100 ? '✓' : pctToTarget + '%') : '—';
+      ppt.textContent = target > 0 ? (pctToTarget >= 100 ? 'OK' : pctToTarget + '%') : '—';
       ppt.style.color = target > 0 && pctToTarget >= 100 ? '#1d6e35' : '';
     }
     document.getElementById('exec-progress-sub').textContent = target > 0
@@ -6951,7 +6939,7 @@
 
     // Doughnut: Måluppfyllnad
     const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
-    drawDoughnut('exec-doughnut-progress', projected, target || 1, progColor, target > 0 ? (pctToTarget >= 100 ? '✓ I mål' : pctToTarget + '%') : '—');
+    drawDoughnut('exec-doughnut-progress', projected, target || 1, progColor, target > 0 ? (pctToTarget >= 100 ? 'I mål' : pctToTarget + '%') : '—');
     {
       const dpc = document.getElementById('exec-doughnut-progress-caption');
       if (target > 0) {
@@ -7065,7 +7053,7 @@
           }
         }
       } catch(_) {}
-      const ejPrefix = pctToTarget < 30 ? '⛔' : '●';
+      const ejPrefix = pctToTarget < 30 ? '●' : '●';
       statusEl.innerHTML = '<strong style="color:#b8410e">' + ejPrefix + '</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet.' + ejInsight + ' <button onclick="applySuggestion()" style="margin-left:8px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer">Använd förslag</button>';
     }
   }
@@ -7628,7 +7616,7 @@
         else if (d.bufferDays >= 14) classes.push('relaxed');
       }
       const roleClass = classes.join(' ');
-      const flag = (d.overshoots ? '<span class="ho-flag warn">⚠ Hinner inte</span> ' : '') + (d.isBottleneck ? '<span class="ho-flag">⚑ Flaskhals</span>' : '');
+      const flag = (d.overshoots ? '<span class="ho-flag warn">⚠ Hinner inte</span> ' : '') + (d.isBottleneck ? '<span class="ho-flag">Flaskhals</span>' : '');
       const dailyRate = d.ownRate.toFixed(1);
       const unitDisplay = d.role.unit === 'vecka' ? '/vecka' : d.role.unit === 'månad' ? '/månad' : '/dag';
       const ownRateInUnit = d.role.unit === 'vecka' ? (d.ownRate * 5).toFixed(1) : d.role.unit === 'månad' ? (d.ownRate * 21).toFixed(1) : d.ownRate.toFixed(1);
@@ -8197,7 +8185,7 @@
         const dailyOutPipeline = d.effectiveRate;
         const role = d.role;
         const utilPct = Math.round((d.capacityUtilization || 0) * 100);
-        const isBn = d.isBottleneck ? ' <strong style="color:#5C0E92">⚑ flaskhals</strong>' : '';
+        const isBn = d.isBottleneck ? ' <strong style="color:#5C0E92">flaskhals</strong>' : '';
         sumHtml += '<tr><td style="padding:4px 8px"><strong>' + escapeHtml(role.name) + '</strong>' + isBn + '</td>';
         sumHtml += '<td style="padding:4px 8px">' + role.count + ' pers · ' + dailyOut.toFixed(2) + '/dag egen</td>';
         sumHtml += '<td style="padding:4px 8px">begränsas av pipeline till ' + dailyOutPipeline.toFixed(2) + '/dag (' + utilPct + ' %)</td>';
@@ -8241,7 +8229,7 @@
     let flowHtml = '<strong>Pipeline:</strong> ';
     data.forEach((d, i) => {
       const cls = d.isBottleneck ? 'pipeline-bottleneck' : 'pipeline-step';
-      flowHtml += '<span class="' + cls + '" title="' + escapeHtml(d.role.name) + ': ' + d.role.count + ' pers, ' + d.ownRate.toFixed(1) + '/dag (' + (d.isBottleneck ? 'flaskhals — sätter pipeline-takten' : Math.round((d.capacityUtilization||0)*100) + '% utnyttjad') + ')">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
+      flowHtml += '<span class="' + cls + '" title="' + escapeHtml(d.role.name) + ': ' + d.role.count + ' pers, ' + d.ownRate.toFixed(1) + '/dag (' + (d.isBottleneck ? 'flaskhals — sätter pipeline-takten' : Math.round((d.capacityUtilization||0)*100) + '% utnyttjad') + ')">' + escapeHtml(d.role.name) + (d.isBottleneck ? '' : '') + '</span>';
       if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
     flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover. Detta är en vattenfalls-modell som överlappar steg parallellt — ingen roll behöver vänta på hela batchen.">Vattenfalls-pipeline — drag för att sortera</span>';
@@ -8253,14 +8241,14 @@
     if (tfPlan.length > 0) {
       const tfDiv = document.createElement('div');
       tfDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:linear-gradient(135deg,#FAFAFD 0%,#F8F5FB 100%);border:0.5px solid #E5E2EA;border-radius:10px;';
-      let tfHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">📦 Leveransplan per typfall — när hinns vad?</div>';
+      let tfHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">Leveransplan per typfall — när hinns vad?</div>';
       tfHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
       tfHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Typfall</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Krav-takt</th><th style="text-align:left;padding:4px 8px">Flaskhals</th><th style="text-align:left;padding:4px 8px">Klart senast</th></tr></thead><tbody>';
       tfPlan.forEach(t => {
         const dateStr = t.finishDate ? t.finishDate.toLocaleDateString('sv-SE') : '—';
         const inTime = t.finishDate && t.finishDate <= deadline;
         const dateColor = inTime ? '#1d6e35' : '#9a2424';
-        const dateIcon = inTime ? '✓' : '⚠';
+        const dateIcon = inTime ? 'OK' : '⚠';
         const rateMonth = t.requiredPerMonth > 0 ? Math.round(t.requiredPerMonth) + '/mån' : '—';
         const rateWeek = t.requiredPerWeek > 0 ? Math.round(t.requiredPerWeek) + '/vecka' : '—';
         tfHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
@@ -8276,28 +8264,32 @@
       container.appendChild(tfDiv);
     }
 
-    // G1.913: Per-fas throughput — vad sker per månad i varje fas?
+    // G1.918: Per-fas flow-cards med visuell utnyttjande-bar och pilar
     const phases = computePhaseThroughput(active, projStart0, deadline, true);
     if (phases.length > 0) {
       const phDiv = document.createElement('div');
-      phDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
-      let phHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">⚙ Aktivitet per fas — vad pågår parallellt varje månad?</div>';
-      phHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-      phHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Fas</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Snitt/mån</th><th style="text-align:right;padding:4px 8px">Snitt/dag</th><th style="text-align:right;padding:4px 8px">Egen takt</th><th style="text-align:right;padding:4px 8px">Utnyttjande</th></tr></thead><tbody>';
-      phases.forEach(p => {
+      phDiv.style.cssText = 'margin:14px 0;padding:16px 18px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
+      let phHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:12px;color:#1A1A1F">Aktivitet per fas <span style="font-weight:400;color:#888590;font-size:11px">— månadssnitt parallellt mot deadline</span></div>';
+      phHtml += '<div style="display:flex;align-items:stretch;gap:0;flex-wrap:nowrap;overflow-x:auto">';
+      phases.forEach((p, idx) => {
         const utilPct = Math.round(p.utilization * 100);
         const utilCol = utilPct >= 80 ? '#9a2424' : (utilPct >= 50 ? '#c2570d' : '#1d6e35');
-        phHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
-        phHtml += '<td style="padding:6px 8px"><strong>' + (p.idx+1) + '. ' + escapeHtml(p.role.name) + '</strong></td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + p.roleVolume + ' st</td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">' + p.avgPerMonth.toFixed(0) + '/mån</td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:#6B5F75">' + p.avgPerDay.toFixed(1) + '/dag</td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:#6B5F75">' + p.ownPerDay.toFixed(1) + '/dag</td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:' + utilCol + '">' + utilPct + ' %</td>';
-        phHtml += '</tr>';
+        // Card för fas
+        phHtml += '<div style="flex:1;min-width:0;padding:14px 12px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;display:flex;flex-direction:column;gap:6px">';
+        phHtml += '<div style="font-size:10px;color:#888590;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">FAS ' + (p.idx+1) + '</div>';
+        phHtml += '<div style="font-size:14px;font-weight:600;color:#1A1A1F">' + escapeHtml(p.role.name) + '</div>';
+        phHtml += '<div style="display:flex;align-items:baseline;gap:4px;margin-top:4px"><span style="font-size:24px;font-weight:700;color:#5C0E92;font-variant-numeric:tabular-nums">' + p.avgPerMonth.toFixed(0) + '</span><span style="font-size:11px;color:#888590">/mån</span></div>';
+        phHtml += '<div style="font-size:11px;color:#6B5F75">' + p.avgPerDay.toFixed(1) + '/dag · ' + p.roleVolume + ' st totalt</div>';
+        // Utnyttjande-bar
+        phHtml += '<div style="margin-top:6px"><div style="display:flex;justify-content:space-between;font-size:10px;color:#6B5F75;margin-bottom:3px"><span>Utnyttjande</span><span style="color:' + utilCol + ';font-weight:600">' + utilPct + ' %</span></div>';
+        phHtml += '<div style="height:6px;background:#F0EDF4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + Math.max(2, utilPct) + '%;background:' + utilCol + '"></div></div></div>';
+        phHtml += '</div>';
+        // Pil mellan faserna
+        if (idx < phases.length - 1) {
+          phHtml += '<div style="display:flex;align-items:center;justify-content:center;width:24px;color:#A8A5AD;font-size:18px">→</div>';
+        }
       });
-      phHtml += '</tbody></table>';
-      phHtml += '<div style="margin-top:8px;font-size:11px;color:#6B5F75">Snitt/mån = rollens volym fördelad över projekttiden (parallellt med andra faser). Utnyttjande = hur mycket av rollens egen kapacitet som behövs.</div>';
+      phHtml += '</div>';
       phDiv.innerHTML = phHtml;
       container.appendChild(phDiv);
     }
@@ -8326,114 +8318,114 @@
       else archDateMap[archRole.role.id] = archSubsetDates.map(s => s.tfName + ': ' + fmt(s.date)).join(' · ');
     }
 
-    // === GANTT-SVG: visuell pipeline ===
-    // Tidsaxel går från projStart till deadline (och rymmer eventuellt overshooting start)
+    // === MILSTOLPE-TIDSLINJE per roll ===
+    // Ersätter Gantt-staplar — istället en ren tidslinje per roll med 4 milstolpar.
+    // Inget visuellt brus, ingen överlappning. Datum + volym läses direkt vid varje prick.
     const today_g = new Date(); today_g.setHours(0,0,0,0);
     const earliestVisible = data.reduce((min, d) => d.mastBorjaSenast < min ? d.mastBorjaSenast : min, projStart0);
     const ganttStart = earliestVisible < projStart0 ? earliestVisible : projStart0;
     const ganttEnd = new Date(deadline);
     const totalSpanMs = Math.max(1, ganttEnd.getTime() - ganttStart.getTime());
 
-    const rowHeight = 60;
-    const headerHeight = 44;
-    const labelWidth = 210;
-    const padRight = 90;
-    const ganttHeight = headerHeight + data.length * rowHeight + 36;
+    const rowHeight = 56;
+    const headerHeight = 36;
+    const labelWidth = 180;
+    const padRight = 60;
+    const ganttHeight = headerHeight + data.length * rowHeight + 28;
 
-    let svg = '<svg class="gantt-svg" viewBox="0 0 1000 ' + ganttHeight + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gantt-schema över rollernas pipeline">';
+    let svg = '<svg class="gantt-svg" viewBox="0 0 1000 ' + ganttHeight + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Milstolpe-tidslinje per roll">';
     const xFor = (date) => labelWidth + ((date.getTime() - ganttStart.getTime()) / totalSpanMs) * (1000 - labelWidth - padRight);
 
-    // Tidsaxel-tickar
-    svg += '<g class="gantt-axis">';
+    // Tidsaxel-tickar (5 jämnt fördelade)
+    svg += '<g>';
     for (let i = 0; i <= 4; i++) {
       const t = ganttStart.getTime() + (totalSpanMs * i / 4);
       const x = labelWidth + (i / 4) * (1000 - labelWidth - padRight);
       const dt = new Date(t);
-      svg += '<line x1="' + x + '" y1="' + (headerHeight - 8) + '" x2="' + x + '" y2="' + (ganttHeight - 26) + '" stroke="#E5E2EA" stroke-width="0.5" stroke-dasharray="2,3"/>';
-      svg += '<text x="' + x + '" y="' + (headerHeight - 12) + '" font-size="10" fill="#6B5F75" text-anchor="middle" font-family="inherit">' + fmtShort(dt) + '</text>';
+      svg += '<line x1="' + x + '" y1="' + (headerHeight - 4) + '" x2="' + x + '" y2="' + (ganttHeight - 22) + '" stroke="#F0EDF4" stroke-width="0.5"/>';
+      svg += '<text x="' + x + '" y="' + (headerHeight - 8) + '" font-size="10" fill="#888590" text-anchor="middle" font-family="inherit">' + fmtShort(dt) + '</text>';
     }
     svg += '</g>';
 
-    // Projektstart-linje (lila)
-    if (projStart0 >= ganttStart && projStart0 <= ganttEnd) {
-      const xPS = xFor(projStart0);
-      svg += '<line x1="' + xPS + '" y1="' + headerHeight + '" x2="' + xPS + '" y2="' + (ganttHeight - 26) + '" stroke="#5C0E92" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.6"/>';
-      svg += '<text x="' + xPS + '" y="' + (ganttHeight - 8) + '" font-size="10" fill="#5C0E92" text-anchor="middle" font-weight="600" font-family="inherit">projektstart</text>';
-    }
-    // Idag-linje
+    // Idag-linje (subtil grön)
     if (today_g >= ganttStart && today_g <= ganttEnd) {
       const xToday = xFor(today_g);
-      svg += '<line x1="' + xToday + '" y1="' + headerHeight + '" x2="' + xToday + '" y2="' + (ganttHeight - 26) + '" stroke="#1d6e35" stroke-width="1.5" stroke-dasharray="4,3"/>';
-      svg += '<text x="' + xToday + '" y="' + (headerHeight + 12) + '" font-size="10" fill="#1d6e35" text-anchor="middle" font-weight="600" font-family="inherit">idag</text>';
+      svg += '<line x1="' + xToday + '" y1="' + headerHeight + '" x2="' + xToday + '" y2="' + (ganttHeight - 22) + '" stroke="#1d6e35" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>';
+      svg += '<text x="' + xToday + '" y="' + (ganttHeight - 6) + '" font-size="9" fill="#1d6e35" text-anchor="middle" font-family="inherit">idag</text>';
+    }
+    // Projektstart-linje
+    if (projStart0 >= ganttStart && projStart0 <= ganttEnd) {
+      const xPS = xFor(projStart0);
+      svg += '<line x1="' + xPS + '" y1="' + headerHeight + '" x2="' + xPS + '" y2="' + (ganttHeight - 22) + '" stroke="#5C0E92" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>';
+      svg += '<text x="' + xPS + '" y="' + (ganttHeight - 6) + '" font-size="9" fill="#5C0E92" text-anchor="middle" font-family="inherit">start</text>';
     }
     // Deadline-linje
     const xDeadline = xFor(ganttEnd);
-    svg += '<line x1="' + xDeadline + '" y1="' + headerHeight + '" x2="' + xDeadline + '" y2="' + (ganttHeight - 26) + '" stroke="#9a2424" stroke-width="2"/>';
-    svg += '<text x="' + xDeadline + '" y="' + (ganttHeight - 8) + '" font-size="10" fill="#9a2424" text-anchor="end" font-weight="600" font-family="inherit">deadline ' + fmt(deadline) + '</text>';
+    svg += '<line x1="' + xDeadline + '" y1="' + headerHeight + '" x2="' + xDeadline + '" y2="' + (ganttHeight - 22) + '" stroke="#9a2424" stroke-width="1.5" opacity="0.7"/>';
+    svg += '<text x="' + xDeadline + '" y="' + (ganttHeight - 6) + '" font-size="9" fill="#9a2424" text-anchor="end" font-family="inherit">deadline</text>';
 
+    // Per roll: en horisontell linje med 4 prickar (25%, 50%, 75%, 100%)
     data.forEach((d, i) => {
       const yRow = headerHeight + i * rowHeight;
-      const yBar = yRow + 24;
-      const barH = 22;
+      const yLine = yRow + 28;
 
-      if (i % 2 === 0) svg += '<rect x="0" y="' + yRow + '" width="1000" height="' + rowHeight + '" fill="#FAFAFD" />';
+      if (i % 2 === 0) svg += '<rect x="0" y="' + yRow + '" width="1000" height="' + rowHeight + '" fill="#FCFAFD" />';
 
-      svg += '<text x="12" y="' + (yRow + 18) + '" font-size="13" font-weight="600" fill="#1A1A1F" font-family="inherit">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</text>';
-      const subText = d.role.count + ' pers · ' + d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' · flaskhals' : '');
-      svg += '<text x="12" y="' + (yRow + 36) + '" font-size="11" fill="#6B5F75" font-family="inherit">' + escapeHtml(subText) + '</text>';
-      // G1.910: Bara visa rec-badge om det är ett problem (ej buffert eller rework-info som spammar)
-      if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
-        svg += '<text x="12" y="' + (yRow + 52) + '" font-size="10" fill="#9a2424" font-family="inherit" font-weight="600">→ ' + d.requiredHeadcount + ' pers (+' + d.additionalNeeded + ')</text>';
+      // Roll-label
+      const labelText = (i+1) + '. ' + d.role.name;
+      svg += '<text x="14" y="' + (yRow + 22) + '" font-size="12" font-weight="600" fill="#1A1A1F" font-family="inherit">' + escapeHtml(labelText) + '</text>';
+      const subText = d.role.count + ' pers · ' + Math.round(d.roleVolume || d.effV || V) + ' st';
+      svg += '<text x="14" y="' + (yRow + 38) + '" font-size="10" fill="#888590" font-family="inherit">' + escapeHtml(subText) + '</text>';
+      if (d.isBottleneck) {
+        svg += '<text x="14" y="' + (yRow + 50) + '" font-size="10" fill="#5C0E92" font-weight="600" font-family="inherit">flaskhals</text>';
       }
 
-      // PLAN-BAR: mastBorjaSenast → klarSenast (vattenfall, kort om V/effectiveRate)
-      const xPlanStart = xFor(d.mastBorjaSenast);
-      const xPlanEnd = xFor(d.klarSenast);
-      const xPlanStartClamp = Math.max(labelWidth, xPlanStart);
-      const planW = Math.max(2, xPlanEnd - xPlanStartClamp);
-      const planColor = d.overshoots ? '#7a1a1a' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
+      // Tidslinje-bas (ljus grå)
+      const xLineStart = xFor(d.mastBorjaSenast);
+      const xLineEnd = xFor(d.klarSenast);
+      const xLineStartClamp = Math.max(labelWidth, xLineStart);
+      const lineColor = d.overshoots ? '#7a1a1a' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
 
       // Pre-projekt-segment (streckat) om mastBorjaSenast < projStart
       if (d.mastBorjaSenast < projStart0) {
         const xPre = xFor(d.mastBorjaSenast);
         const xPreEnd = xFor(projStart0);
-        const wPre = Math.max(0, xPreEnd - xPre);
-        if (wPre > 0) svg += '<rect x="' + xPre + '" y="' + yBar + '" width="' + wPre + '" height="' + barH + '" fill="' + planColor + '" opacity="0.18" stroke="' + planColor + '" stroke-width="1" stroke-dasharray="3,2" rx="3"><title>' + escapeHtml(d.role.name) + ' behöver tekniskt börja före projektstart för att hinna — överväg mer bemanning eller flytta deadline</title></rect>';
+        if (xPreEnd > xPre) {
+          svg += '<line x1="' + xPre + '" y1="' + yLine + '" x2="' + xPreEnd + '" y2="' + yLine + '" stroke="' + lineColor + '" stroke-width="2" stroke-dasharray="3,3" opacity="0.4"/>';
+        }
       }
 
-      svg += '<rect x="' + xPlanStartClamp + '" y="' + yBar + '" width="' + planW + '" height="' + barH + '" fill="' + planColor + '" opacity="0.78" rx="3">';
-      svg += '<title>' + escapeHtml(d.role.name) + ' (plan): ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ', ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st i takt ' + d.effectiveRate.toFixed(1) + '/dag pipeline. Egen-takt ' + d.ownRate.toFixed(1) + '/dag (' + d.role.count + ' pers).' + (d.isBottleneck && d.daysSavedPerExtra > 0 ? ' +1 person sparar ~' + d.daysSavedPerExtra + ' dgr.' : '') + '</title>';
-      svg += '</rect>';
+      // Aktiv linje (tunn, inte tjock stapel)
+      svg += '<line x1="' + xLineStartClamp + '" y1="' + yLine + '" x2="' + xLineEnd + '" y2="' + yLine + '" stroke="' + lineColor + '" stroke-width="3" opacity="0.6" stroke-linecap="round"/>';
 
-      // Datum-texter
-      if (planW > 90) {
-        svg += '<text x="' + (xPlanStartClamp + 6) + '" y="' + (yBar + 15) + '" font-size="10" fill="#fff" font-weight="600" font-family="inherit">' + fmt(d.mastBorjaSenast) + '</text>';
-        svg += '<text x="' + (xPlanEnd - 6) + '" y="' + (yBar + 15) + '" font-size="10" fill="#fff" font-weight="600" text-anchor="end" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
-      } else {
-        svg += '<text x="' + (xPlanEnd + 4) + '" y="' + (yBar + 15) + '" font-size="10" fill="#1A1A1F" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
-      }
+      // Milstolpe-prickar vid 25%, 50%, 75%, 100% av rollens volym
+      const milestones = [0.25, 0.5, 0.75, 1.0];
+      const dayMs_g = 1000 * 60 * 60 * 24;
+      const lineMs = d.klarSenast.getTime() - d.mastBorjaSenast.getTime();
+      milestones.forEach((p, mi) => {
+        const msMs = d.mastBorjaSenast.getTime() + lineMs * p;
+        const msDate = new Date(msMs);
+        const xM = xFor(msDate);
+        if (xM < labelWidth || xM > 1000 - padRight + 5) return;
+        const itemsAt = Math.round((d.roleVolume || d.effV || V) * p);
+        const isLast = (p === 1.0);
+        const r = isLast ? 6 : 4;
+        // Prick
+        svg += '<circle cx="' + xM + '" cy="' + yLine + '" r="' + r + '" fill="' + lineColor + '" stroke="#fff" stroke-width="1.5">';
+        svg += '<title>' + Math.round(p*100) + ' % klart: ' + itemsAt + ' av ' + Math.round(d.roleVolume || d.effV || V) + ' st den ' + msDate.toLocaleDateString('sv-SE') + '</title>';
+        svg += '</circle>';
+        // Datum-text under prick (bara 50% och 100% för att inte spamma)
+        if (isLast || p === 0.5) {
+          const lbl = isLast ? msDate.toLocaleDateString('sv-SE', {month:'short',day:'numeric'}) + ' · ' + itemsAt + ' st' : Math.round(p*100) + '% · ' + msDate.toLocaleDateString('sv-SE', {month:'short',day:'numeric'});
+          svg += '<text x="' + xM + '" y="' + (yLine + 16) + '" font-size="9" fill="#6B5F75" text-anchor="middle" font-family="inherit">' + lbl + '</text>';
+        }
+      });
 
-      // G1.910: Milestones-streck inne i bar borttaget — visuellt brus
-
-      // G1.910: Actual-linjen borttagen — det är för mycket visuellt brus i Gantt
-
-      // Handover-markering till nästa roll (streckad linje) — visar att överlämning sker när första item är klar, inte hela batchen
-      if (i < data.length - 1) {
-        const next = data[i+1];
-        const xNextStart = Math.max(labelWidth, xFor(next.mastBorjaSenast));
-        const yNextBar = headerHeight + (i+1) * rowHeight + 24 + 11;
-        // Kort linje från en bit in i denna bar (där första item kommer ut) ner till nästa rolls start
-        const oneItemCal = d.ownRate > 0 ? (1 / d.ownRate) * 7 / 5 : 0;
-        const xFirstOut = xFor(new Date(d.mastBorjaSenast.getTime() + oneItemCal * dayMs));
-        const xConnect = Math.min(Math.max(xPlanStartClamp + 8, xFirstOut), xPlanEnd);
-        svg += '<path d="M ' + xConnect + ' ' + (yBar + barH) + ' L ' + xConnect + ' ' + (yNextBar - 8) + ' L ' + xNextStart + ' ' + yNextBar + '" stroke="#A8A5AD" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.7"/>';
-      }
-
-      // Sista-beställning för Nätarkitekt
+      // Sista-beställning för Nätarkitekt (lila prick på linjen)
       if (archRole && d.role.id === archRole.role.id && archLastOrderDate) {
         const xLast = xFor(archLastOrderDate);
         if (xLast >= labelWidth && xLast <= 1000 - padRight) {
-          svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="5" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning för Nätarkitekt: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
+          svg += '<circle cx="' + xLast + '" cy="' + yLine + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
         }
       }
     });
@@ -8449,11 +8441,11 @@
     if (false && data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
       tactDiv.className = 'tact-timeline'; tactDiv.setAttribute('role', 'region'); tactDiv.setAttribute('aria-label', 'Taktat tidslinje per roll');
-      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>📅 Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
+      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
       data.forEach((d, i) => {
         if (!d.milestones || d.milestones.length === 0) return;
         tactHtml += '<div class="tact-role">';
-        tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' <span style="color:#5C0E92;font-weight:600">⚑ flaskhals</span>' : '');
+        tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' <span style="color:#5C0E92;font-weight:600">flaskhals</span>' : '');
         const firstItemMs2 = d.ownRate > 0 ? d.actualStart.getTime() + (1/d.ownRate) * 7/5 * 24*3600*1000 : null; const firstItemStr = firstItemMs2 ? fmt(new Date(firstItemMs2)) : '';
         tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klart ' + firstItemStr : '') + ' · pipeline ' + d.effectiveRate.toFixed(1) + '/dag' + (d.ownRate > d.effectiveRate + 0.01 ? ' (egen ' + d.ownRate.toFixed(1) + '/dag)' : '') + '</span></div>';
         tactHtml += '<ul class="tact-list" aria-label="Milestones för ' + escapeHtml(d.role.name) + '">';
