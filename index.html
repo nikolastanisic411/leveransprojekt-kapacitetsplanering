@@ -3065,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.900-100PUSHES-DELIVERED" aria-busy="true">
+<body data-build="2026-04-29-G1.901-INFEASIBLE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3497,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.900-100PUSHES-DELIVERED</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.901-INFEASIBLE</span>
   </div>
 
 </div>
@@ -5338,10 +5338,20 @@
       if (isFinite(totalToReach) && totalToReach > maxOffsetCal) { maxOffsetCal = totalToReach; maxIdx = i; }
     });
     const S1ms = deadline.getTime() - maxOffsetCal * dayMs;
+    // G1.901: Infeasible-flagga — om backward-schedule placerar S1 mer än 30 dagar före projektstart,
+    // är planen praktiskt omöjlig. Då ska verktyget INTE visa orealistiska datum från 2009 utan
+    // istället peka ut att flaskhalsen är för svag.
+    const projStartMs = projektStart.getTime();
+    const daysBeforeProjStart = Math.max(0, (projStartMs - S1ms) / dayMs);
+    const isInfeasible = daysBeforeProjStart > 30;
+    // Klampa rendering-datum för att inte visa 17-års-historik. Vi spar de "äkta" matematiska datumen
+    // men markerar planen som infeasible så vyer kan visa varning istället för datum.
     data.forEach(d => {
       const calV = d.daysNeededCal;
-      d.mastBorjaSenast = new Date(S1ms + d.startupOffsetCal * dayMs);
-      d.klarSenast = new Date(d.mastBorjaSenast.getTime() + calV * dayMs);
+      d.mastBorjaSenastRaw = new Date(S1ms + d.startupOffsetCal * dayMs);
+      d.klarSenastRaw = new Date(d.mastBorjaSenastRaw.getTime() + calV * dayMs);
+      d.mastBorjaSenast = d.mastBorjaSenastRaw;
+      d.klarSenast = d.klarSenastRaw;
     });
 
     // 5) Forward simulation från projektStart (med nuvarande bemanning)
@@ -5378,7 +5388,8 @@
       const earliestStartMs = Math.max(projektStart.getTime() + d.startupOffsetCal * dayMs, d.mastBorjaSenast.getTime());
       const availCal = Math.max(0, (d.klarSenast.getTime() - earliestStartMs) / dayMs);
       const availWork = availCal * 5 / 7;
-      const reqEffDayForOwnVolume = availWork > 0 ? d.effV / availWork : Infinity;
+      // G1.903: Om availWork är 0 (klarSenast passerat pga infeasible), fallback till globalBottleneckRate
+      const reqEffDayForOwnVolume = availWork > 0 ? d.effV / availWork : globalBottleneckRate;
 
       // Krav: rollen behöver leverera MINST pipelinens takt (globalBottleneckRate)
       // OCH rollen måste hinna sin egen volym på den tid som finns (reqEffDayForOwnVolume)
@@ -5462,6 +5473,8 @@
       totalSurplus: totalSurplus_h,
       wastedRoles: wastedRoles_h,
       bottleneckRate: globalBottleneckRate,
+      isInfeasible: isInfeasible,
+      daysBeforeProjStart: Math.round(daysBeforeProjStart),
       valid: true,
     };
   }
@@ -8065,6 +8078,51 @@
       return;
     }
     const data = sched.data;
+
+    // G1.901: Om planen är infeasible (kräver att starta långt före projektstart),
+    // visa stor varning istället för fyrkantiga 17-års-baren
+    if (sched.isInfeasible) {
+      const yrs = Math.round(sched.daysBeforeProjStart / 365 * 10) / 10;
+      const bn = data.find(d => d.isBottleneck);
+      const bnTaktTxt = bn ? bn.ownRate.toFixed(2) + '/dag (' + bn.role.name + ')' : '—';
+      const reqExtra = bn && bn.requiredHeadcount && isFinite(bn.requiredHeadcount) ? Math.max(0, bn.requiredHeadcount - bn.role.count) : 0;
+      // Beräkna hur länge projektet faktiskt skulle ta från projektstart med nuvarande takt
+      const projTakeDays = (V / Math.max(0.001, sched.bottleneckRate)) * 7 / 5;
+      const projTakeYrs = Math.round(projTakeDays / 365 * 10) / 10;
+
+      const warnDiv = document.createElement('div');
+      warnDiv.style.cssText = 'margin:8px 0;padding:18px 22px;background:linear-gradient(135deg,#FFF0F0 0%,#FFE5EB 100%);border:1px solid #9a2424;border-radius:10px;color:#5A1530;';
+      warnDiv.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:8px">⚠ Planen är inte genomförbar med nuvarande setup</div>' +
+        '<div style="font-size:13px;line-height:1.5">Pipeline-takten är <strong>' + bnTaktTxt + '</strong> — för att hinna <strong>' + Math.round(V) + ' st</strong> tar det <strong>' + Math.round(projTakeDays) + ' kalenderdagar (≈' + projTakeYrs + ' år)</strong>, men du har bara <strong>' + Math.round((deadline.getTime() - sched.projektStart.getTime()) / (1000*60*60*24)) + ' dagar</strong> till deadline.<br><br>' +
+        (bn && reqExtra > 0 ? '<strong>Lösning: höj ' + bn.role.name + ' till ' + bn.requiredHeadcount + ' personer</strong> (+' + reqExtra + ').' : '<strong>Höj flaskhalsen, minska målet eller flytta deadline framåt.</strong>') +
+        ' <button onclick="applySuggestion()" style="margin-left:6px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">Använd förslag</button>' +
+        '</div>';
+      container.appendChild(warnDiv);
+
+      // G1.902: När infeasible, hoppa över Gantt-rendering helt (den skulle bara visa orealistiska 17-års-baren)
+      // och visa istället en kompakt roll-summary
+      const summaryDiv = document.createElement('div');
+      summaryDiv.style.cssText = 'margin-top:8px;padding:12px 14px;background:#FAFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:12px;';
+      let sumHtml = '<div style="font-weight:600;margin-bottom:6px">Vad varje roll skulle hinna med nuvarande bemanning:</div><table style="width:100%;border-collapse:collapse">';
+      data.forEach(d => {
+        const dailyOut = d.ownRate;
+        const dailyOutPipeline = d.effectiveRate;
+        const role = d.role;
+        const utilPct = Math.round((d.capacityUtilization || 0) * 100);
+        const isBn = d.isBottleneck ? ' <strong style="color:#5C0E92">⚑ flaskhals</strong>' : '';
+        sumHtml += '<tr><td style="padding:4px 8px"><strong>' + escapeHtml(role.name) + '</strong>' + isBn + '</td>';
+        sumHtml += '<td style="padding:4px 8px">' + role.count + ' pers · ' + dailyOut.toFixed(2) + '/dag egen</td>';
+        sumHtml += '<td style="padding:4px 8px">begränsas av pipeline till ' + dailyOutPipeline.toFixed(2) + '/dag (' + utilPct + ' %)</td>';
+        sumHtml += '<td style="padding:4px 8px">' + (d.requiredHeadcount && isFinite(d.requiredHeadcount) ? '<strong style="color:#9a2424">behöver ' + d.requiredHeadcount + '</strong>' : '—') + '</td></tr>';
+      });
+      sumHtml += '</table>';
+      summaryDiv.innerHTML = sumHtml;
+      container.appendChild(summaryDiv);
+
+      // Returnera tidigt — INTE visa orealistisk Gantt
+      return;
+    }
+
     const dayMs = 1000 * 60 * 60 * 24;
     const fmt = d => d.toLocaleDateString('sv-SE');
     const fmtShort = d => d.toLocaleDateString('sv-SE', {month: 'short', day: 'numeric'});
@@ -8249,7 +8307,7 @@
     container.appendChild(ganttDiv);
 
     // === Taktat tidslinje (milestones per roll, datumvisade i punkt-form) ===
-    if (data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
+    if (!sched.isInfeasible && data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
       tactDiv.className = 'tact-timeline'; tactDiv.setAttribute('role', 'region'); tactDiv.setAttribute('aria-label', 'Taktat tidslinje per roll');
       let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>📅 Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
