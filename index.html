@@ -3090,7 +3090,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.925-STYRGRUPP" aria-busy="true">
+<body data-build="2026-04-29-G1.926-CAPACITY-CHECK" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3556,7 +3556,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.925-STYRGRUPP</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.926-CAPACITY-CHECK</span>
   </div>
 
 </div>
@@ -8413,16 +8413,21 @@
       tfPlan.forEach(t => {
         const dateStr = t.finishDate ? t.finishDate.toLocaleDateString('sv-SE') : '—';
         const inTime = t.finishDate && t.finishDate <= deadline;
-        const dateColor = inTime ? '#1d6e35' : '#9a2424';
-        const dateIcon = inTime ? 'OK' : '⚠';
+        // G1.926: Jämför krav-takt mot rollens FAKTISKA kapacitet (rateThisFlow × 21)
+        const flowMaxPerMonth = t.rateThisFlow * 21;
+        const overCapacity = t.requiredPerMonth > flowMaxPerMonth + 0.5;
+        const dateColor = (inTime && !overCapacity) ? '#1d6e35' : '#9a2424';
         const rateMonth = t.requiredPerMonth > 0 ? Math.round(t.requiredPerMonth) + '/mån' : '—';
         const rateWeek = t.requiredPerWeek > 0 ? Math.round(t.requiredPerWeek) + '/vecka' : '—';
-        tfHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
+        const rateColor = overCapacity ? '#9a2424' : '#1A1A1F';
+        const rateBadge = overCapacity ? ' <span style="display:inline-block;padding:1px 6px;background:#FFE5EE;color:#5A1530;border-radius:4px;font-size:10px;font-weight:700;margin-left:4px">EJ MÖJLIGT</span>' : '';
+        const rowBg = overCapacity ? ';background:#FFF5F8' : '';
+        tfHtml += '<tr style="border-top:0.5px solid #F0EDF4' + rowBg + '">';
         tfHtml += '<td style="padding:6px 8px"><strong>' + escapeHtml(t.name) + '</strong><div style="font-size:10px;color:#6B5F75;font-weight:400">via ' + t.participants.join(' → ') + '</div></td>';
         tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + t.volume + ' st</td>';
-        tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums"><strong>' + rateMonth + '</strong><div style="font-size:10px;color:#6B5F75">' + rateWeek + '</div></td>';
-        tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + escapeHtml(t.bottleneck.name) + ' (' + t.rateThisFlow.toFixed(2) + '/dag)</td>';
-        tfHtml += '<td style="padding:6px 8px;color:' + dateColor + ';font-weight:600">' + dateIcon + ' ' + dateStr + '</td>';
+        tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:' + rateColor + '"><strong>' + rateMonth + '</strong>' + rateBadge + '<div style="font-size:10px;color:#6B5F75">' + rateWeek + '</div></td>';
+        tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + escapeHtml(t.bottleneck.name) + '<div style="font-size:10px">max ' + Math.round(flowMaxPerMonth) + '/mån</div></td>';
+        tfHtml += '<td style="padding:6px 8px;color:' + dateColor + ';font-weight:600">' + dateStr + '</td>';
         tfHtml += '</tr>';
       });
       tfHtml += '</tbody></table>';
