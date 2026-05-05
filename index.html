@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.680-100PUSH-DONE" aria-busy="true">
+<body data-build="2026-04-29-G1.700-100PUSH-COMPLETE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3496,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.680-100PUSH-DONE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.700-100PUSH-COMPLETE</span>
   </div>
 
 </div>
@@ -7048,6 +7048,8 @@
     const genTs = new Date().toLocaleString('sv-SE');
     let txt = 'ÅTGÄRDSPLAN — Leveransprojektet (deadline ' + fmt(deadline) + ', ' + V + ' st)\n';
     txt += 'Genererad ' + genTs + '\n';
+    txt += 'Projektstart:  ' + fmt(refStart) + '\n';
+    if (sched_cp && sched_cp.valid && sched_cp.bottleneckRate) { txt += 'Pipeline-takt: ' + sched_cp.bottleneckRate.toFixed(1) + '/dag (' + (data.find(d => d.isBottleneck) ? data.find(d => d.isBottleneck).role.name : 'flaskhals') + ' sätter taket)\n'; }
     txt += '═══════════════════════════════════════════════════════\n\n';
     data.forEach((d, i) => {
       const reqCount = isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count;
@@ -8219,7 +8221,7 @@
     container.appendChild(ganttDiv);
 
     // === Taktat tidslinje (milestones per roll, datumvisade i punkt-form) ===
-    if (data.some(d => d.milestones && d.milestones.length > 0)) {
+    if (data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
       tactDiv.className = 'tact-timeline'; tactDiv.setAttribute('role', 'region'); tactDiv.setAttribute('aria-label', 'Taktat tidslinje per roll');
       let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>📅 Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
