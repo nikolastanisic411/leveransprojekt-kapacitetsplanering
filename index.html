@@ -1913,6 +1913,12 @@
   .handover-card .ho-role.relaxed {
     border-color: rgba(168,230,194,0.5);
   }
+  .handover-card .ho-role .ho-stat-line { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+  .handover-card .ho-role .ho-pill { background: rgba(255,255,255,0.10); border-radius: 6px; padding: 3px 8px; font-size: 11px; }
+  .handover-card .ho-role .ho-pill strong { color: #fff; font-weight: 700; }
+  .handover-card .ho-role .ho-status-line { font-size: 12px; margin: 4px 0; line-height: 1.4; }
+  .handover-card .ho-role .ho-status-line .ho-apply-btn { display: inline-block; margin-left: 6px; padding: 2px 8px; font-size: 11px; }
+  .handover-card .ho-role .ho-dates-line { display: flex; gap: 14px; font-size: 11px; opacity: 0.85; margin-top: 4px; padding-top: 6px; border-top: 0.5px solid rgba(255,255,255,0.15); }
   .handover-card .ho-role .ho-name {
     font-size: 14px;
     font-weight: 600;
@@ -3065,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.909-HITRATE-95" aria-busy="true">
+<body data-build="2026-04-29-G1.910-CLEAN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3497,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.909-HITRATE-95</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.910-CLEAN</span>
   </div>
 
 </div>
@@ -7558,104 +7564,44 @@
       if (isFinite(d.bufferDays)) ariaParts.push(d.bufferDays >= 0 ? d.bufferDays + ' dagars marginal' : Math.abs(d.bufferDays) + ' dagars försening'); if (typeof d.capacityUtilization === 'number') ariaParts.push(Math.round(d.capacityUtilization*100) + ' procent kapacitet utnyttjad');
       const ariaLabel = ariaParts.join(', ');
       html += '<div class="' + roleClass + '" role="group" aria-label="' + escapeHtml(ariaLabel) + '">';
+
+      // G1.910: Komprimerad roll-card. Bara det väsentliga: namn, status, nuvarande/förslag, knapp.
       html += '<div class="ho-name">' + (i+1) + '. ' + escapeHtml(d.role.name) + flag + '</div>';
-      // Task #29: Visa rework-tillägg explicit för Nätarkitekt
-      if (d.reworkVolume > 0) {
-        html += '<div class="ho-stat"><span>Antal att leverera</span><strong title="Total volym ' + Math.round(V) + ' + ' + d.reworkVolume + ' rework (TF1 eskaleras till Nätarkitekt — ' + (state.reworkRate || 10) + ' % av TF1-volymen)">' + Math.round(V) + ' + ' + d.reworkVolume + ' rework = <span style="color:#FFD6F0">' + (Math.round(V) + d.reworkVolume) + '</span> st</strong></div>';
+
+      // En enda kompakt info-rad: bemanning + takt + volym
+      const compactRate = ownRateInUnit + ' ' + unitDisplay;
+      const compactVolume = Math.round(d.roleVolume || d.effV || V) + ' st';
+      const utilPctC = Math.round((d.capacityUtilization || 0) * 100);
+      const utilColorC = utilPctC >= 80 ? '#A8E6C2' : (utilPctC >= 50 ? '#FFE6A0' : '#FFB8E0');
+      html += '<div class="ho-stat-line">';
+      html += '<span class="ho-pill"><strong>' + d.role.count + '</strong> pers</span>';
+      html += '<span class="ho-pill"><strong>' + compactRate + '</strong></span>';
+      html += '<span class="ho-pill"><strong>' + compactVolume + '</strong> att leverera</span>';
+      html += '<span class="ho-pill" style="color:' + utilColorC + '"><strong>' + utilPctC + '%</strong> kapacitet</span>';
+      html += '</div>';
+
+      // Status-rad: en mening
+      html += '<div class="ho-status-line">';
+      if (d.klarSenast.getTime() <= projektStartDate.getTime()) {
+        html += '<span style="color:#FFD6F0">⚠ Klar-datum redan passerat — flytta deadline eller skala flaskhalsen.</span>';
+      } else if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
+        html += '<span style="color:#FFD6F0">⚠ Behöver <strong>' + d.requiredHeadcount + ' pers</strong> (+' + d.additionalNeeded + ')</span>';
+        html += ' <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + '</button>';
+      } else if (d.surplusHeadcount && d.surplusHeadcount >= 1 && !d.isBottleneck) {
+        html += '<span style="opacity:0.85">Kan frigöra <strong>' + d.surplusHeadcount + ' pers</strong> — flaskhalsen begränsar oavsett</span>';
+        html += ' <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + '</button>';
       } else {
-        html += '<div class="ho-stat"><span>Antal att leverera</span><strong>' + Math.round(V) + ' st</strong></div>';
-      }
-      html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
-      html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + (effLowerThanOwn ? ' <span style=\'opacity:0.7;font-weight:400;font-size:10px\'>(pipeline ' + effRateInUnit + ' p.g.a. flaskhals)</span>' : '') + '</strong></div>';
-      // G1.502/G1.537: Kapacitets-utnyttjande med mini-bar
-      if (typeof d.capacityUtilization === 'number') {
-        const utilPct = Math.round(d.capacityUtilization * 100);
-        const utilColor = utilPct >= 80 ? '#A8E6C2' : (utilPct >= 50 ? '#FFE6A0' : '#FFB8E0');
-        const utilLabel = utilPct >= 80 ? '✓ fullt utnyttjad' : (utilPct >= 50 ? 'delvis utnyttjad' : '⚠ underutnyttjad');
-        const bar = '<span style=\'display:inline-block;width:60px;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;margin-left:6px;vertical-align:middle;overflow:hidden\'><span style=\'display:block;width:' + Math.max(2, utilPct) + '%;height:100%;background:' + utilColor + '\'></span></span>';
-        html += '<div class="ho-stat" title="Pipeline taktar i ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag — rollens egen kapacitet skulle räcka till ' + (d.ownRate ? d.ownRate.toFixed(1) : '?') + '/dag, men flaskhalsen begränsar till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + bar + '</strong></div>';
-      }
-      html += '<div class="ho-period">';
-      const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
-      const firstItemMs803 = (d.actualStart && d.ownRate > 0) ? d.actualStart.getTime() + (1/d.ownRate)*7/5*86400000 : null;
-      const firstItemTxt803 = firstItemMs803 ? ' <span style="opacity:0.7;font-size:11px">(första klart ' + fmt(new Date(firstItemMs803)) + ')</span>' : '';
-      html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + firstItemTxt803 + startWarn + '<br>';
-      html += '<strong>Måste vara klar senast:</strong> ' + fmt(d.klarSenast);
-      // G1.22: Buffer-rad alltid synlig per roll (G1.44: + förklarande tooltip)
-      if (d.actualFinish && isFinite(d.bufferDays)) {
-        const bufColor = d.bufferDays > 0 ? '#1A4A28' : (d.bufferDays === 0 ? '#5A3A10' : '#5A1530');
-        const bufBg = d.bufferDays > 0 ? '#E8F5EE' : (d.bufferDays === 0 ? '#FFF8E5' : '#FFE5EE');
-        const bufLabel = d.bufferDays > 0 ? d.bufferDays + ' dagars marginal' : (d.bufferDays === 0 ? 'precis i tid' : Math.abs(d.bufferDays) + ' dagars försening');
-        const bufTip = d.bufferDays >= 0
-          ? 'Med nuvarande bemanning blir rollen klar ' + fmt(d.actualFinish) + ' (' + d.bufferDays + ' dagar före klar-senast ' + fmt(d.klarSenast) + ').'
-          : 'Med nuvarande bemanning blir rollen klar ' + fmt(d.actualFinish) + ' (' + Math.abs(d.bufferDays) + ' dagar EFTER klar-senast ' + fmt(d.klarSenast) + ').';
-        html += '<br><span title="' + bufTip + '" style="display:inline-block;margin-top:4px;padding:2px 8px;background:' + bufBg + ';color:' + bufColor + ';border-radius:10px;font-size:11px;font-weight:600;cursor:help">' + bufLabel + '</span>';
+        const bufStr = (d.actualFinish && isFinite(d.bufferDays)) ? (d.bufferDays > 0 ? d.bufferDays + ' dgr marginal' : d.bufferDays === 0 ? 'precis i tid' : Math.abs(d.bufferDays) + ' dgr försening') : '';
+        html += '<span style="color:#A8E6C2">✓ OK</span> · klar ' + (d.actualFinish ? fmt(d.actualFinish) : '—') + (bufStr ? ' · ' + bufStr : '');
       }
       html += '</div>';
-      // Action-rekommendation: vad krävs för att hinna med start från idag/projektstart
-      const todayMid = new Date(); todayMid.setHours(0,0,0,0);
-      const refStartDate = projektStartDate ? new Date(projektStartDate) : new Date(todayMid);
-      refStartDate.setHours(0,0,0,0);
-      if (d.klarSenast.getTime() <= refStartDate.getTime()) {
-        // Klar-datum har passerat — bemanning räcker inte
-        html += '<div class="ho-action">';
-        html += '<strong>Åtgärd:</strong> Klar-datumet <strong>' + fmt(d.klarSenast) + '</strong> har redan passerat. ';
-        html += 'Mer bemanning räcker inte — flytta deadline eller skala upp nedströms-flaskhalsen först.';
-        html += '</div>';
-      } else if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
-        const startStr = fmt(refStartDate);
-        // Beräkna alternativ: höj per-person-takt istället för fler personer
-        const currentPerPersonRaw = (d.role.count > 0 && d.role.takt) ? +d.role.takt : 0;
-        const requiredPerPersonRaw = (d.role.count > 0) ? (currentPerPersonRaw * (d.requiredHeadcount / d.role.count)) : 0;
-        html += '<div class="ho-action">';
-        html += '<strong>Åtgärd:</strong> Behöver <strong>' + fmtPers(d.requiredHeadcount) + '</strong> ';
-        html += '(<span style="color:#FFD6F0">+' + d.additionalNeeded + '</span> mot nuvarande ' + d.role.count + ') ';
-        html += 'som startar <strong>' + startStr + '</strong> och är klara <strong>' + fmt(d.klarSenast) + '</strong>.';
-        // Alternativ: höj takt per person
-        if (currentPerPersonRaw > 0 && requiredPerPersonRaw > currentPerPersonRaw) {
-          const unitDisp = d.role.unit === 'vecka' ? '/vecka' : d.role.unit === 'månad' ? '/månad' : '/dag';
-          html += '<br><span style="opacity:0.9">Alternativ: höj takt från <strong>' + currentPerPersonRaw.toFixed(1) + unitDisp + '</strong> till <strong>' + requiredPerPersonRaw.toFixed(1) + unitDisp + '</strong> per person.</span>';
-        }
-        // Hint: om den här rollen INTE är flaskhalsen, lös flaskhalsen först
-        if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
-          const bnReq = bottleneck.requiredHeadcount && isFinite(bottleneck.requiredHeadcount) ? bottleneck.requiredHeadcount : null;
-          const bnHint = bnReq && bnReq > bottleneck.role.count ? ' (höj till ' + bnReq + ' pers, +' + (bnReq - bottleneck.role.count) + ')' : '';
-          html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong>' + bnHint + ' först — det kan eliminera detta behov.</em>';
-        }
-        // G1.302/G1.508: Hävstång både för isBottleneck och isPipelineBottleneck
-        if ((d.isBottleneck || d.isPipelineBottleneck) && d.daysSavedPerExtra > 0) {
-          html += '<br><em style="opacity:0.85">Hävstång: <strong>+1 person</strong> sparar ca <strong>' + d.daysSavedPerExtra + ' dagar</strong> på pipelinens slut.</em>';
-        }
-        // G1.9: Visa konkret konsekvens om vi INTE gör något
-        if (d.actualFinish && isFinite(d.bufferDays) && d.bufferDays < 0) {
-          html += '<br><span style="color:#FFD6F0;font-weight:600">Utan ändring: klar ' + fmt(d.actualFinish) + ' (' + Math.abs(d.bufferDays) + ' dagars försening mot klar-senast).</span>';
-        }
-        // Apply-knapp för att tillämpa rekommendationen direkt
-        html += '<button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + ' personer</button>';
-        html += '<button class="ho-copy-btn" onclick="copyRoleRecommendation(\'' + d.role.id + '\')" type="button" title="Kopiera rekommendation som text för att skicka till resursägaren">Kopiera till urklipp</button>';
-        html += '</div>';
-      } else if (isFinite(d.requiredHeadcount)) {
-        // OK — bemanning räcker. G1.503: Pipeline-utnyttjande surplus (NOC-fallet)
-        html += '<div class="ho-action ok">';
-        if (typeof d.surplusHeadcount === 'number' && d.surplusHeadcount >= 1 && !d.isBottleneck) {
-          const utilPct503 = Math.round((d.capacityUtilization || 0) * 100);
-          html += '<strong>⚠ Pipeline-flaskhalsen begränsar:</strong> rollens kapacitet används till <strong>' + utilPct503 + ' %</strong>. Du kan frigöra <strong>' + fmtPers(d.surplusHeadcount) + '</strong> utan effekt på leveransen — flaskhalsen sätter taket oavsett. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button" style="margin-left:4px">Sätt ' + d.requiredHeadcount + '</button><br>';
-        } else if (d.bufferDays >= 30 && d.role.count > Math.max(1, d.requiredHeadcount) + 1) {
-          const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
-          html += '<strong>● Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + Math.max(1, d.requiredHeadcount) + ')" type="button" style="margin-left:4px">Sätt ' + Math.max(1, d.requiredHeadcount) + '</button><br>';
-        }
-        const okLbl = d.role.count === d.requiredHeadcount ? '<strong>✓ OK – exakt rätt:</strong> ' : '<strong>✓ OK:</strong> ';
-        html += okLbl + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
-        // G1.9: Visa förväntat slutdatum + buffer-marginal
-        if (d.actualFinish && isFinite(d.bufferDays)) {
-          const buf = d.bufferDays;
-          const marginalText = buf > 0
-            ? '<span style="color:#A8E6C2;font-weight:600">' + buf + ' dagars marginal</span>'
-            : (buf === 0 ? '<span style="opacity:0.85">precis i tid</span>' : '<span style="color:#FFD6F0;font-weight:600">' + Math.abs(buf) + ' dagars försening</span>');
-          html += '<br><span style="opacity:0.9">Förväntat klart: <strong>' + fmt(d.actualFinish) + '</strong> (' + marginalText + ').</span>';
-        }
-        html += '</div>';
-      }
+
+      // Datum-mini-rad: starta + klar (inget mer)
+      html += '<div class="ho-dates-line">';
+      html += '<span>Starta: <strong>' + fmt(d.mastBorjaSenast) + '</strong></span>';
+      html += '<span>Klar: <strong>' + fmt(d.klarSenast) + '</strong></span>';
+      html += '</div>';
+
       html += '</div>';
     });
     content.innerHTML = html;
@@ -8284,9 +8230,10 @@
       svg += '<text x="12" y="' + (yRow + 18) + '" font-size="13" font-weight="600" fill="#1A1A1F" font-family="inherit">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</text>';
       const subText = d.role.count + ' pers · ' + d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' · flaskhals' : '');
       svg += '<text x="12" y="' + (yRow + 36) + '" font-size="11" fill="#6B5F75" font-family="inherit">' + escapeHtml(subText) + '</text>';
-      const recBadge = (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) ? '→ ' + d.requiredHeadcount + ' pers (+' + d.additionalNeeded + ')' : (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : (isFinite(d.bufferDays) ? (d.bufferDays >= 0 ? d.bufferDays + ' dgr marginal' : Math.abs(d.bufferDays) + ' dgr försening') : ''));
-      const recColor = d.additionalNeeded > 0 ? '#9a2424' : (d.bufferDays < 0 ? '#9a2424' : '#1d6e35');
-      svg += '<text x="12" y="' + (yRow + 52) + '" font-size="10" fill="' + recColor + '" font-family="inherit">' + escapeHtml(recBadge) + '</text>';
+      // G1.910: Bara visa rec-badge om det är ett problem (ej buffert eller rework-info som spammar)
+      if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
+        svg += '<text x="12" y="' + (yRow + 52) + '" font-size="10" fill="#9a2424" font-family="inherit" font-weight="600">→ ' + d.requiredHeadcount + ' pers (+' + d.additionalNeeded + ')</text>';
+      }
 
       // PLAN-BAR: mastBorjaSenast → klarSenast (vattenfall, kort om V/effectiveRate)
       const xPlanStart = xFor(d.mastBorjaSenast);
@@ -8315,33 +8262,9 @@
         svg += '<text x="' + (xPlanEnd + 4) + '" y="' + (yBar + 15) + '" font-size="10" fill="#1A1A1F" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
       }
 
-      // PROGRESSIONS-MARKERINGAR (milestones 25/50/75/100%) — visa i baren
-      if (d.milestones && d.milestones.length > 0 && planW > 60) {
-        d.milestones.forEach(ms => {
-          if (ms.date >= d.mastBorjaSenast && ms.date <= d.klarSenast) {
-            const xM = xFor(ms.date);
-            if (xM >= xPlanStartClamp && xM <= xPlanEnd) {
-              svg += '<line x1="' + xM + '" y1="' + yBar + '" x2="' + xM + '" y2="' + (yBar + barH) + '" stroke="#fff" stroke-width="1" opacity="0.5"/>';
-            }
-          }
-        });
-      }
+      // G1.910: Milestones-streck inne i bar borttaget — visuellt brus
 
-      // ACTUAL-LINJE (forward sim) — visa som tunn streckad linje under plan-bar OM den avviker betydligt
-      if (d.actualFinish && Math.abs(d.bufferDays) >= 3) {
-        const xAS = Math.max(labelWidth, xFor(d.actualStart));
-        const xAF = xFor(d.actualFinish);
-        const yA = yBar + barH + 4;
-        if (xAF > xAS) {
-          const aColor = d.bufferDays < 0 ? '#9a2424' : '#1d6e35';
-          svg += '<line x1="' + xAS + '" y1="' + yA + '" x2="' + Math.min(xAF, 1000 - padRight) + '" y2="' + yA + '" stroke="' + aColor + '" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.7"/>';
-          if (xAF > 1000 - padRight) {
-            svg += '<text x="' + (1000 - padRight + 2) + '" y="' + (yA + 3) + '" font-size="9" fill="' + aColor + '" font-family="inherit">→ ' + fmt(d.actualFinish) + '</text>';
-          } else {
-            svg += '<text x="' + (xAF + 2) + '" y="' + (yA + 3) + '" font-size="9" fill="' + aColor + '" font-family="inherit">faktisk slut ' + fmt(d.actualFinish) + '</text>';
-          }
-        }
-      }
+      // G1.910: Actual-linjen borttagen — det är för mycket visuellt brus i Gantt
 
       // Handover-markering till nästa roll (streckad linje) — visar att överlämning sker när första item är klar, inte hela batchen
       if (i < data.length - 1) {
@@ -8371,8 +8294,8 @@
     ganttDiv.innerHTML = svg;
     container.appendChild(ganttDiv);
 
-    // === Taktat tidslinje (milestones per roll, datumvisade i punkt-form) ===
-    if (!sched.isInfeasible && data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
+    // G1.910: Tact-timeline borttaget — redundant med Gantt
+    if (false && data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
       tactDiv.className = 'tact-timeline'; tactDiv.setAttribute('role', 'region'); tactDiv.setAttribute('aria-label', 'Taktat tidslinje per roll');
       let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>📅 Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
