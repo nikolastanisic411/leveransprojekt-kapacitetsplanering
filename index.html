@@ -3065,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.901-INFEASIBLE" aria-busy="true">
+<body data-build="2026-04-29-G1.906-TIME-BOTTLENECK" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3497,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.901-INFEASIBLE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.906-TIME-BOTTLENECK</span>
   </div>
 
 </div>
@@ -5693,14 +5693,23 @@
 
     // Med per-roll hitrate: flaskhalsen är rollen med lägsta EFFEKTIVA takt (kap × hitrate),
     // inte den med lägsta råa kapacitet — eftersom 5/dag × 60% < 4/dag × 90%.
-    const caps = active.map(r => ({
-      id: r.id, name: r.name,
-      raw: roleCapPerDay(r),
-      eff: roleEffectivePessimistic(r),
-      hitrate: roleHitrate(r),
-    }));
-    const minEff = Math.min(...caps.map(c => c.eff));
-    const bottleneck = caps.find(c => c.eff === minEff);
+    // G1.905: Flerflödes-flaskhals = roll med längst TID (volym/takt), ej lägst takt
+    const caps = active.map(r => {
+      const eff = roleEffectivePessimistic(r);
+      let roleVol = +state.onskadVolym || 0;
+      if (r.typfalls && typeof r.typfalls === 'object') {
+        const subs = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
+        if (subs.length > 0) {
+          roleVol = 0;
+          subs.forEach(s => { if (r.typfalls[s.tf]) roleVol += s.volume; });
+        }
+      }
+      const timeNeededDays = (eff > 0) ? roleVol / eff : Infinity;
+      return { id: r.id, name: r.name, raw: roleCapPerDay(r), eff, hitrate: roleHitrate(r), roleVol, timeNeededDays };
+    });
+    const maxTime = Math.max(...caps.map(c => isFinite(c.timeNeededDays) ? c.timeNeededDays : 0));
+    const bottleneck = caps.find(c => c.timeNeededDays === maxTime && isFinite(c.timeNeededDays)) || caps[0];
+    const minEff = bottleneck.eff;
     // Behåll minCap-variabeln för bakåtkompatibilitet — men det är nu effektiv-min
     const minCap = bottleneck.raw;
 
@@ -6777,7 +6786,22 @@
     // G1.60/G1.61/G1.69: Pessimistisk takt — rework × actual-vs-plan-faktor när utfall finns
     const minEffDay = active.length > 0 ? Math.min(...active.map(roleEffectivePessimistic)) : 0;
     const monthlyRate = minEffDay * 21;
-    const bottleneck = active.length > 0 ? active.reduce((b, r) => roleEffectivePessimistic(r) < roleEffectivePessimistic(b) ? r : b) : null;
+    // G1.906: Tids-baserad flaskhals (volym/takt), inte takt-baserad
+    let bottleneck = null;
+    if (active.length > 0) {
+      const subs_e = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
+      let maxT = -1;
+      active.forEach(r => {
+        const eff = roleEffectivePessimistic(r);
+        let vol = +state.onskadVolym || 0;
+        if (r.typfalls && typeof r.typfalls === 'object' && subs_e.length > 0) {
+          vol = 0; subs_e.forEach(s => { if (r.typfalls[s.tf]) vol += s.volume; });
+        }
+        const t = (eff > 0) ? vol / eff : Infinity;
+        if (isFinite(t) && t > maxT) { maxT = t; bottleneck = r; }
+      });
+      if (!bottleneck) bottleneck = active[0];
+    }
     
     // Beräkna projected volume mot deadline
     const today = new Date();
