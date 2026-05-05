@@ -3071,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.914-CONSISTENT" aria-busy="true">
+<body data-build="2026-04-29-G1.915-NO-JARGON" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.914-CONSISTENT</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.915-NO-JARGON</span>
   </div>
 
 </div>
@@ -5950,39 +5950,13 @@
     } else if (effMonth <= 0) {
       timeline.innerHTML = '<strong>Ingen takt.</strong> Höj kapaciteten i någon roll.';
     } else {
-      const lastStartDate = new Date(deadline);
-      lastStartDate.setDate(lastStartDate.getDate() - effLeadtimeDays * (7/5));
-      let typfallStr;
-      if (state.leadtimeDays === 'mix') {
-        typfallStr = 'Blandat (viktad ledtid ' + effLeadtimeDays.toFixed(1) + ' dagar)';
-      } else {
-        typfallStr = 'Typfall ' + (state.leadtimeDays === 10 ? '1' : state.leadtimeDays === 60 ? '2' : '3') +
-                     ' (' + state.leadtimeDays + ' arbetsdagar)';
-      }
-      // Projektstart-info — bara om relevant
-      let startInfo = '';
-      if (projektStartSet) {
-        if (startDelayMonths > 0) {
-          startInfo = ' Projektstart ' + projektStartDate.toLocaleDateString('sv-SE') +
-            ' (' + startDelayMonths.toFixed(1) + ' mån framåt).';
-          if (effectiveRamp > 0) {
-            startInfo += ' Full takt ' + (startDelayMonths + effectiveRamp).toFixed(1) +
-              ' mån från idag (' + effectiveRamp.toFixed(1) + ' mån ramp).';
-          }
-        } else if (elapsedFromStart > 0) {
-          startInfo = ' Projektstart ' + projektStartDate.toLocaleDateString('sv-SE') +
-            ' (' + elapsedFromStart.toFixed(1) + ' mån sedan).';
-          if (effectiveRamp > 0 && elapsedFromStart < effectiveRamp) {
-            startInfo += ' Full takt om ' + (effectiveRamp - elapsedFromStart).toFixed(1) + ' mån.';
-          }
-        }
-      } else if (effectiveRamp > 0) {
-        startInfo = ' Full takt om ' + effectiveRamp.toFixed(1) + ' mån (ramp från idag).';
-      }
-      timeline.innerHTML = '<strong>' + Math.round(potentialVolym) + ' st</strong> kan levereras till ' +
-        deadline.toLocaleDateString('sv-SE') + ' med nuvarande takt (' + Math.round(effMonth) + '/mån). ' +
-        'Sista startdag (' + typfallStr + '): <strong>' + lastStartDate.toLocaleDateString('sv-SE') + '</strong>. ' +
-        'Flaskhals: ' + bottleneck.name + '.' + startInfo;
+      // G1.915: Förenklat — bara det användaren behöver veta
+      const goalTxt = state.onskadVolym > 0
+        ? (potentialVolym >= state.onskadVolym
+            ? '<strong style="color:#1d6e35">✓ Når målet</strong> — ' + Math.round(potentialVolym) + ' st kan levereras till ' + deadline.toLocaleDateString('sv-SE') + ' (' + Math.round(potentialVolym - state.onskadVolym) + ' st marginal).'
+            : '<strong style="color:#9a2424">⚠ Når inte målet</strong> — ' + Math.round(potentialVolym) + ' st kan levereras till ' + deadline.toLocaleDateString('sv-SE') + ' (saknar ' + Math.round(state.onskadVolym - potentialVolym) + ' st).')
+        : '<strong>' + Math.round(potentialVolym) + ' st</strong> kan levereras till ' + deadline.toLocaleDateString('sv-SE') + '.';
+      timeline.innerHTML = goalTxt;
     }
 
     const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
