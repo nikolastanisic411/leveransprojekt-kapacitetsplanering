@@ -6836,9 +6836,32 @@
       } catch (_) {}
       statusEl.innerHTML = '<strong style="color:#1d6e35">●</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st mellan <strong>' + startStr + '</strong> och <strong>' + deadline.toLocaleDateString('sv-SE') + '</strong>.' + extraInsight504;
     } else if (pctToTarget >= 80) {
-      statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Höj <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> i steg 4 — flaskhalsen sätter taket på hela kedjan.';
+      // G1.506: Nära mål - tillagt insikt om hur mycket flaskhalsen behöver höjas
+      let nearInsight = '';
+      try {
+        const sched_n = computePipelineSchedule({ active, V: target, deadline, projektStart: projektStartDate, usePessimistic: true });
+        if (sched_n.valid && bottleneck) {
+          const bnData = sched_n.data.find(d => d.role.id === bottleneck.id);
+          if (bnData && bnData.requiredHeadcount > bnData.role.count) {
+            nearInsight = ' Höj till <strong>' + bnData.requiredHeadcount + ' personer</strong> (+' + (bnData.requiredHeadcount - bnData.role.count) + ').';
+          }
+        }
+      } catch(_) {}
+      statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> sätter taket.' + nearInsight + ' <button onclick="applySuggestion()" style="margin-left:8px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer">Använd förslag</button>';
     } else {
-      statusEl.innerHTML = '<strong style="color:#b8410e">●</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras. <button onclick="applySuggestion()" style="margin-left:8px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer">Använd förslag</button>';
+      // G1.507: Ej i mål - visa exakt antal extra personer som behövs på flaskhalsen
+      let ejInsight = '';
+      try {
+        const sched_e = computePipelineSchedule({ active, V: target, deadline, projektStart: projektStartDate, usePessimistic: true });
+        if (sched_e.valid && bottleneck) {
+          const bnData = sched_e.data.find(d => d.role.id === bottleneck.id);
+          if (bnData && bnData.requiredHeadcount > bnData.role.count) {
+            const extra = bnData.requiredHeadcount - bnData.role.count;
+            ejInsight = ' Behöver <strong>+' + extra + ' personer</strong> på <strong>' + bottleneck.name + '</strong>.';
+          }
+        }
+      } catch(_) {}
+      statusEl.innerHTML = '<strong style="color:#b8410e">●</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet.' + ejInsight + ' <button onclick="applySuggestion()" style="margin-left:8px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer">Använd förslag</button>';
     }
   }
 
