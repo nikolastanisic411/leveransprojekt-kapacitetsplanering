@@ -5271,17 +5271,19 @@
       return { data: [], projektStart, deadline, V, valid: false };
     }
 
-    // 1) Effektiv takt per roll (egen + kumulativ pipeline-takt)
+    // 1) Effektiv takt per roll
     //    ownRate = takt × hitrate (samt rework-faktor om pessimistic)
+    //    G1.904: effectiveRate = ownRate (NOT cumulative min). I flerflödes-pipeline
+    //    ska en roll inte begränsas av roller på andra TF-flöden. T.ex. Entreprenör
+    //    som hanterar TF1 ska inte påverkas av Nätarkitekt som bara hanterar TF2.
+    //    Pipeline-tid = max över alla roller av (volume/ownRate + uppstart).
     const rateOf = (r) => usePessimistic ? roleEffectivePerDayWithRework(r) * getActualVsPlanFactor() : roleEffectivePerDay(r);
-    let cumMin = Infinity;
     const data = active.map((role, idx) => {
       const own = rateOf(role);
-      cumMin = Math.min(cumMin, own);
       return {
         role, idx,
         ownRate: own,
-        effectiveRate: cumMin,
+        effectiveRate: own, // = ownRate, ej cumMin (G1.904)
         isBottleneck: false,
         // fyll på senare:
         startupOffsetCal: 0,
@@ -5299,6 +5301,11 @@
         milestones: [],
       };
     });
+    // G1.904: Bottleneck är rollen med LÄNGSTA tid (volume_i / ownRate_i), inte längst takt.
+    // Detta är meningsfullt i flerflödes-pipeline där låg-volym-roller med låg takt
+    // ändå inte är pipeline-flaskhalsen om annan roll har mer volym × långsammare.
+    // Vi sätter bottleneck-flaggan SENARE när vi har volume per roll (efter steg 3).
+    // Provisorisk: lägsta ownRate som platshållare; uppdateras nedan.
     const minOwn = Math.min(...data.map(d => d.ownRate));
     data.forEach(d => { d.isBottleneck = Math.abs(d.ownRate - minOwn) < 1e-9; });
 
@@ -5316,11 +5323,31 @@
       d.startupOffsetCal = off;
     });
 
-    // 3) Effektiv volym per roll (Nätarkitekt får extra rework-volym)
+    // 3) Effektiv volym per roll — KORREKT typfall-medveten beräkning.
+    //    En roll bearbetar bara items från TF där role.typfalls[tf] === true.
+    //    Ex: Nätarkitekt med typfalls.tf1=false hanterar bara TF2+TF3-volymen, inte hela V.
+    //    Detta är kritiskt: utan detta tror modellen att alla roller bär hela V vilket
+    //    gör att lågfrekventa flaskhalsar (Nätark) verkar långsammare än de är.
+    const subsets_g904 = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
+    function getRoleVolume_g904(role) {
+      // Om typfalls saknas eller TFs ej satta, fallback till hela V (bakåtkompatibilitet)
+      if (!role.typfalls || typeof role.typfalls !== 'object') return V;
+      // Mix-läge: summera bara TFs som rollen deltar i
+      if (subsets_g904.length > 0) {
+        let vol = 0;
+        subsets_g904.forEach(s => {
+          if (role.typfalls[s.tf]) vol += s.volume;
+        });
+        return vol;
+      }
+      // Fallback (legacy/non-mix): hela V
+      return V;
+    }
     data.forEach(d => {
       const isArch = /arkitekt/i.test(d.role.name || '');
       d.reworkVolume = isArch ? getReworkVolume() : 0;
-      d.effV = V + d.reworkVolume;
+      d.roleVolume = getRoleVolume_g904(d.role);
+      d.effV = d.roleVolume + d.reworkVolume;
     });
 
     // 4) Backward schedule
@@ -5382,34 +5409,48 @@
     //    requiredEffDayToMatchPipeline = globalBottleneckRate (= minOwn över alla roller)
     //    requiredHeadcount = ceil(requiredEffDayToMatchPipeline / perPersonEffDay)
     //    OBS: Om rollen själv är flaskhalsen, måste den minst hinna effV på sin egen tid → använd då högre värdet.
-    const globalBottleneckRate = Math.min(...data.map(d => d.ownRate));
+    // G1.904: requiredHeadcount baseras på rollens egen volym × dess egen tid till deadline.
+    //    "Kan rollen hinna sin egen del av jobbet på den tid som finns?"
+    //    availCal = från max(projektStart + uppstart_i, idag) till deadline (rollens absolut sista möjlighet)
+    //    När planen är infeasible blir detta fortfarande meningsfull rekommendation
+    //    (= "hur många behövs för att hinna roleVolume på den givna tiden från projektstart").
+    const today_g904 = new Date(); today_g904.setHours(0,0,0,0);
+    // "Effektiv flaskhals-takt" baserat på vilka roller som har LÄNGSTA tid (volym/takt).
+    // Det är pipeline-output-takten — flaskhalsen i flerflödes-bemärkelse.
+    let bottleneckTimeRole = data[0];
+    let bottleneckTimeDays = 0;
     data.forEach(d => {
-      // Tillgänglig tid = från earliestStart till klarSenast
-      const earliestStartMs = Math.max(projektStart.getTime() + d.startupOffsetCal * dayMs, d.mastBorjaSenast.getTime());
-      const availCal = Math.max(0, (d.klarSenast.getTime() - earliestStartMs) / dayMs);
-      const availWork = availCal * 5 / 7;
-      // G1.903: Om availWork är 0 (klarSenast passerat pga infeasible), fallback till globalBottleneckRate
-      const reqEffDayForOwnVolume = availWork > 0 ? d.effV / availWork : globalBottleneckRate;
+      const t = (d.ownRate > 0) ? (d.effV / d.ownRate) : Infinity;
+      if (t > bottleneckTimeDays) { bottleneckTimeDays = t; bottleneckTimeRole = d; }
+    });
+    const globalBottleneckRate = bottleneckTimeRole.ownRate;
+    // Uppdatera isBottleneck till "tids-flaskhals"
+    data.forEach(d => { d.isBottleneck = (d === bottleneckTimeRole); });
 
-      // Krav: rollen behöver leverera MINST pipelinens takt (globalBottleneckRate)
-      // OCH rollen måste hinna sin egen volym på den tid som finns (reqEffDayForOwnVolume)
-      // För flaskhalsen är dessa lika. För uppströms-roller räcker det att matcha pipelinen.
-      // För icke-flaskhals-roller räcker det att matcha pipelinens takt; lägg liten margin
-      // För flaskhals-roller måste den hinna sin egen volym.
-      const reqEffDay = Math.max(globalBottleneckRate, reqEffDayForOwnVolume);
+    data.forEach(d => {
+      // Rollens absolut sista möjliga starttid = deadline - rollens egen tid
+      // Earliest start = max(projektStart + uppstart, idag)
+      const earliestStartMs_g904 = Math.max(
+        projektStart.getTime() + d.startupOffsetCal * dayMs,
+        today_g904.getTime() + d.startupOffsetCal * dayMs
+      );
+      const availCal_g904 = Math.max(0, (deadline.getTime() - earliestStartMs_g904) / dayMs);
+      const availWork_g904 = availCal_g904 * 5 / 7;
+      const reqEffDay_g904 = availWork_g904 > 0 ? d.effV / availWork_g904 : Infinity;
 
       const perPerson = (d.role.count > 0) ? (d.ownRate / d.role.count) : 0;
-      // Använd liten epsilon för att undvika ceil-edge-case (4.5001/4.5 → 2 istället för 1)
-      d.requiredHeadcount = (perPerson > 0 && isFinite(reqEffDay)) ? Math.max(1, Math.ceil((reqEffDay - 1e-6) / perPerson)) : Infinity;
+      d.requiredHeadcount = (perPerson > 0 && isFinite(reqEffDay_g904)) ? Math.max(1, Math.ceil((reqEffDay_g904 - 1e-6) / perPerson)) : Infinity;
       d.additionalNeeded = Math.max(0, d.requiredHeadcount - d.role.count);
 
-      // G1.501: Kapacitets-utnyttjande — hur stor andel av rollens kapacitet använder pipelinen faktiskt?
-      // I steady state begränsas alla roller av globalBottleneckRate. Utnyttjande = bottleneck/own.
-      d.capacityUtilization = (d.ownRate > 0) ? Math.min(1, globalBottleneckRate / d.ownRate) : 0;
-      // Surplus = personer utöver de som behövs för att matcha pipelinen
+      // Kapacitets-utnyttjande = (rollens egen volym × egen takt-tid) / (tid till deadline)
+      // Om rollen hinner enkelt = låg utnyttjande
+      // Om rollen är på gränsen = hög utnyttjande
+      const ownTimeNeeded = (d.ownRate > 0) ? d.effV / d.ownRate : Infinity;
+      const ownTimeAvailable = availWork_g904;
+      d.capacityUtilization = (ownTimeAvailable > 0 && isFinite(ownTimeNeeded)) ? Math.min(1, ownTimeNeeded / ownTimeAvailable) : 1;
+
       d.surplusHeadcount = Math.max(0, d.role.count - d.requiredHeadcount);
-      // Är rollen pipeline-flaskhalsen?
-      d.isPipelineBottleneck = Math.abs(d.ownRate - globalBottleneckRate) < 1e-9;
+      d.isPipelineBottleneck = (d === bottleneckTimeRole);
     });
     // Lägg pipeline-rate som returvärde
 
