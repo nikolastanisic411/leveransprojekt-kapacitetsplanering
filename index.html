@@ -3061,7 +3061,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.500-FINAL" aria-busy="true">
+<body data-build="2026-04-29-G1.504-INSIGHT" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3492,7 +3492,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.500-FINAL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.504-INSIGHT</span>
   </div>
 
 </div>
@@ -5361,21 +5361,42 @@
       d.overshoots = d.mastBorjaSenast.getTime() < projektStart.getTime() - dayMs/2;
     });
 
-    // 6) Required headcount per roll: vad krävs för att rollen ska hinna klar i sin slot?
-    //    Tillgänglig arbetsdagar = (klarSenast_i - earliestStart_i) × 5/7
-    //    earliestStart_i = max(projektStart + startupOffsetCal_i, mastBorjaSenast_i)
-    //    requiredEffDay = effV_i / availWorkDays
-    //    requiredHeadcount = ceil(requiredEffDay / perPersonEffDay)
+    // 6) Required headcount per roll: vad krävs för att rollen ska MATCHA pipelinens takt?
+    //    Pipeline-flaskhalsen sätter taket på vad som faktiskt levereras (globalBottleneckRate).
+    //    En icke-flaskhals roll behöver inte vara snabbare än pipelinen — extra kapacitet är slöseri.
+    //    requiredEffDayToMatchPipeline = globalBottleneckRate (= minOwn över alla roller)
+    //    requiredHeadcount = ceil(requiredEffDayToMatchPipeline / perPersonEffDay)
+    //    OBS: Om rollen själv är flaskhalsen, måste den minst hinna effV på sin egen tid → använd då högre värdet.
+    const globalBottleneckRate = Math.min(...data.map(d => d.ownRate));
     data.forEach(d => {
+      // Tillgänglig tid = från earliestStart till klarSenast
       const earliestStartMs = Math.max(projektStart.getTime() + d.startupOffsetCal * dayMs, d.mastBorjaSenast.getTime());
       const availCal = Math.max(0, (d.klarSenast.getTime() - earliestStartMs) / dayMs);
       const availWork = availCal * 5 / 7;
-      const reqEffDay = availWork > 0 ? d.effV / availWork : Infinity;
-      // perPersonEff: rollens ownRate / antal personer (med samma multiplikator vi just räknade i ownRate)
+      const reqEffDayForOwnVolume = availWork > 0 ? d.effV / availWork : Infinity;
+
+      // Krav: rollen behöver leverera MINST pipelinens takt (globalBottleneckRate)
+      // OCH rollen måste hinna sin egen volym på den tid som finns (reqEffDayForOwnVolume)
+      // För flaskhalsen är dessa lika. För uppströms-roller räcker det att matcha pipelinen.
+      // För icke-flaskhals-roller räcker det att matcha pipelinens takt; lägg liten margin
+      // För flaskhals-roller måste den hinna sin egen volym.
+      const reqEffDay = Math.max(globalBottleneckRate, reqEffDayForOwnVolume);
+
       const perPerson = (d.role.count > 0) ? (d.ownRate / d.role.count) : 0;
-      d.requiredHeadcount = (perPerson > 0 && isFinite(reqEffDay)) ? Math.ceil(reqEffDay / perPerson) : Infinity;
+      // Använd liten epsilon för att undvika ceil-edge-case (4.5001/4.5 → 2 istället för 1)
+      d.requiredHeadcount = (perPerson > 0 && isFinite(reqEffDay)) ? Math.max(1, Math.ceil((reqEffDay - 1e-6) / perPerson)) : Infinity;
       d.additionalNeeded = Math.max(0, d.requiredHeadcount - d.role.count);
+
+      // G1.501: Kapacitets-utnyttjande — hur stor andel av rollens kapacitet använder pipelinen faktiskt?
+      // I steady state begränsas alla roller av globalBottleneckRate. Utnyttjande = bottleneck/own.
+      d.capacityUtilization = (d.ownRate > 0) ? Math.min(1, globalBottleneckRate / d.ownRate) : 0;
+      // Surplus = personer utöver de som behövs för att matcha pipelinen
+      d.surplusHeadcount = Math.max(0, d.role.count - d.requiredHeadcount);
+      // Är rollen pipeline-flaskhalsen?
+      d.isPipelineBottleneck = Math.abs(d.ownRate - globalBottleneckRate) < 1e-9;
     });
+    // Lägg pipeline-rate som returvärde
+
 
     // 7) Milestones per roll: 25%, 50%, 75%, 100% av V (i kalenderdatum)
     //    Bygger taktat tidslinje. Utgår från actualStart (verklighet) men kan visas som klar-senast också.
@@ -6798,7 +6819,22 @@
       statusEl.innerHTML = '<strong>Status:</strong> Sätt en framtida deadline.';
     } else if (pctToTarget >= 100) {
       const startStr = (state.projektStart && state.projektStart.length >= 8) ? new Date(state.projektStart).toLocaleDateString('sv-SE') : new Date().toLocaleDateString('sv-SE');
-      statusEl.innerHTML = '<strong style="color:#1d6e35">●</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st mellan <strong>' + startStr + '</strong> och <strong>' + deadline.toLocaleDateString('sv-SE') + '</strong>.';
+      // G1.504: Flaskhals + utnyttjande-insikt — koppla allt till en handlingsbar mening
+      let extraInsight504 = '';
+      try {
+        const sched_es = computePipelineSchedule({ active, V: target, deadline, projektStart: projektStartDate, usePessimistic: true });
+        if (sched_es.valid) {
+          const totalSurplus = sched_es.data.reduce((s, d) => s + (d.surplusHeadcount || 0), 0);
+          const wastedRoles = sched_es.data.filter(d => (d.capacityUtilization || 1) < 0.5 && !d.isBottleneck);
+          if (totalSurplus >= 2 && wastedRoles.length > 0) {
+            extraInsight504 = ' <strong>Insikt:</strong> Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> sätter taket — du kan frigöra <strong>' + totalSurplus + ' personer</strong> från ' + wastedRoles.map(d => d.role.name).join(', ') + ' utan effekt på leveransen.';
+          } else {
+            const slackTxt = sched_es.slackDays >= 0 ? sched_es.slackDays + ' dgr marginal' : Math.abs(sched_es.slackDays) + ' dgr försening';
+            extraInsight504 = ' Sista rollen blir klar med <strong>' + slackTxt + '</strong> mot deadline.';
+          }
+        }
+      } catch (_) {}
+      statusEl.innerHTML = '<strong style="color:#1d6e35">●</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st mellan <strong>' + startStr + '</strong> och <strong>' + deadline.toLocaleDateString('sv-SE') + '</strong>.' + extraInsight504;
     } else if (pctToTarget >= 80) {
       statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Höj <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> i steg 4 — flaskhalsen sätter taket på hela kedjan.';
     } else {
@@ -7380,6 +7416,13 @@
       }
       html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
       html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + (effLowerThanOwn ? ' <span style=\'opacity:0.7;font-weight:400;font-size:10px\'>(pipeline ' + effRateInUnit + ' p.g.a. flaskhals)</span>' : '') + '</strong></div>';
+      // G1.502: Kapacitets-utnyttjande
+      if (typeof d.capacityUtilization === 'number') {
+        const utilPct = Math.round(d.capacityUtilization * 100);
+        const utilColor = utilPct >= 80 ? '#A8E6C2' : (utilPct >= 50 ? '#FFE6A0' : '#FFD6F0');
+        const utilLabel = utilPct >= 80 ? 'fullt utnyttjad' : (utilPct >= 50 ? 'delvis utnyttjad' : 'underutnyttjad');
+        html += '<div class="ho-stat" title="Pipeline-flaskhalsen begränsar vad som faktiskt levereras till ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag. Rollens egen kapacitet utnyttjas till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + '</strong></div>';
+      }
       html += '<div class="ho-period">';
       const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
       html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + startWarn + '<br>';
@@ -7436,11 +7479,14 @@
         html += '<button class="ho-copy-btn" onclick="copyRoleRecommendation(\'' + d.role.id + '\')" type="button" title="Kopiera rekommendation som text för att skicka till resursägaren">Kopiera till urklipp</button>';
         html += '</div>';
       } else if (isFinite(d.requiredHeadcount)) {
-        // OK — bemanning räcker. Om STOR marginal: föreslå att frigöra resurser
+        // OK — bemanning räcker. G1.503: Pipeline-utnyttjande surplus (NOC-fallet)
         html += '<div class="ho-action ok">';
-        if (d.bufferDays >= 30 && d.role.count > Math.max(1, d.requiredHeadcount) + 1) {
+        if (typeof d.surplusHeadcount === 'number' && d.surplusHeadcount >= 1 && !d.isBottleneck) {
+          const utilPct503 = Math.round((d.capacityUtilization || 0) * 100);
+          html += '<strong>Pipeline-flaskhalsen begränsar:</strong> rollens kapacitet används till <strong>' + utilPct503 + ' %</strong>. Du kan frigöra <strong>' + fmtPers(d.surplusHeadcount) + '</strong> utan effekt på leveransen — flaskhalsen sätter taket oavsett.<br>';
+        } else if (d.bufferDays >= 30 && d.role.count > Math.max(1, d.requiredHeadcount) + 1) {
           const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
-          html += '<strong>Överbalanserad:</strong> ' + d.role.count + ' personer räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + spar_g192 + ' personer</strong> till andra projekt och fortfarande hålla deadline.<br>';
+          html += '<strong>Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline.<br>';
         }
         html += '<strong>OK:</strong> ' + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
         // G1.9: Visa förväntat slutdatum + buffer-marginal
