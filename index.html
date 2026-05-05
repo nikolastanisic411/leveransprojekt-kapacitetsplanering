@@ -3065,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.908-INACTIVE-HINT" aria-busy="true">
+<body data-build="2026-04-29-G1.909-HITRATE-95" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3287,7 +3287,7 @@
     <div class="role-name"><span class="tt" tabindex="0" data-tip="Andel leveranser som lyckas på första försöket. Resten är bomkörningar — t.ex. entreprenörer som åker hem utan att ha kunnat avsluta jobbet (saknar fiber, inget signalrör, kund hemma men inte avtalat tid). 90% är ett rimligt riktvärde. Per-roll-justeringar görs i Avancerat-läget.">Hitrate</span>
       <span class="hint">andel leveranser som lyckas — speglar generell bomkörning</span>
     </div>
-    <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="90" step="1">
+    <input type="range" id="hitrate" aria-label="Global hitrate i procent" aria-valuemin="50" aria-valuemax="100" min="50" max="100" value="95" step="1">
     <div class="count" id="hitrate-v">90%</div>
     <div class="hitrate-detail" id="hitrate-detail">—</div>
   </div>
@@ -3497,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.908-INACTIVE-HINT</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.909-HITRATE-95</span>
   </div>
 
 </div>
@@ -3525,7 +3525,7 @@
     roles: defaultRoles.map(r => ({...r})),
     scenarios: defaultScenarios.map(s => ({...s})),
     constraints: defaultConstraints.map(c => ({...c})),
-    hitrate: 90,
+    hitrate: 95,
     deadline: '',
     projektStart: '',
     onskadVolym: 0,
@@ -4692,7 +4692,7 @@
   }
 
   function applyStateToInputs() {
-    document.getElementById('hitrate').value = state.hitrate || 90;
+    document.getElementById('hitrate').value = state.hitrate || 95;
     document.getElementById('rampMonths').value = state.rampMonths || 0;
     document.getElementById('deadline').value = state.deadline || '';
     document.getElementById('projektStart').value = state.projektStart || '';
@@ -5009,7 +5009,7 @@
     state.roles = defaultRoles.map(r => ({...r}));
     state.scenarios = defaultScenarios.map(s => ({...s}));
     state.constraints = defaultConstraints.map(c => ({...c}));
-    state.hitrate = 90;
+    state.hitrate = 95;
     state.deadline = '';
     state.projektStart = '';
     state.onskadVolym = 0;
@@ -6210,7 +6210,7 @@
       return { error: 'no_capacity', message: 'Ingen positiv kapacitet kan beräknas — kontrollera mål, deadline och ledtid.' };
     }
 
-    const hitrate = (+state.hitrate || 90) / 100;
+    const hitrate = (+state.hitrate || 95) / 100;
     const margin = (+state.margin || 0) / 100;
     const targetWithMargin = tm * (1 + margin);
     const requiredDay = targetWithMargin / hitrate / 21;
