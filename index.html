@@ -314,8 +314,9 @@
   .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
   .tact-role-meta { font-weight: 400; color: #6B5F75; font-size: 11px; }
   .tact-list { list-style: none; padding: 0; margin: 0; }
-  .tact-list li { display: flex; gap: 8px; align-items: baseline; font-size: 11px; padding: 3px 0; border-bottom: 0.5px dashed #F0EDF4; font-variant-numeric: tabular-nums; }
-  .tact-list li:last-child { border-bottom: 0; font-weight: 600; }
+  .tact-list li { display: flex; gap: 8px; align-items: baseline; font-size: 11px; padding: 3px 0; border-bottom: 0.5px dashed #F0EDF4; font-variant-numeric: tabular-nums; transition: background 0.1s; }
+  .tact-list li:hover { background: #F8F5FB; }
+  .tact-list li:last-child { border-bottom: 0; font-weight: 700; padding-top: 6px; color: #5C0E92; }
   .tact-pct { width: 36px; color: #5C0E92; font-weight: 600; }
   .tact-items { width: 70px; color: #1A1A1F; }
   .tact-date { color: #6B5F75; }
@@ -2956,6 +2957,9 @@
     border-radius: 10px;
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
   }
+  .exec-kpi-clickable { cursor: pointer; }
+  .exec-kpi-clickable:hover { transform: translateY(-2px); border-color: #C266F0; box-shadow: 0 2px 8px rgba(92,14,146,0.12); }
+  .exec-kpi-clickable:focus { outline: 2px solid #5C0E92; outline-offset: 2px; }
   .exec-kpi:hover:not(.exec-kpi-primary) {
     border-color: #D8C5E8;
     box-shadow: 0 2px 8px rgba(92,14,146,0.08);
@@ -3407,7 +3411,7 @@
         <div class="exec-kpi-value" id="exec-rate">—</div>
         <div class="exec-kpi-sub" id="exec-rate-sub">—</div>
       </div>
-      <div class="exec-kpi">
+      <div class="exec-kpi exec-kpi-clickable" onclick="scrollToStep(4)" role="button" tabindex="0" title="Klicka för att hoppa till bemanning">
         <div class="exec-kpi-label" title="Den roll med lägst egen-takt — sätter taket för pipeline-output">Flaskhals</div>
         <div class="exec-kpi-value" id="exec-bottleneck">—</div>
         <div class="exec-kpi-sub" id="exec-bottleneck-sub">—</div>
@@ -3545,6 +3549,8 @@
   }
 
   // Formaterar tal med tusentalsavskiljare (svenska: 1 234)
+  // G1.284: Plural-fix för 'person/personer'
+  function fmtPers(n) { const x = Math.max(0, +n || 0); return (x === 1 ? '1 person' : x + ' personer'); }
   function fmtNum(n, decimals) {
     if (!isFinite(n)) return '—';
     const d = (decimals === undefined) ? 0 : decimals;
@@ -4368,7 +4374,7 @@
         if (factor > 1) {
           const requiredHC = Math.ceil(totalHeadcount * factor);
           const extraHC = requiredHC - totalHeadcount;
-          deltaText = ' · skalfaktor ×' + factor.toFixed(2) + ' (≈ ' + requiredHC + ' personer, +' + extraHC + ')';
+          deltaText = ' · skalfaktor ×' + factor.toFixed(2) + ' (≈ ' + fmtPers(requiredHC) + ', +' + extraHC + ')';
           // G1.49: Riktad rekommendation — vad behövs på bottleneck-rollen?
           if (bottleneckRole && bottleneckRole.role.count > 0 && bottleneckRole.eff > 0) {
             // newRate per person = bottleneck.eff / bottleneck.count, total ny rate = target × scale
@@ -4392,7 +4398,7 @@
         } else if (factor < 1) {
           const minHC = Math.max(1, Math.ceil(totalHeadcount * factor));
           const sparHC = totalHeadcount - minHC;
-          deltaText = ' · klarar med ' + Math.round(factor * 100) + ' % av bemanningen (≈ ' + minHC + ' personer' + (sparHC > 0 ? ', frigör ' + sparHC : '') + ')';
+          deltaText = ' · klarar med ' + Math.round(factor * 100) + ' % av bemanningen (≈ ' + fmtPers(minHC) + '' + (sparHC > 0 ? ', frigör ' + sparHC : '') + ')';
         } else {
           deltaText = ' · skalfaktor ×1.00 — exakt i nivå med nuvarande bemanning';
         }
@@ -5386,7 +5392,30 @@
       d.milestones = ms;
     });
 
-    // Total slack mellan deadline och faktisk slut
+    // G1.261: Räkna vinsten av en extra person på varje roll (sensitivitetsanalys)
+    data.forEach(d => {
+      if (d.role.count > 0 && d.ownRate > 0) {
+        const perPerson = d.ownRate / d.role.count;
+        const newOwnRate = (d.role.count + 1) * perPerson;
+        // Approximerad vinst: om rollen är flaskhalsen, vinsten = nya minRate / gamla minRate × pipeline-takt
+        // Förenkling: dagar sparade = V × (1/effRate - 1/newEffRate) × 7/5
+        const newEffRate = d.isBottleneck ? Math.min(d.effectiveRate, newOwnRate) : d.effectiveRate;
+        // Om rollen IS flaskhalsen, ny pipeline-min = min(uppströms-min, newOwnRate)
+        // Förenkling: vi visar bara antal dagar besparing om rollen är flaskhalsen
+        if (d.isBottleneck && newOwnRate > d.effectiveRate + 0.001) {
+          const newRateLimit = Math.min(newOwnRate, d.effectiveRate * (newOwnRate / d.ownRate));
+          const oldDays = d.effectiveRate > 0 ? d.effV / d.effectiveRate * 7 / 5 : Infinity;
+          const newDays = newRateLimit > 0 ? d.effV / newRateLimit * 7 / 5 : Infinity;
+          d.daysSavedPerExtra = Math.max(0, Math.round(oldDays - newDays));
+        } else {
+          d.daysSavedPerExtra = 0;
+        }
+      } else {
+        d.daysSavedPerExtra = 0;
+      }
+    });
+
+  // Total slack mellan deadline och faktisk slut
     const lastFinish = data[data.length - 1].actualFinish;
     const slackDays = Math.round((deadline.getTime() - lastFinish.getTime()) / dayMs);
 
@@ -6691,8 +6720,8 @@
     document.getElementById('exec-rate').textContent = fmtNum(Math.round(monthlyRate)) + '/mån';
     {
       const factor_e = (typeof getActualVsPlanFactor === 'function') ? getActualVsPlanFactor() : 1;
-      const ratePrefix = factor_e < 1 ? 'pess. ' : '';
-      document.getElementById('exec-rate-sub').textContent = ratePrefix + minEffDay.toFixed(1) + '/dag · ' + state.hitrate + '% plan-hitrate' + (factor_e < 1 ? ' (justerad efter utfall)' : '');
+      const ratePrefix = factor_e < 1 ? 'utfall-justerad: ' : '';
+      document.getElementById('exec-rate-sub').textContent = ratePrefix + minEffDay.toFixed(1) + '/dag · ' + state.hitrate + '% plan-hitrate' + (factor_e < 1 ? ' (utfall ' + Math.round(factor_e*100) + '% av plan)' : '');
     }
 
     // KPI: Flaskhals
@@ -6742,7 +6771,7 @@
     } else if (pctToTarget >= 80) {
       statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Höj <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> i steg 4 — flaskhalsen sätter taket på hela kedjan.';
     } else {
-      statusEl.innerHTML = '<strong style="color:#b8410e">●</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras.';
+      statusEl.innerHTML = '<strong style="color:#b8410e">●</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras. <button onclick="applySuggestion()" style="margin-left:8px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer">Använd förslag</button>';
     }
   }
 
@@ -6908,17 +6937,19 @@
     const lastFinish = sched_cp.lastFinish;
     const projDelta = Math.round((lastFinish.getTime() - deadline.getTime()) / dayMs);
     
+    const genTs = new Date().toLocaleString('sv-SE');
     let txt = 'ÅTGÄRDSPLAN — Leveransprojektet (deadline ' + fmt(deadline) + ', ' + V + ' st)\n';
+    txt += 'Genererad ' + genTs + '\n';
     txt += '═══════════════════════════════════════════════════════\n\n';
     data.forEach((d, i) => {
       const reqCount = isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count;
       const additional = Math.max(0, reqCount - d.role.count);
       txt += (i+1) + '. ' + d.role.name.toUpperCase() + '\n';
-      txt += '   Bemanning: ' + reqCount + ' personer (idag: ' + d.role.count + (additional > 0 ? ', behov: +' + additional : ', ok') + ')\n';
+      txt += '   Bemanning: ' + fmtPers(reqCount) + ' (idag: ' + d.role.count + (additional > 0 ? ', behov: +' + additional : ', ok') + ')\n';
       txt += '   Start senast: ' + fmt(d.mastBorjaSenast || refStart) + '\n';
       txt += '   Klar senast:  ' + fmt(d.klarSenast) + '\n';
       txt += '   Volym:        ' + V + ' st\n';
-      txt += '   Takt:         ' + d.ownRate.toFixed(1) + '/dag (effektiv)\n\n';
+      txt += '   Takt:         ' + d.ownRate.toFixed(1) + '/dag egen' + (d.ownRate > d.effectiveRate + 0.01 ? ' / ' + d.effectiveRate.toFixed(1) + '/dag pipeline' : '') + '\n\n';
     });
     
     const totalAdd = data.reduce((s, d) => s + Math.max(0, (isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count) - d.role.count), 0);
@@ -7163,7 +7194,7 @@
       '<strong>' + escapeHtml(earliest.role.name) + '</strong> behöver börja senast <strong>' + fmt(earliest.mastBorjaSenast) + '</strong>' +
       ' — det är <strong>' + daysShort + ' dagar</strong> innan ' + refStartLabel + '. ' +
       (overshooters.length > 1 ? overshooters.length + ' roller hinner inte. ' : '') +
-      'Klicka <strong>Använd förslag</strong> för att uppdatera bemanningen automatiskt, eller flytta deadline framåt.';
+      'Höj bemanningen, korta ledtiderna eller flytta deadline. <button onclick="applySuggestion()" style="margin-left:8px;background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer">Använd förslag</button>';
     el.style.display = 'block';
   }
 
@@ -7345,7 +7376,7 @@
         const currentPerPersonRaw = (d.role.count > 0 && d.role.takt) ? +d.role.takt : 0;
         const requiredPerPersonRaw = (d.role.count > 0) ? (currentPerPersonRaw * (d.requiredHeadcount / d.role.count)) : 0;
         html += '<div class="ho-action">';
-        html += '<strong>Åtgärd:</strong> Behöver <strong>' + d.requiredHeadcount + ' personer</strong> ';
+        html += '<strong>Åtgärd:</strong> Behöver <strong>' + fmtPers(d.requiredHeadcount) + '</strong> ';
         html += '(<span style="color:#FFD6F0">+' + d.additionalNeeded + '</span> mot nuvarande ' + d.role.count + ') ';
         html += 'som startar <strong>' + startStr + '</strong> och är klara <strong>' + fmt(d.klarSenast) + '</strong>.';
         // Alternativ: höj takt per person
@@ -7372,7 +7403,7 @@
           const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
           html += '<strong>Överbalanserad:</strong> ' + d.role.count + ' personer räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + spar_g192 + ' personer</strong> till andra projekt och fortfarande hålla deadline.<br>';
         }
-        html += '<strong>OK:</strong> ' + d.role.count + ' personer räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
+        html += '<strong>OK:</strong> ' + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
         // G1.9: Visa förväntat slutdatum + buffer-marginal
         if (d.actualFinish && isFinite(d.bufferDays)) {
           const buf = d.bufferDays;
@@ -7880,7 +7911,7 @@
       flowHtml += '<span class="' + cls + '">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
       if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
-    flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover.">drag för att sortera om</span>';
+    flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover.">vattenfalls-pipeline — drag för att sortera</span>';
     flow.innerHTML = flowHtml;
     container.appendChild(flow);
 
@@ -8060,7 +8091,7 @@
         tactHtml += '<div class="tact-role">';
         tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' <span style="color:#5C0E92;font-weight:600">⚑ flaskhals</span>' : '');
         const firstItemMs2 = d.ownRate > 0 ? d.actualStart.getTime() + (1/d.ownRate) * 7/5 * 24*3600*1000 : null; const firstItemStr = firstItemMs2 ? fmt(new Date(firstItemMs2)) : '';
-        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klar ' + firstItemStr : '') + ' · pipeline ' + d.effectiveRate.toFixed(1) + '/dag' + (d.ownRate > d.effectiveRate + 0.01 ? ' (egen ' + d.ownRate.toFixed(1) + '/dag)' : '') + '</span></div>';
+        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klart ' + firstItemStr : '') + ' · pipeline ' + d.effectiveRate.toFixed(1) + '/dag' + (d.ownRate > d.effectiveRate + 0.01 ? ' (egen ' + d.ownRate.toFixed(1) + '/dag)' : '') + '</span></div>';
         tactHtml += '<ul class="tact-list">';
         d.milestones.forEach(ms => {
           const pctLabel = Math.round(ms.pct * 100);
@@ -9089,7 +9120,15 @@
     }
   });
 
-    // Persistera scroll-position så reload landar på samma plats (ej bara toppen)
+  
+  // G1.223: Keyboard-handler för Översikt-KPIer (role=button)
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('exec-kpi-clickable')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+  // Persistera scroll-position så reload landar på samma plats (ej bara toppen)
   try {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     const SCROLL_KEY = 'maxtakt-scroll-y';
@@ -9124,6 +9163,7 @@
     if (window && window.console && console.log) {
       console.log('%cLeveransprojekt — Kapacitetsplanering', 'color: #5C0E92; font-weight: 600; font-size: 14px');
       console.log('Build:', document.body.dataset.build || 'unknown');
+      console.log('Modell: vattenfalls-pipeline (G1.83+)');
       console.log('Local data: localStorage[' + STORAGE_KEY + ']');
     }
   } catch (_) {}
