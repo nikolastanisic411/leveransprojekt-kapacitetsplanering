@@ -3071,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.910-CLEAN" aria-busy="true">
+<body data-build="2026-04-29-G1.911-TF-PLAN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.910-CLEAN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.911-TF-PLAN</span>
   </div>
 
 </div>
@@ -5525,6 +5525,40 @@
       valid: true,
     };
   }
+  // G1.911: Per-TF leveransplan — när levereras vilken typfall-volym?
+  // Varje TF har sin egen flaskhals (lägsta takt bland deltagande roller).
+  // TF1-flödet kan flyta snabbare än TF2 om Nätarkitekt bara deltar i TF2.
+  function computeTfDeliveryPlan(active, projektStart, usePessimistic) {
+    const subs = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
+    if (!subs.length || !active.length) return [];
+    const dayMs = 1000 * 60 * 60 * 24;
+    const rateOf = (r) => usePessimistic ? roleEffectivePerDayWithRework(r) * getActualVsPlanFactor() : roleEffectivePerDay(r);
+    return subs.filter(s => s.volume > 0).map(s => {
+      // Roller som deltar i denna TF
+      const participants = active.filter(r => r.typfalls && r.typfalls[s.tf]);
+      if (!participants.length) return { tf: s.tf, name: s.name, volume: s.volume, rateThisFlow: 0, daysCal: Infinity, finishDate: null, bottleneck: null };
+      // Per-flow flaskhals = lägsta ownRate bland deltagande roller
+      let minRate = Infinity, bnRole = participants[0];
+      participants.forEach(r => {
+        const rate = rateOf(r);
+        if (rate < minRate) { minRate = rate; bnRole = r; }
+      });
+      const daysWork = minRate > 0 ? s.volume / minRate : Infinity;
+      const daysCal = isFinite(daysWork) ? daysWork * 7 / 5 : Infinity;
+      const finishDate = isFinite(daysCal) ? new Date(projektStart.getTime() + daysCal * dayMs) : null;
+      return {
+        tf: s.tf,
+        name: s.name,
+        volume: s.volume,
+        rateThisFlow: minRate,
+        daysCal,
+        finishDate,
+        bottleneck: bnRole,
+        participants: participants.map(p => p.name),
+      };
+    }).sort((a, b) => (a.daysCal || 0) - (b.daysCal || 0));
+  }
+
 
   // Returnerar kapacitet per dag givet ett alternativt antal personer (för min/max-scenarier)
   function roleCapPerDayWithCount(role, alternativeCount) {
@@ -8130,6 +8164,26 @@
       summaryDiv.innerHTML = sumHtml;
       container.appendChild(summaryDiv);
 
+      // G1.911: Per-TF leveransplan — visar konkret vilken volym som hinns till vilket datum
+      const tfPlan_inf = computeTfDeliveryPlan(active, sched.projektStart, true);
+      if (tfPlan_inf.length > 0) {
+        const tfDiv = document.createElement('div');
+        tfDiv.style.cssText = 'margin-top:8px;padding:12px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:12px;';
+        let tfHtml = '<div style="font-weight:600;margin-bottom:6px">Leveransplan per typfall — när levereras vad?</div><table style="width:100%;border-collapse:collapse">';
+        tfPlan_inf.forEach(t => {
+          const dateStr = t.finishDate ? t.finishDate.toLocaleDateString('sv-SE') : 'aldrig';
+          const lateOk = t.finishDate && t.finishDate <= deadline ? '<span style="color:#1d6e35">✓ i tid</span>' : '<span style="color:#9a2424">⚠ efter deadline</span>';
+          tfHtml += '<tr><td style="padding:4px 8px"><strong>' + escapeHtml(t.name) + '</strong></td>';
+          tfHtml += '<td style="padding:4px 8px">' + t.volume + ' st</td>';
+          tfHtml += '<td style="padding:4px 8px">via ' + t.participants.join(' → ') + '</td>';
+          tfHtml += '<td style="padding:4px 8px">flaskhals: ' + escapeHtml(t.bottleneck.name) + ' (' + t.rateThisFlow.toFixed(2) + '/dag)</td>';
+          tfHtml += '<td style="padding:4px 8px"><strong>klart ' + dateStr + '</strong> ' + lateOk + '</td></tr>';
+        });
+        tfHtml += '</table>';
+        tfDiv.innerHTML = tfHtml;
+        container.appendChild(tfDiv);
+      }
+
       // Returnera tidigt — INTE visa orealistisk Gantt
       return;
     }
@@ -8150,6 +8204,32 @@
     flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover. Detta är en vattenfalls-modell som överlappar steg parallellt — ingen roll behöver vänta på hela batchen.">Vattenfalls-pipeline — drag för att sortera</span>';
     flow.innerHTML = flowHtml; flow.setAttribute('aria-label', 'Pipeline-ordning av roller med flaskhals markerad');
     container.appendChild(flow);
+
+    // G1.911: Per-TF leveransplan — primär detaljerad vy
+    const tfPlan = computeTfDeliveryPlan(active, projStart0, true);
+    if (tfPlan.length > 0) {
+      const tfDiv = document.createElement('div');
+      tfDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:linear-gradient(135deg,#FAFAFD 0%,#F8F5FB 100%);border:0.5px solid #E5E2EA;border-radius:10px;';
+      let tfHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">📦 Leveransplan per typfall — när hinns vad?</div>';
+      tfHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+      tfHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Typfall</th><th style="text-align:left;padding:4px 8px">Volym</th><th style="text-align:left;padding:4px 8px">Flöde</th><th style="text-align:left;padding:4px 8px">Flaskhals</th><th style="text-align:left;padding:4px 8px">Klart senast</th></tr></thead><tbody>';
+      tfPlan.forEach(t => {
+        const dateStr = t.finishDate ? t.finishDate.toLocaleDateString('sv-SE') : '—';
+        const inTime = t.finishDate && t.finishDate <= deadline;
+        const dateColor = inTime ? '#1d6e35' : '#9a2424';
+        const dateIcon = inTime ? '✓' : '⚠';
+        tfHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
+        tfHtml += '<td style="padding:6px 8px"><strong>' + escapeHtml(t.name) + '</strong></td>';
+        tfHtml += '<td style="padding:6px 8px;font-variant-numeric:tabular-nums">' + t.volume + ' st</td>';
+        tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + t.participants.join(' → ') + '</td>';
+        tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + escapeHtml(t.bottleneck.name) + ' (' + t.rateThisFlow.toFixed(2) + '/dag)</td>';
+        tfHtml += '<td style="padding:6px 8px;color:' + dateColor + ';font-weight:600">' + dateIcon + ' ' + dateStr + '</td>';
+        tfHtml += '</tr>';
+      });
+      tfHtml += '</tbody></table>';
+      tfDiv.innerHTML = tfHtml;
+      container.appendChild(tfDiv);
+    }
 
     // Sista-beställning per Nätarkitekt-subset (samma som tidigare logik)
     const archRole = data.find(x => /arkitekt/i.test(x.role.name));
