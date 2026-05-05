@@ -7442,9 +7442,9 @@
       // G1.502: Kapacitets-utnyttjande
       if (typeof d.capacityUtilization === 'number') {
         const utilPct = Math.round(d.capacityUtilization * 100);
-        const utilColor = utilPct >= 80 ? '#A8E6C2' : (utilPct >= 50 ? '#FFE6A0' : '#FFD6F0');
+        const utilColor = utilPct >= 80 ? '#A8E6C2' : (utilPct >= 50 ? '#FFE6A0' : '#FFB8E0');
         const utilLabel = utilPct >= 80 ? 'fullt utnyttjad' : (utilPct >= 50 ? 'delvis utnyttjad' : 'underutnyttjad');
-        html += '<div class="ho-stat" title="Pipeline-flaskhalsen begränsar vad som faktiskt levereras till ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag. Rollens egen kapacitet utnyttjas till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + '</strong></div>';
+        html += '<div class="ho-stat" title="Pipeline taktar i ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag — rollens egen kapacitet skulle räcka till ' + (d.ownRate ? d.ownRate.toFixed(1) : '?') + '/dag, men flaskhalsen begränsar till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + '</strong></div>';
       }
       html += '<div class="ho-period">';
       const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
@@ -7489,8 +7489,8 @@
         if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
           html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
         }
-        // G1.302: Visa vinsten av +1 person på flaskhalsen
-        if (d.isBottleneck && d.daysSavedPerExtra > 0) {
+        // G1.302/G1.508: Hävstång både för isBottleneck och isPipelineBottleneck
+        if ((d.isBottleneck || d.isPipelineBottleneck) && d.daysSavedPerExtra > 0) {
           html += '<br><em style="opacity:0.85">Hävstång: <strong>+1 person</strong> sparar ca <strong>' + d.daysSavedPerExtra + ' dagar</strong> på pipelinens slut.</em>';
         }
         // G1.9: Visa konkret konsekvens om vi INTE gör något
@@ -7506,10 +7506,10 @@
         html += '<div class="ho-action ok">';
         if (typeof d.surplusHeadcount === 'number' && d.surplusHeadcount >= 1 && !d.isBottleneck) {
           const utilPct503 = Math.round((d.capacityUtilization || 0) * 100);
-          html += '<strong>Pipeline-flaskhalsen begränsar:</strong> rollens kapacitet används till <strong>' + utilPct503 + ' %</strong>. Du kan frigöra <strong>' + fmtPers(d.surplusHeadcount) + '</strong> utan effekt på leveransen — flaskhalsen sätter taket oavsett.<br>';
+          html += '<strong>Pipeline-flaskhalsen begränsar:</strong> rollens kapacitet används till <strong>' + utilPct503 + ' %</strong>. Du kan frigöra <strong>' + fmtPers(d.surplusHeadcount) + '</strong> utan effekt på leveransen — flaskhalsen sätter taket oavsett. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button" style="margin-left:4px">Sätt ' + d.requiredHeadcount + '</button><br>';
         } else if (d.bufferDays >= 30 && d.role.count > Math.max(1, d.requiredHeadcount) + 1) {
           const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
-          html += '<strong>Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline.<br>';
+          html += '<strong>Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + Math.max(1, d.requiredHeadcount) + ')" type="button" style="margin-left:4px">Sätt ' + Math.max(1, d.requiredHeadcount) + '</button><br>';
         }
         html += '<strong>OK:</strong> ' + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
         // G1.9: Visa förväntat slutdatum + buffer-marginal
