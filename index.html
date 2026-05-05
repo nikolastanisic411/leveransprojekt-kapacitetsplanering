@@ -301,7 +301,7 @@
   }
   .gantt-svg {
     width: 100%;
-    min-width: 720px;
+    min-width: 560px;
     height: auto;
     display: block;
   }
@@ -4392,7 +4392,7 @@
           const sparHC = totalHeadcount - minHC;
           deltaText = ' · klarar med ' + Math.round(factor * 100) + ' % av bemanningen (≈ ' + minHC + ' personer' + (sparHC > 0 ? ', frigör ' + sparHC : '') + ')';
         } else {
-          deltaText = ' · skalfaktor ×1.00 (precis i nivå)';
+          deltaText = ' · skalfaktor ×1.00 — exakt i nivå med nuvarande bemanning';
         }
       }
       if (eff >= target) {
@@ -5595,7 +5595,7 @@
     const effDay = minEff;
     const effMonth = effDay * 21;
 
-    // G1.81: Min/max-spannet borttaget — använd effDay/effMonth genomgående
+    // G1.81/G1.84: Min/max-spannet borttaget — drawChart får effMonth tre gånger för bakåtkompatibilitet
     const lowEffMonth = effMonth;
     const highEffMonth = effMonth;
     const hasSpread = false;
@@ -5772,12 +5772,7 @@
 
     const totalPersonal = state.roles.reduce((sum, r) => sum + r.count, 0);
     document.getElementById('banner-takt').textContent = fmtNum(Math.round(effMonth)) + '/mån';
-    if (hasSpread) {
-      document.getElementById('banner-takt-sub').innerHTML =
-        effDay.toFixed(1) + '/dag · spann ' + lowEffDay.toFixed(1) + '–' + highEffDay.toFixed(1);
-    } else {
-      document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · global loss-faktor ' + state.hitrate + '%';
-    }
+    document.getElementById('banner-takt-sub').innerHTML = effDay.toFixed(1) + '/dag · global loss-faktor ' + state.hitrate + '%';
     document.getElementById('banner-bottleneck').textContent = bottleneck.name;
     document.getElementById('banner-bottleneck-sub').innerHTML = bottleneck.eff.toFixed(0) + '/dag — sätter taket';
     if (state.onskadVolym > 0) {
@@ -6692,11 +6687,15 @@
 
     // KPI: Effektiv takt
     document.getElementById('exec-rate').textContent = fmtNum(Math.round(monthlyRate)) + '/mån';
-    document.getElementById('exec-rate-sub').textContent = minEffDay.toFixed(1) + '/dag · ' + state.hitrate + '% hitrate';
+    {
+      const factor_e = (typeof getActualVsPlanFactor === 'function') ? getActualVsPlanFactor() : 1;
+      const ratePrefix = factor_e < 1 ? 'pess. ' : '';
+      document.getElementById('exec-rate-sub').textContent = ratePrefix + minEffDay.toFixed(1) + '/dag · ' + state.hitrate + '% plan-hitrate' + (factor_e < 1 ? ' (justerad efter utfall)' : '');
+    }
 
     // KPI: Flaskhals
     document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : '—';
-    document.getElementById('exec-bottleneck-sub').textContent = bottleneck ? roleEffectivePessimistic(bottleneck).toFixed(1) + '/dag sätter taket' : 'inga aktiva roller';
+    document.getElementById('exec-bottleneck-sub').textContent = bottleneck ? roleEffectivePessimistic(bottleneck).toFixed(1) + '/dag sätter taket — höj bemanning här först' : 'inga aktiva roller';
 
     // Doughnut: Måluppfyllnad
     const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
@@ -6711,7 +6710,7 @@
       .map((r, i) => ({ name: r.name, value: +r.count, color: palette[i % palette.length] }));
     drawDoughnutMulti('exec-doughnut-roles', segments, totalHeadcount + '');
     const breakdown = segments.map(s => s.name + ' ' + s.value).join(' · ');
-    document.getElementById('exec-doughnut-roles-caption').textContent = breakdown || 'Inga roller';
+    document.getElementById('exec-doughnut-roles-caption').textContent = breakdown || 'Inga aktiva roller — aktivera i steg 4';
 
     // Doughnut: Hitrate (faktisk om utfall finns, annars planerad)
     const utfallEntries = (state.utfall && state.utfall.entries) || [];
@@ -6732,14 +6731,14 @@
     // Status-rad
     const statusEl = document.getElementById('exec-status');
     if (target <= 0) {
-      statusEl.innerHTML = '<strong>Status:</strong> Sätt mål och deadline för en komplett bedömning.';
+      statusEl.innerHTML = '<strong>Status:</strong> Sätt mål i steg 1 och deadline i steg 2 för en komplett bedömning.';
     } else if (!deadline || deadline <= today) {
       statusEl.innerHTML = '<strong>Status:</strong> Sätt en framtida deadline.';
     } else if (pctToTarget >= 100) {
       const startStr = (state.projektStart && state.projektStart.length >= 8) ? new Date(state.projektStart).toLocaleDateString('sv-SE') : new Date().toLocaleDateString('sv-SE');
       statusEl.innerHTML = '<strong style="color:#1d6e35">●</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st mellan <strong>' + startStr + '</strong> och <strong>' + deadline.toLocaleDateString('sv-SE') + '</strong>.';
     } else if (pctToTarget >= 80) {
-      statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Överväg att höja kapacitet på flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong>.';
+      statusEl.innerHTML = '<strong style="color:#5C0E92">●</strong> <strong style="color:#5C0E92">Nära mål.</strong> Saknar <strong>' + fmtNum(target - Math.round(projected)) + '</strong> st till deadline. Höj <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> i steg 4 — flaskhalsen sätter taket på hela kedjan.';
     } else {
       statusEl.innerHTML = '<strong style="color:#b8410e">●</strong> <strong style="color:#b8410e">Ej i mål.</strong> Når endast <strong>' + pctToTarget + '%</strong> av målet. Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> måste skalas upp eller deadline justeras.';
     }
@@ -7162,7 +7161,7 @@
       '<strong>' + escapeHtml(earliest.role.name) + '</strong> behöver börja senast <strong>' + fmt(earliest.mastBorjaSenast) + '</strong>' +
       ' — det är <strong>' + daysShort + ' dagar</strong> innan ' + refStartLabel + '. ' +
       (overshooters.length > 1 ? overshooters.length + ' roller hinner inte. ' : '') +
-      'Höj bemanningen, korta ledtiderna eller flytta deadline.';
+      'Klicka <strong>Använd förslag</strong> för att uppdatera bemanningen automatiskt, eller flytta deadline framåt.';
     el.style.display = 'block';
   }
 
@@ -7305,7 +7304,7 @@
       html += '<div class="ho-name">' + (i+1) + '. ' + escapeHtml(d.role.name) + flag + '</div>';
       // Task #29: Visa rework-tillägg explicit för Nätarkitekt
       if (d.reworkVolume > 0) {
-        html += '<div class="ho-stat"><span>Antal att leverera</span><strong title="Volym ' + Math.round(V) + ' + rework ' + d.reworkVolume + ' (TF1-eskalering)">' + Math.round(V) + ' + ' + d.reworkVolume + ' rework = <span style="color:#FFD6F0">' + (Math.round(V) + d.reworkVolume) + '</span> st</strong></div>';
+        html += '<div class="ho-stat"><span>Antal att leverera</span><strong title="Total volym ' + Math.round(V) + ' + ' + d.reworkVolume + ' rework (TF1 eskaleras till Nätarkitekt — ' + (state.reworkRate || 10) + ' % av TF1-volymen)">' + Math.round(V) + ' + ' + d.reworkVolume + ' rework = <span style="color:#FFD6F0">' + (Math.round(V) + d.reworkVolume) + '</span> st</strong></div>';
       } else {
         html += '<div class="ho-stat"><span>Antal att leverera</span><strong>' + Math.round(V) + ' st</strong></div>';
       }
@@ -7864,7 +7863,7 @@
       flowHtml += '<span class="' + cls + '">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
       if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
-    flowHtml += '<span class="pipeline-hint">drag för att sortera om</span>';
+    flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover.">drag för att sortera om</span>';
     flow.innerHTML = flowHtml;
     container.appendChild(flow);
 
@@ -7967,7 +7966,7 @@
       }
 
       svg += '<rect x="' + xPlanStartClamp + '" y="' + yBar + '" width="' + planW + '" height="' + barH + '" fill="' + planColor + '" opacity="0.78" rx="3">';
-      svg += '<title>' + escapeHtml(d.role.name) + ' (plan): ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ', ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st i takt ' + d.effectiveRate.toFixed(1) + '/dag</title>';
+      svg += '<title>' + escapeHtml(d.role.name) + ' (plan): ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ', ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st i takt ' + d.effectiveRate.toFixed(1) + '/dag pipeline. Egen-takt ' + d.ownRate.toFixed(1) + '/dag (' + d.role.count + ' pers).</title>';
       svg += '</rect>';
 
       // Datum-texter
@@ -8022,7 +8021,7 @@
       if (archRole && d.role.id === archRole.role.id && archLastOrderDate) {
         const xLast = xFor(archLastOrderDate);
         if (xLast >= labelWidth && xLast <= 1000 - padRight) {
-          svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
+          svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning för Nätarkitekt: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
         }
       }
     });
@@ -8038,12 +8037,13 @@
     if (data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
       tactDiv.className = 'tact-timeline';
-      let tactHtml = '<div class="tact-title">Takt per roll — när är hur mycket klart?</div><div class="tact-roles">';
+      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline.">Takt per roll — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(progression mot deadline)</span></div><div class="tact-roles">';
       data.forEach((d, i) => {
         if (!d.milestones || d.milestones.length === 0) return;
         tactHtml += '<div class="tact-role">';
-        tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name);
-        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + ' · ' + d.effectiveRate.toFixed(1) + '/dag</span></div>';
+        tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' <span style="color:#5C0E92;font-weight:600">⚑ flaskhals</span>' : '');
+        const firstItemMs2 = d.ownRate > 0 ? d.actualStart.getTime() + (1/d.ownRate) * 7/5 * 24*3600*1000 : null; const firstItemStr = firstItemMs2 ? fmt(new Date(firstItemMs2)) : '';
+        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klar ' + firstItemStr : '') + ' · ' + d.effectiveRate.toFixed(1) + '/dag pipeline</span></div>';
         tactHtml += '<ul class="tact-list">';
         d.milestones.forEach(ms => {
           const pctLabel = Math.round(ms.pct * 100);
