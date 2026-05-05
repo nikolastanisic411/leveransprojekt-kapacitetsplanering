@@ -3061,7 +3061,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.83-PIPELINE-WATERFALL" aria-busy="true">
+<body data-build="2026-04-29-G1.396-FULL-FIX" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3436,8 +3436,9 @@
       </div>
     </div>
 
-    <div class="exec-status" id="exec-status">—</div>
+    <div class="exec-status" id="exec-status" role="status" aria-live="polite">—</div>
     <div style="text-align:right;margin-top:10px;font-size:11px"><a href="#section-handover" style="color:#5C0E92;text-decoration:none;font-weight:500">→ Se detaljerad sammanfattning per roll</a></div>
+    <div id="exec-slack-bar" style="display:none;margin-top:10px;padding:8px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:11px;color:#6B5F75;text-align:center;"></div>
   </div>
 
 
@@ -3491,7 +3492,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.83-PIPELINE-WATERFALL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.396-FULL-FIX</span>
   </div>
 
 </div>
@@ -6759,6 +6760,22 @@
     drawDoughnut('exec-doughnut-hitrate', actualHitrate, 100, hitColor, actualHitrate + '%');
     document.getElementById('exec-doughnut-hitrate-caption').textContent = hitrateLabel + ' hitrate';
 
+    // G1.324b: Slack-bar för total marginal
+    {
+      const sb = document.getElementById('exec-slack-bar');
+      if (sb && deadline && minEffDay > 0 && active.length > 0) {
+        try {
+          const sched_e = computePipelineSchedule({ active, V: target, deadline, projektStart: projektStartDate, usePessimistic: true });
+          if (sched_e.valid) {
+            const slack = sched_e.slackDays;
+            const totalDays = Math.round(sched_e.totalCalDaysNeeded);
+            const txt = '<strong>Pipeline-tid:</strong> ' + totalDays + ' kalenderdagar · ' + (slack >= 0 ? '<span style=\'color:#1d6e35\'>+' + slack + ' dgr marginal</span>' : '<span style=\'color:#9a2424\'>' + Math.abs(slack) + ' dgr försening</span>');
+            sb.innerHTML = txt; sb.style.display = '';
+          } else { sb.style.display = 'none'; }
+        } catch(_) { sb.style.display = 'none'; }
+      } else if (sb) { sb.style.display = 'none'; }
+    }
+
     // Status-rad
     const statusEl = document.getElementById('exec-status');
     if (target <= 0) {
@@ -6973,6 +6990,9 @@
       txt += 'VID FAKTISK HITRATE (' + aHr_c + ' %): klart ' + fmt(altFinish) + ' (' + (altDelta > 0 ? altDelta + ' dagar EFTER deadline' : Math.abs(altDelta) + ' dagars marginal') + ').\n';
     }
     txt += 'TOTALT: +' + totalAdd + ' personer behövs för att hålla deadline ' + fmt(deadline) + '.\n';
+    if (sched_cp && sched_cp.totalCalDaysNeeded) {
+      txt += 'PIPELINE: ' + Math.round(sched_cp.totalCalDaysNeeded) + ' kalenderdagar från start till sista item · slack ' + sched_cp.slackDays + ' dgr.\n';
+    }
     // G1.39: Inkludera smart-tips (alternativ till mer bemanning) när planen släpar
     if (projDelta > 0) {
       const tips = [];
@@ -7387,6 +7407,10 @@
         // Hint: om den här rollen INTE är flaskhalsen, lös flaskhalsen först
         if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
           html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
+        }
+        // G1.302: Visa vinsten av +1 person på flaskhalsen
+        if (d.isBottleneck && d.daysSavedPerExtra > 0) {
+          html += '<br><em style="opacity:0.85">Hävstång: <strong>+1 person</strong> sparar ca <strong>' + d.daysSavedPerExtra + ' dagar</strong> på pipelinens slut.</em>';
         }
         // G1.9: Visa konkret konsekvens om vi INTE gör något
         if (d.actualFinish && isFinite(d.bufferDays) && d.bufferDays < 0) {
@@ -7911,7 +7935,7 @@
       flowHtml += '<span class="' + cls + '">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
       if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
-    flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover.">vattenfalls-pipeline — drag för att sortera</span>';
+    flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover. Detta är en vattenfalls-modell som överlappar steg parallellt — ingen roll behöver vänta på hela batchen.">Vattenfalls-pipeline — drag för att sortera</span>';
     flow.innerHTML = flowHtml;
     container.appendChild(flow);
 
@@ -8003,7 +8027,7 @@
       const xPlanEnd = xFor(d.klarSenast);
       const xPlanStartClamp = Math.max(labelWidth, xPlanStart);
       const planW = Math.max(2, xPlanEnd - xPlanStartClamp);
-      const planColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
+      const planColor = d.overshoots ? '#7a1a1a' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
 
       // Pre-projekt-segment (streckat) om mastBorjaSenast < projStart
       if (d.mastBorjaSenast < projStart0) {
@@ -8103,6 +8127,15 @@
       });
       tactHtml += '</div>';
       tactDiv.innerHTML = tactHtml;
+      // G1.313: Pipeline-overview
+      if (sched.totalCalDaysNeeded && isFinite(sched.totalCalDaysNeeded)) {
+        const totalDays_g313 = Math.round(sched.totalCalDaysNeeded);
+        const bnRate_g313 = sched.dailyOutput || 0;
+        const overviewDiv = document.createElement('div');
+        overviewDiv.style.cssText = 'margin-top:10px;padding:8px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:11px;color:#6B5F75;text-align:center;';
+        const projStartFmt = (sched.projektStart && !isNaN(sched.projektStart.getTime())) ? sched.projektStart.toLocaleDateString('sv-SE') : '—'; const lastFinishFmt = (sched.lastFinish && !isNaN(sched.lastFinish.getTime())) ? sched.lastFinish.toLocaleDateString('sv-SE') : '—'; overviewDiv.innerHTML = '<strong>Pipeline:</strong> ' + projStartFmt + ' → ' + lastFinishFmt + ' (' + totalDays_g313 + ' kalenderdagar) · steady state ' + bnRate_g313.toFixed(1) + '/dag · slack ' + sched.slackDays + ' dgr mot deadline';
+        tactDiv.appendChild(overviewDiv);
+      }
       container.appendChild(tactDiv);
     }
 
@@ -8124,7 +8157,7 @@
       summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> sista beställning per typfall: ' + parts.join(' · ') + '.';
     }
     if (overshooters.length > 0) {
-      summaryHtml += ' <span class="matrix-warning">⚠ ' + overshooters.length + ' roll' + (overshooters.length === 1 ? '' : 'er') + ' kan inte hinnas med givet projektstart ' + fmt(projStart0) + ' — höj kapaciteten på flaskhalsen, korta handover eller flytta deadline.</span>';
+      summaryHtml += ' <span class="matrix-warning">⚠️ ' + overshooters.length + ' roll' + (overshooters.length === 1 ? '' : 'er') + ' kan inte hinnas med givet projektstart ' + fmt(projStart0) + ' — höj kapaciteten på flaskhalsen, korta handover eller flytta deadline.</span>';
     }
     summary.innerHTML = summaryHtml;
     container.appendChild(summary);
