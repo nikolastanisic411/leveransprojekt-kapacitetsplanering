@@ -305,6 +305,19 @@
     height: auto;
     display: block;
   }
+  /* G1.83: Taktat tidslinje per roll — milestones i punktform */
+  .tact-timeline { margin-top: 16px; padding: 14px 16px; background: linear-gradient(135deg, #FAFAFD 0%, #F5F0FA 100%); border: 0.5px solid #E5E2EA; border-radius: 10px; }
+  .tact-title { font-size: 13px; font-weight: 600; color: #1A1A1F; margin-bottom: 10px; }
+  .tact-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 10px 12px; }
+  .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
+  .tact-role-meta { font-weight: 400; color: #6B5F75; font-size: 11px; }
+  .tact-list { list-style: none; padding: 0; margin: 0; }
+  .tact-list li { display: flex; gap: 8px; align-items: baseline; font-size: 11px; padding: 3px 0; border-bottom: 0.5px dashed #F0EDF4; font-variant-numeric: tabular-nums; }
+  .tact-list li:last-child { border-bottom: 0; font-weight: 600; }
+  .tact-pct { width: 36px; color: #5C0E92; font-weight: 600; }
+  .tact-items { width: 70px; color: #1A1A1F; }
+  .tact-date { color: #6B5F75; }
   @media print {
     .plan-status-pill { display: flex !important; break-inside: avoid; animation: none !important; box-shadow: none !important; position: static !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
     .plan-status-pill .psp-arrow { display: none; }
@@ -3043,7 +3056,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.82-PREP-PER-TF" aria-busy="true">
+<body data-build="2026-04-29-G1.83-PIPELINE-WATERFALL" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3472,7 +3485,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.82-PREP-PER-TF</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.83-PIPELINE-WATERFALL</span>
   </div>
 
 </div>
@@ -5190,9 +5203,10 @@
     return base;
   }
 
-  // G1.68: Pessimistisk multiplikator baserat på utfall — om verklig hitrate < plan-hitrate,
-  // returnera actualHr / planHr (< 1) så takt-baserade bedömningar blir realistiska.
-  // Returnerar 1 om utfall saknas eller avvikelse är inom 5 procentenheter.
+  // G1.68/G1.83: Pessimistisk multiplikator baserat på utfall.
+  // - Triggas bara om utfall finns OCH verklig hitrate avviker mer än 10 procentenheter från plan.
+  // - Clampas till 0.7..1.0 så att en kort dålig period inte blåser upp resursförslag till orimliga nivåer.
+  // - Returnerar 1 (= ingen påverkan) om utfall saknas eller avvikelsen är liten.
   function getActualVsPlanFactor() {
     if (!state.utfall || !Array.isArray(state.utfall.entries) || state.utfall.entries.length === 0) return 1;
     const tu = state.utfall.entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
@@ -5201,8 +5215,11 @@
     const aHr = (tl / tu) * 100;
     const pHr = (typeof state.hitrate === 'number') ? state.hitrate : 100;
     if (pHr <= 0 || aHr <= 0) return 1;
-    if (Math.abs(aHr - pHr) < 5) return 1;
-    return aHr / pHr;
+    // G1.83: höj tröskel från 5 till 10 procentenheter — kortvariga utfall ska inte trigga pessimistic
+    if (Math.abs(aHr - pHr) < 10) return 1;
+    const raw = aHr / pHr;
+    // Clampa: 0.7 nedre gräns (max 30% pessimism), 1.0 övre (positiv avvikelse triggar inget)
+    return Math.max(0.7, Math.min(1.0, raw));
   }
 
   // G1.68: Pessimistisk effektiv takt — withRework × actualVsPlan-faktor.
@@ -5210,6 +5227,182 @@
   function roleEffectivePessimistic(role) {
     return roleEffectivePerDayWithRework(role) * getActualVsPlanFactor();
   }
+
+  // === G1.83: Korrekt vattenfalls-/pipeline-schemaläggning ===
+  // ERSÄTTER burst-modellen som antog att varje roll måste vara klar med HELA volymen
+  // innan nästa roll börjar. Detta gav negativa start-datum, orealistiska resursförslag
+  // (140 personer för måttliga scenarier), och en orealistiskt linjär kedja.
+  //
+  // KORREKT MODELL (vattenfall med överlappning):
+  //   Roll i+1 kan börja på item k så fort roll i är klar med item k + handover.
+  //   Steady-state-takten i pipelinen begränsas av flaskhalsen (lägsta egen-takt uppströms inkl. egen).
+  //   Sista item ut från roll i = startTime_i + V/effectiveRate_i (i arbetsdagar)
+  //   där startTime_i = startTime_1 + sum_{j<i}(1/ownRate_j + handover_{j→j+1}_kalender)
+  //
+  // Funktionen returnerar { data, projektStart, deadline, S1, dailyOutput, totalCalDaysNeeded, slackDays, hasSlack }
+  // där `data[i]` = { role, ownRate, effectiveRate, startupOffsetCal, mastBorjaSenast, klarSenast,
+  //                   actualStart, actualFinish, bufferDays, requiredHeadcount, additionalNeeded,
+  //                   reworkVolume, effV, isBottleneck, overshoots, daysNeededCal, milestones[] }
+  //
+  // Använder pessimistisk takt (rework + utfall-justering) när utfall finns, annars rå effektiv takt.
+  function computePipelineSchedule(opts) {
+    const dayMs = 1000 * 60 * 60 * 24;
+    const active = (opts && opts.active) || activeRoles();
+    const V = +(opts && opts.V) || 0;
+    const deadline = (opts && opts.deadline) ? new Date(opts.deadline) : null;
+    const projektStart = (opts && opts.projektStart) ? new Date(opts.projektStart) : (() => { const t = new Date(); t.setHours(0,0,0,0); return t; })();
+    const usePessimistic = !(opts && opts.usePessimistic === false);
+
+    if (active.length === 0 || V <= 0 || !deadline || isNaN(deadline.getTime())) {
+      return { data: [], projektStart, deadline, V, valid: false };
+    }
+
+    // 1) Effektiv takt per roll (egen + kumulativ pipeline-takt)
+    //    ownRate = takt × hitrate (samt rework-faktor om pessimistic)
+    const rateOf = (r) => usePessimistic ? roleEffectivePerDayWithRework(r) * getActualVsPlanFactor() : roleEffectivePerDay(r);
+    let cumMin = Infinity;
+    const data = active.map((role, idx) => {
+      const own = rateOf(role);
+      cumMin = Math.min(cumMin, own);
+      return {
+        role, idx,
+        ownRate: own,
+        effectiveRate: cumMin,
+        isBottleneck: false,
+        // fyll på senare:
+        startupOffsetCal: 0,
+        mastBorjaSenast: null,
+        klarSenast: null,
+        actualStart: null,
+        actualFinish: null,
+        bufferDays: 0,
+        requiredHeadcount: Infinity,
+        additionalNeeded: 0,
+        reworkVolume: 0,
+        effV: V,
+        overshoots: false,
+        daysNeededCal: 0,
+        milestones: [],
+      };
+    });
+    const minOwn = Math.min(...data.map(d => d.ownRate));
+    data.forEach(d => { d.isBottleneck = Math.abs(d.ownRate - minOwn) < 1e-9; });
+
+    // 2) Uppstartstid till varje roll (i kalenderdagar)
+    //    startupOffsetCal_i = sum_{j<i}( (1/ownRate_j) × 7/5 + handover_{j→j+1}_kalender )
+    //    Plus förprojekterings-dagar för rollen själv (prepDaysPerTf, vid behov)
+    data.forEach((d, i) => {
+      let off = 0;
+      for (let j = 0; j < i; j++) {
+        const ratej = data[j].ownRate;
+        if (ratej > 0) off += (1 / ratej) * 7 / 5; // 1 item processed → kalenderdagar
+        const ho = (typeof data[j].role.handoverToNext === 'number') ? data[j].role.handoverToNext : 0;
+        off += ho;
+      }
+      d.startupOffsetCal = off;
+    });
+
+    // 3) Effektiv volym per roll (Nätarkitekt får extra rework-volym)
+    data.forEach(d => {
+      const isArch = /arkitekt/i.test(d.role.name || '');
+      d.reworkVolume = isArch ? getReworkVolume() : 0;
+      d.effV = V + d.reworkVolume;
+    });
+
+    // 4) Backward schedule
+    //    klar_i = startTime_i + V_i / effectiveRate_i × 7/5
+    //    Den senaste klar_i är vår "deadline-ankarpunkt" — vanligen sista rollen, men säker mot edge cases.
+    //    klar_max = D ⇒ S1 = D - max_i( startupOffsetCal_i × dayMs + (V_i / effRate_i × 7/5) × dayMs )
+    //    Per roll: klarSenast_i = S1 + startupOffsetCal_i + V_i/effRate_i × 7/5
+    //              mastBorjaSenast_i = S1 + startupOffsetCal_i
+    let maxOffsetCal = 0;
+    let maxIdx = 0;
+    data.forEach((d, i) => {
+      const calV = d.effectiveRate > 0 ? (d.effV / d.effectiveRate) * 7 / 5 : Infinity;
+      d.daysNeededCal = calV;
+      const totalToReach = d.startupOffsetCal + calV;
+      if (isFinite(totalToReach) && totalToReach > maxOffsetCal) { maxOffsetCal = totalToReach; maxIdx = i; }
+    });
+    const S1ms = deadline.getTime() - maxOffsetCal * dayMs;
+    data.forEach(d => {
+      const calV = d.daysNeededCal;
+      d.mastBorjaSenast = new Date(S1ms + d.startupOffsetCal * dayMs);
+      d.klarSenast = new Date(d.mastBorjaSenast.getTime() + calV * dayMs);
+    });
+
+    // 5) Forward simulation från projektStart (med nuvarande bemanning)
+    //    Detta visar VERKLIGHETEN: när blir varje roll faktiskt klar?
+    //    actualStart_i = projektStart + startupOffsetCal_i (begränsat av föregående roll)
+    //    actualFinish_i = actualStart_i + V_i/effRate_i × 7/5
+    let prevFinishMs = -Infinity;
+    data.forEach((d, i) => {
+      let startMs = projektStart.getTime() + d.startupOffsetCal * dayMs;
+      // Måste börja efter att föregående är klar med första item + handover
+      if (i > 0) {
+        const prev = data[i-1];
+        const oneItemCal = prev.ownRate > 0 ? (1 / prev.ownRate) * 7 / 5 : 0;
+        const ho = (typeof prev.role.handoverToNext === 'number') ? prev.role.handoverToNext : 0;
+        const earliestMs = (prev.actualStart ? prev.actualStart.getTime() : startMs) + (oneItemCal + ho) * dayMs;
+        startMs = Math.max(startMs, earliestMs);
+      }
+      d.actualStart = new Date(startMs);
+      const calV = d.effectiveRate > 0 ? (d.effV / d.effectiveRate) * 7 / 5 : Infinity;
+      d.actualFinish = isFinite(calV) ? new Date(startMs + calV * dayMs) : new Date(8.64e15);
+      d.bufferDays = Math.round((d.klarSenast.getTime() - d.actualFinish.getTime()) / dayMs);
+      d.overshoots = d.mastBorjaSenast.getTime() < projektStart.getTime() - dayMs/2;
+    });
+
+    // 6) Required headcount per roll: vad krävs för att rollen ska hinna klar i sin slot?
+    //    Tillgänglig arbetsdagar = (klarSenast_i - earliestStart_i) × 5/7
+    //    earliestStart_i = max(projektStart + startupOffsetCal_i, mastBorjaSenast_i)
+    //    requiredEffDay = effV_i / availWorkDays
+    //    requiredHeadcount = ceil(requiredEffDay / perPersonEffDay)
+    data.forEach(d => {
+      const earliestStartMs = Math.max(projektStart.getTime() + d.startupOffsetCal * dayMs, d.mastBorjaSenast.getTime());
+      const availCal = Math.max(0, (d.klarSenast.getTime() - earliestStartMs) / dayMs);
+      const availWork = availCal * 5 / 7;
+      const reqEffDay = availWork > 0 ? d.effV / availWork : Infinity;
+      // perPersonEff: rollens ownRate / antal personer (med samma multiplikator vi just räknade i ownRate)
+      const perPerson = (d.role.count > 0) ? (d.ownRate / d.role.count) : 0;
+      d.requiredHeadcount = (perPerson > 0 && isFinite(reqEffDay)) ? Math.ceil(reqEffDay / perPerson) : Infinity;
+      d.additionalNeeded = Math.max(0, d.requiredHeadcount - d.role.count);
+    });
+
+    // 7) Milestones per roll: 25%, 50%, 75%, 100% av V (i kalenderdatum)
+    //    Bygger taktat tidslinje. Utgår från actualStart (verklighet) men kan visas som klar-senast också.
+    data.forEach(d => {
+      const ms = [];
+      if (d.effectiveRate > 0 && isFinite(d.effectiveRate)) {
+        const stops = [0.25, 0.5, 0.75, 1.0];
+        stops.forEach(p => {
+          const itemsDone = Math.round(d.effV * p);
+          const calOffset = (itemsDone / d.effectiveRate) * 7 / 5;
+          const dt = new Date(d.actualStart.getTime() + calOffset * dayMs);
+          ms.push({ pct: p, itemsDone, date: dt });
+        });
+      }
+      d.milestones = ms;
+    });
+
+    // Total slack mellan deadline och faktisk slut
+    const lastFinish = data[data.length - 1].actualFinish;
+    const slackDays = Math.round((deadline.getTime() - lastFinish.getTime()) / dayMs);
+
+    return {
+      data,
+      projektStart,
+      deadline,
+      V,
+      S1: new Date(S1ms),
+      dailyOutput: data[data.length - 1].effectiveRate, // pipeline-output i steady state
+      totalCalDaysNeeded: maxOffsetCal,
+      slackDays,
+      hasSlack: slackDays >= 0,
+      lastFinish,
+      valid: true,
+    };
+  }
+
   // Returnerar kapacitet per dag givet ett alternativt antal personer (för min/max-scenarier)
   function roleCapPerDayWithCount(role, alternativeCount) {
     const raw = (+alternativeCount || 0) * rolePerDay(role);
@@ -6708,36 +6901,10 @@
     const refStart = projektStartDate;
     refStart.setHours(0,0,0,0);
     const V = target;
-    const effTakts = active.map(r => roleEffectivePerDay(r));
-    let cm = Infinity;
-    const data = active.map((r, i) => { const o = effTakts[i]; cm = Math.min(cm, o); return { role: r, ownRate: o, effectiveRate: cm }; });
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (i === data.length - 1) data[i].klarSenast = new Date(deadline);
-      else {
-        const ds = data[i+1];
-        const dwd = ds.effectiveRate > 0 ? (V / ds.effectiveRate) * 7 / 5 : 0;
-        const ho = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
-        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (dwd + ho) * dayMs);
-      }
-      const acd = Math.max(0, (data[i].klarSenast.getTime() - refStart.getTime()) / dayMs);
-      const awd = acd * 5 / 7;
-      const reqEff = awd > 0 ? V / awd : Infinity;
-      const ppe = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
-      data[i].requiredHeadcount = (ppe > 0 && isFinite(reqEff)) ? Math.ceil(reqEff / ppe) : Infinity;
-    }
-    // G1.9: Forward-sim för prognos med nuvarande bemanning
-    {
-      let chainMs = refStart.getTime();
-      for (let i = 0; i < data.length; i++) {
-        if (i > 0) {
-          const ho = (typeof data[i-1].role.handoverToNext === 'number') ? data[i-1].role.handoverToNext : 0;
-          chainMs = data[i-1].actualFinish.getTime() + ho * dayMs;
-        }
-        const dn = data[i].ownRate > 0 ? (V / data[i].ownRate) * 7 / 5 : Infinity;
-        data[i].actualFinish = isFinite(dn) ? new Date(chainMs + dn * dayMs) : new Date(8.64e15);
-      }
-    }
-    const lastFinish = data[data.length - 1].actualFinish;
+    // G1.83: Använd central pipeline-helper (vattenfall, ej burst)
+    const sched_cp = computePipelineSchedule({ active, V, deadline, projektStart: refStart, usePessimistic: true });
+    const data = sched_cp.data;
+    const lastFinish = sched_cp.lastFinish;
     const projDelta = Math.round((lastFinish.getTime() - deadline.getTime()) / dayMs);
     
     let txt = 'ÅTGÄRDSPLAN — Leveransprojektet (deadline ' + fmt(deadline) + ', ' + V + ' st)\n';
@@ -6973,39 +7140,14 @@
     const active = activeRoles();
     if (active.length === 0) { el.style.display = 'none'; return; }
 
-    // Använd samma burst-modell som matrisen och sammanfattningen
+    // G1.83: Använd central pipeline-helper (vattenfall, ej burst)
     const dayMs = 1000 * 60 * 60 * 24;
     const today0 = new Date(); today0.setHours(0,0,0,0);
     const projektStartDate = (state.projektStart && state.projektStart.length >= 8 && !isNaN(new Date(state.projektStart).getTime())) ? new Date(state.projektStart) : today0;
     const refStart = projektStartDate;
     const V = target;
-    // G1.75: Använd pessimistisk takt — så att utfall som visar verklig avvikelse 
-    // triggar varningen tidigare, inte bara plan-takt.
-    const pessFactor_sw = getActualVsPlanFactor();
-    const effTakts = active.map(r => roleEffectivePerDay(r) * pessFactor_sw);
-    let cumulativeMin = Infinity;
-    const data = active.map((role, idx) => {
-      const ownRate = effTakts[idx];
-      cumulativeMin = Math.min(cumulativeMin, ownRate);
-      return { role, idx, ownRate, effectiveRate: cumulativeMin };
-    });
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (i === data.length - 1) {
-        data[i].klarSenast = new Date(deadline);
-      } else {
-        const downstream = data[i+1];
-        const downstreamDaysCal = downstream.effectiveRate > 0 ? (V / downstream.effectiveRate) * 7 / 5 : 0;
-        const handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
-        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
-      }
-      // G1.57: Rework-konsistens — Nätarkitekt får extra volym (samma logik som drawRolesMatrix + updateHandoverPanel)
-      const isArch_sw = /arkitekt/i.test(data[i].role.name || '');
-      const rwVol_sw = isArch_sw ? getReworkVolume() : 0;
-      const effV_sw = V + rwVol_sw;
-      const daysNeeded = data[i].effectiveRate > 0 ? effV_sw / data[i].effectiveRate : Infinity;
-      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
-      data[i].overshoots = data[i].mastBorjaSenast < refStart;
-    }
+    const sched_sw = computePipelineSchedule({ active, V, deadline, projektStart: refStart, usePessimistic: true });
+    const data = sched_sw.data;
 
     const overshooters = data.filter(d => d.overshoots);
     if (overshooters.length === 0) {
@@ -7116,81 +7258,25 @@
     const projektStartDate = (state.projektStart && state.projektStart.length >= 8) ? new Date(state.projektStart) : new Date();
     const fmt = d => d.toLocaleDateString('sv-SE');
 
-    // Använd EXAKT samma burst-modell som Detaljerad planering (drawRolesMatrix)
-    // för att garantera identiska datum mellan vyerna
-    const effTakts = active.map(r => roleEffectivePerDay(r));
-    const minEff = Math.min(...effTakts);
-    let cumulativeMin = Infinity;
-    const data = active.map((role, idx) => {
-      const ownRate = effTakts[idx];
-      cumulativeMin = Math.min(cumulativeMin, ownRate);
-      return {
-        role, idx, ownRate,
-        effectiveRate: cumulativeMin,
-        isBottleneck: Math.abs(ownRate - minEff) < 1e-9,
-      };
+    // G1.83: Korrekt vattenfalls-/pipeline-modell via central helper
+    const projStart0 = new Date(projektStartDate); projStart0.setHours(0,0,0,0);
+    const refStart = projStart0; // bakåtkompatibilitet — flera referenser använder fortfarande refStart
+    const sched = computePipelineSchedule({ active, V, deadline, projektStart: projStart0, usePessimistic: true });
+    if (!sched.valid) {
+      card.classList.add('empty');
+      content.innerHTML = 'Sätt mål, deadline och bemanning för att se översikten för resursägare.';
+      footer.innerHTML = '';
+      updatePlanStatusPill({ show: false });
+      return;
+    }
+    const data = sched.data;
+    // Säkerställ availWorkDays-fältet (används senare för apply-button-logik)
+    data.forEach(d => {
+      const earliestStartMs = Math.max(projStart0.getTime() + d.startupOffsetCal * dayMs, d.mastBorjaSenast.getTime());
+      const availCal = Math.max(0, (d.klarSenast.getTime() - earliestStartMs) / dayMs);
+      d.availWorkDays = availCal * 5 / 7;
+      d.requiredEffDay = d.availWorkDays > 0 ? d.effV / d.availWorkDays : Infinity;
     });
-
-    // BURST-modell: klar_i = klar_(i+1) - V/rate_(i+1) - handover_(i→i+1)
-    // Konvertera arbetsdagar till kalenderdagar med faktor 7/5
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (i === data.length - 1) {
-        data[i].klarSenast = new Date(deadline);
-      } else {
-        const downstream = data[i+1];
-        const downstreamDaysCal = downstream.effectiveRate > 0 ? (V / downstream.effectiveRate) * 7 / 5 : 0;
-        const handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
-        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
-      }
-      // Task #29: Nätarkitekt får extra last från TF1-rework
-      const isArch = /arkitekt/i.test(data[i].role.name || '');
-      const rwVol = isArch ? getReworkVolume() : 0;
-      data[i].reworkVolume = rwVol;
-      const effV = V + rwVol;
-      data[i].effV = effV;
-      const daysNeeded = data[i].effectiveRate > 0 ? effV / data[i].effectiveRate : Infinity;
-      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
-      // overshoots: mastBorjaSenast < projektStart (eller idag om ingen projektstart)
-      const today0 = new Date(); today0.setHours(0,0,0,0);
-      const refStart = projektStartDate || today0;
-      data[i].overshoots = data[i].mastBorjaSenast < refStart;
-      // Räkna rekommenderad bemanning för att HINNA: 
-      // tillgängliga arbetsdagar = (klarSenast - refStart) × 5/7
-      const availCalDays = Math.max(0, (data[i].klarSenast.getTime() - refStart.getTime()) / dayMs);
-      const availWorkDays = availCalDays * 5 / 7;
-      data[i].availWorkDays = availWorkDays;
-      // Krävd effektiv takt per dag för att hinna effV items (inkl. rework)
-      const requiredEffDay = availWorkDays > 0 ? effV / availWorkDays : Infinity;
-      // Per-person effektiv takt = rollens nuvarande effektiva takt / antal personer
-      const perPersonEff = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
-      const reqHeadcount = (perPersonEff > 0 && isFinite(requiredEffDay)) ? Math.ceil(requiredEffDay / perPersonEff) : Infinity;
-      data[i].requiredHeadcount = reqHeadcount;
-      data[i].additionalNeeded = Math.max(0, reqHeadcount - data[i].role.count);
-      data[i].requiredEffDay = requiredEffDay;
-    }
-
-    // G1.9: Forward-simulering — när blir varje roll FAKTISKT klar med nuvarande bemanning?
-    // Burst-modellen kedjas framåt från refStart. Buffer = klarSenast - actualFinish.
-    {
-      const today0 = new Date(); today0.setHours(0,0,0,0);
-      const refStart = projektStartDate || today0;
-      let chainStartMs = refStart.getTime();
-      for (let i = 0; i < data.length; i++) {
-        if (i > 0) {
-          // Kan börja när föregående är klar + handover till denna roll
-          const ho = (typeof data[i-1].role.handoverToNext === 'number') ? data[i-1].role.handoverToNext : 0;
-          chainStartMs = data[i-1].actualFinish.getTime() + ho * dayMs;
-        }
-        data[i].actualStart = new Date(chainStartMs);
-        const effV_fwd = (data[i].effV !== undefined) ? data[i].effV : V;
-        const daysNeeded = data[i].ownRate > 0 ? (effV_fwd / data[i].ownRate) * 7 / 5 : Infinity;
-        data[i].actualFinish = isFinite(daysNeeded)
-          ? new Date(chainStartMs + daysNeeded * dayMs)
-          : new Date(8.64e15);
-        // Buffer i kalenderdagar (positivt = marginal, negativt = försening)
-        data[i].bufferDays = Math.round((data[i].klarSenast.getTime() - data[i].actualFinish.getTime()) / dayMs);
-      }
-    }
 
     const bottleneck = data.find(d => d.isBottleneck);
     // Bygg roll-cards
@@ -7751,113 +7837,45 @@
     container.innerHTML = '';
 
     const active = activeRoles();
-    // Mål-volymen är "totalen man valt"; fall tillbaka till potentialVolym om mål saknas
     const V = (state.onskadVolym && state.onskadVolym > 0) ? state.onskadVolym : potentialVolym;
-
-    if (active.length === 0 || !V || V <= 0) {
-      container.innerHTML = '<div style="color:#A8A5AD;text-align:center;padding:20px;font-size:12px;">Sätt mål-volym och bemanning för att se planeringen.</div>';
+    if (active.length === 0 || !V || V <= 0 || !deadline || isNaN(deadline.getTime())) {
+      container.innerHTML = '<div style="color:#A8A5AD;text-align:center;padding:20px;font-size:12px;">Sätt mål-volym, deadline och bemanning för att se planeringen.</div>';
       return;
     }
 
-    const dayMs = 1000 * 60 * 60 * 24;
-    const projStart = projektStartDate || new Date();
-
-    // === FORWARD: per roll, beräkna effektiv takt ===
-    // Per-roll effektiv takt = kap × per-roll-hitrate. Flaskhals = lägsta sådana effektiv takt.
-    // Cumulative-min = min av alla uppströms (inkl. egen) — det är pipeline-output-takten.
-    const effTakts = active.map(r => roleEffectivePerDay(r));
-    const minEff = Math.min(...effTakts);
-    let cumulativeMin = Infinity;
-    const data = active.map((role, idx) => {
-      const ownRate = effTakts[idx];
-      cumulativeMin = Math.min(cumulativeMin, ownRate);
-      return {
-        role, idx,
-        ownRate,
-        effectiveRate: cumulativeMin,
-        isBottleneck: Math.abs(ownRate - minEff) < 1e-9,
-        isLimitedByUpstream: ownRate > cumulativeMin + 1e-3,
-      };
-    });
-
-    // === BACKWARD: per roll, räkna "klar senast" och "måste börja senast" ===
-    // BURST-modell: Varje roll måste vara klar med sista item innan nästa roll börjar sin batch.
-    // Detta speglar verkligheten där roller arbetar i faser vid stora volymer (nätarkitekter
-    // ritar klart innan entreprenör börjar bygga).
-    // klar_N = deadline. klar_i = klar_(i+1) - V/rate_(i+1) - handover_(i→i+1)
-    const h = getHandover();
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (i === data.length - 1) {
-        // Sista rollen är klar exakt på deadline
-        data[i].klarSenast = new Date(deadline);
-      } else {
-        const downstream = data[i+1];
-        // Kalenderdagar = arbetsdagar × 7/5 (5 arbetsdagar per vecka)
-        const downstreamDaysCal = downstream.effectiveRate > 0 ? (V / downstream.effectiveRate) * 7 / 5 : 0;
-        // Handover mellan rollerna — använd rollens egen handoverToNext (per-roll-konfigurerad)
-        let handoverDays = (typeof data[i].role.handoverToNext === 'number') ? data[i].role.handoverToNext : 0;
-        // Backward-compat fallback om field saknas
-        if (handoverDays === 0 && !('handoverToNext' in (data[i].role || {}))) {
-          const downName = (downstream.role.name || '').toLowerCase();
-          const thisName = (data[i].role.name || '').toLowerCase();
-          if (/order/.test(thisName) && /arkitekt/.test(downName)) handoverDays = h.orderHandover;
-          else if (/order/.test(thisName) && /(tekniker|entreprenör)/.test(downName)) handoverDays = h.orderHandover;
-          else if (/arkitekt/.test(thisName) && /(tekniker|entreprenör)/.test(downName)) handoverDays = h.archHandover + h.tekStartup;
-          else handoverDays = 1;
-        }
-        data[i].klarSenast = new Date(data[i+1].klarSenast.getTime() - (downstreamDaysCal + handoverDays) * dayMs);
-      }
-      // Nätarkitekt får extra volym från TF1-rework om reworkRate > 0
-      const isArch = /arkitekt/i.test(data[i].role.name || '');
-      const rwVol = isArch ? getReworkVolume() : 0;
-      const effV = V + rwVol;
-      const daysNeeded = data[i].effectiveRate > 0 ? effV / data[i].effectiveRate : Infinity;
-      data[i].daysNeeded = daysNeeded;
-      data[i].reworkVolume = rwVol;
-      data[i].mastBorjaSenast = new Date(data[i].klarSenast.getTime() - daysNeeded * 7 / 5 * dayMs);
-      data[i].overshoots = data[i].mastBorjaSenast < projStart;
-      // Action: rekommenderad bemanning för att hinna med start från projektStart/idag
-      const today0_m = new Date(); today0_m.setHours(0,0,0,0);
-      const refStart_m = projStart || today0_m;
-      const availCalDays_m = Math.max(0, (data[i].klarSenast.getTime() - refStart_m.getTime()) / dayMs);
-      const availWorkDays_m = availCalDays_m * 5 / 7;
-      const requiredEffDay_m = availWorkDays_m > 0 ? effV / availWorkDays_m : Infinity;
-      const perPersonEff_m = (data[i].role.count > 0) ? (data[i].ownRate / data[i].role.count) : 0;
-      data[i].requiredHeadcount = (perPersonEff_m > 0 && isFinite(requiredEffDay_m)) ? Math.ceil(requiredEffDay_m / perPersonEff_m) : Infinity;
-      data[i].additionalNeeded = Math.max(0, data[i].requiredHeadcount - data[i].role.count);
+    // G1.83: Korrekt vattenfalls-/pipeline-modell
+    const projStart0 = new Date(projektStartDate || new Date()); projStart0.setHours(0,0,0,0);
+    const sched = computePipelineSchedule({ active, V, deadline, projektStart: projStart0, usePessimistic: true });
+    if (!sched.valid) {
+      container.innerHTML = '<div style="color:#A8A5AD;text-align:center;padding:20px;font-size:12px;">Sätt mål, deadline och bemanning för att se planeringen.</div>';
+      return;
     }
+    const data = sched.data;
+    const dayMs = 1000 * 60 * 60 * 24;
+    const fmt = d => d.toLocaleDateString('sv-SE');
+    const fmtShort = d => d.toLocaleDateString('sv-SE', {month: 'short', day: 'numeric'});
 
-    // Längsta tidsspannet styr bar-skalningen
-    const maxDays = Math.max(...data.map(d => isFinite(d.daysNeeded) ? d.daysNeeded : 0), 1);
-
-    // === Pipeline-flow-rad ovanför tabellen ===
+    // === Pipeline-flow-rad ===
     const flow = document.createElement('div');
     flow.className = 'pipeline-flow-line';
     let flowHtml = '<strong>Pipeline:</strong> ';
     data.forEach((d, i) => {
       const cls = d.isBottleneck ? 'pipeline-bottleneck' : 'pipeline-step';
       flowHtml += '<span class="' + cls + '">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
-      if (i < data.length - 1) {
-        flowHtml += '<span class="pipeline-arrow">→</span>';
-      }
+      if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
     flowHtml += '<span class="pipeline-hint">drag för att sortera om</span>';
     flow.innerHTML = flowHtml;
     container.appendChild(flow);
 
-    const fmt = d => d.toLocaleDateString('sv-SE');
-
-    // Sista beställningsdatum för Nätarkitekt — beräknas PER SUBSET (per aktivt typfall).
-    // Varje TF har sin egen ledtid → sin egen sista beställning. Visas alla applicerade
-    // tillsammans i kolumnen 'Sista beställning'.
+    // Sista-beställning per Nätarkitekt-subset (samma som tidigare logik)
     const archRole = data.find(x => /arkitekt/i.test(x.role.name));
-    const archSubsetDates = []; // [{ tfName, date, leadtimeDays }]
+    const archSubsetDates = [];
     if (archRole) {
       const subsets = getActiveSubsets();
       const archDailyRaw = roleCapPerDay(archRole.role);
       const archProcDays = archDailyRaw > 0 ? 1 / archDailyRaw : 0;
       subsets.forEach(s => {
-        // Bara TFs där Nätarkitekt deltar är relevanta
         if (!archRole.role.typfalls || !archRole.role.typfalls[s.tf]) return;
         const ltCalDays = s.leadtimeDays * 7 / 5;
         const last = new Date(deadline);
@@ -7866,160 +7884,204 @@
         archSubsetDates.push({ tfName: s.name, date: rounded, leadtimeDays: s.leadtimeDays, volume: s.volume });
       });
     }
-    // Tidigast (= mest pressade) datum för matriscellen + sammanfattning
     let archLastOrderDate = null;
-    if (archSubsetDates.length > 0) {
-      archLastOrderDate = archSubsetDates.reduce((earliest, x) => x.date < earliest ? x.date : earliest, archSubsetDates[0].date);
+    if (archSubsetDates.length > 0) archLastOrderDate = archSubsetDates.reduce((earliest, x) => x.date < earliest ? x.date : earliest, archSubsetDates[0].date);
+    const archDateMap = {};
+    if (archRole && archSubsetDates.length > 0) {
+      if (archSubsetDates.length === 1) archDateMap[archRole.role.id] = fmt(archSubsetDates[0].date);
+      else archDateMap[archRole.role.id] = archSubsetDates.map(s => s.tfName + ': ' + fmt(s.date)).join(' · ');
     }
 
-    // === GANTT-SVG: visuell pipeline mellan projektstart och deadline ===
-    // Tidsaxel: tidigaste mastBorjaSenast (eller projStart om planen är tight) till deadline
-    const earliestStart = data.reduce((min, d) => d.mastBorjaSenast < min ? d.mastBorjaSenast : min, projStart);
-    const ganttStart = earliestStart < projStart ? earliestStart : projStart;
+    // === GANTT-SVG: visuell pipeline ===
+    // Tidsaxel går från projStart till deadline (och rymmer eventuellt overshooting start)
+    const today_g = new Date(); today_g.setHours(0,0,0,0);
+    const earliestVisible = data.reduce((min, d) => d.mastBorjaSenast < min ? d.mastBorjaSenast : min, projStart0);
+    const ganttStart = earliestVisible < projStart0 ? earliestVisible : projStart0;
     const ganttEnd = new Date(deadline);
     const totalSpanMs = Math.max(1, ganttEnd.getTime() - ganttStart.getTime());
-    const today_g = new Date(); today_g.setHours(0,0,0,0);
-    
-    const archRoleSet = archRole ? archRole.role.id : null;
-    const archDateMap = {}; // roleId → siste-orderdatum-text
-    if (archRole && archSubsetDates.length > 0) {
-      if (archSubsetDates.length === 1) {
-        archDateMap[archRole.role.id] = fmt(archSubsetDates[0].date);
-      } else {
-        archDateMap[archRole.role.id] = archSubsetDates.map(s => s.tfName + ': ' + fmt(s.date)).join(' · ');
-      }
-    }
-    
-    const rowHeight = 56;
-    const headerHeight = 40;
-    const labelWidth = 200;
-    const padRight = 80;
-    const ganttHeight = headerHeight + data.length * rowHeight + 30;
-    const fmtShort = d => d.toLocaleDateString('sv-SE', {month: 'short', day: 'numeric'});
-    
+
+    const rowHeight = 60;
+    const headerHeight = 44;
+    const labelWidth = 210;
+    const padRight = 90;
+    const ganttHeight = headerHeight + data.length * rowHeight + 36;
+
     let svg = '<svg class="gantt-svg" viewBox="0 0 1000 ' + ganttHeight + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gantt-schema över rollernas pipeline">';
     const xFor = (date) => labelWidth + ((date.getTime() - ganttStart.getTime()) / totalSpanMs) * (1000 - labelWidth - padRight);
-    
-    // Tidsaxel-tickar: 5 jämnt fördelade datum
+
+    // Tidsaxel-tickar
     svg += '<g class="gantt-axis">';
     for (let i = 0; i <= 4; i++) {
       const t = ganttStart.getTime() + (totalSpanMs * i / 4);
       const x = labelWidth + (i / 4) * (1000 - labelWidth - padRight);
       const dt = new Date(t);
-      svg += '<line x1="' + x + '" y1="' + (headerHeight - 8) + '" x2="' + x + '" y2="' + (ganttHeight - 20) + '" stroke="#E5E2EA" stroke-width="0.5" stroke-dasharray="2,3"/>';
+      svg += '<line x1="' + x + '" y1="' + (headerHeight - 8) + '" x2="' + x + '" y2="' + (ganttHeight - 26) + '" stroke="#E5E2EA" stroke-width="0.5" stroke-dasharray="2,3"/>';
       svg += '<text x="' + x + '" y="' + (headerHeight - 12) + '" font-size="10" fill="#6B5F75" text-anchor="middle" font-family="inherit">' + fmtShort(dt) + '</text>';
     }
     svg += '</g>';
-    
-    // Idag-linje (grön) om den ligger inom span
+
+    // Projektstart-linje (lila)
+    if (projStart0 >= ganttStart && projStart0 <= ganttEnd) {
+      const xPS = xFor(projStart0);
+      svg += '<line x1="' + xPS + '" y1="' + headerHeight + '" x2="' + xPS + '" y2="' + (ganttHeight - 26) + '" stroke="#5C0E92" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.6"/>';
+      svg += '<text x="' + xPS + '" y="' + (ganttHeight - 8) + '" font-size="10" fill="#5C0E92" text-anchor="middle" font-weight="600" font-family="inherit">projektstart</text>';
+    }
+    // Idag-linje
     if (today_g >= ganttStart && today_g <= ganttEnd) {
       const xToday = xFor(today_g);
-      svg += '<line x1="' + xToday + '" y1="' + headerHeight + '" x2="' + xToday + '" y2="' + (ganttHeight - 20) + '" stroke="#1d6e35" stroke-width="1.5" stroke-dasharray="4,3"/>';
-      svg += '<text x="' + xToday + '" y="' + (ganttHeight - 6) + '" font-size="10" fill="#1d6e35" text-anchor="middle" font-weight="600" font-family="inherit">idag</text>';
+      svg += '<line x1="' + xToday + '" y1="' + headerHeight + '" x2="' + xToday + '" y2="' + (ganttHeight - 26) + '" stroke="#1d6e35" stroke-width="1.5" stroke-dasharray="4,3"/>';
+      svg += '<text x="' + xToday + '" y="' + (headerHeight + 12) + '" font-size="10" fill="#1d6e35" text-anchor="middle" font-weight="600" font-family="inherit">idag</text>';
     }
-    // Deadline-linje (röd-lila)
+    // Deadline-linje
     const xDeadline = xFor(ganttEnd);
-    svg += '<line x1="' + xDeadline + '" y1="' + headerHeight + '" x2="' + xDeadline + '" y2="' + (ganttHeight - 20) + '" stroke="#9a2424" stroke-width="2"/>';
-    svg += '<text x="' + xDeadline + '" y="' + (ganttHeight - 6) + '" font-size="10" fill="#9a2424" text-anchor="end" font-weight="600" font-family="inherit">deadline ' + fmt(deadline) + '</text>';
-    
-    // Rader per roll
+    svg += '<line x1="' + xDeadline + '" y1="' + headerHeight + '" x2="' + xDeadline + '" y2="' + (ganttHeight - 26) + '" stroke="#9a2424" stroke-width="2"/>';
+    svg += '<text x="' + xDeadline + '" y="' + (ganttHeight - 8) + '" font-size="10" fill="#9a2424" text-anchor="end" font-weight="600" font-family="inherit">deadline ' + fmt(deadline) + '</text>';
+
     data.forEach((d, i) => {
       const yRow = headerHeight + i * rowHeight;
-      const yBar = yRow + 22;
-      const barH = 20;
-      
-      // Bakgrundsrad (zebra)
+      const yBar = yRow + 24;
+      const barH = 22;
+
       if (i % 2 === 0) svg += '<rect x="0" y="' + yRow + '" width="1000" height="' + rowHeight + '" fill="#FAFAFD" />';
-      
-      // Roll-label vänster
+
       svg += '<text x="12" y="' + (yRow + 18) + '" font-size="13" font-weight="600" fill="#1A1A1F" font-family="inherit">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</text>';
-      const subText = (d.role.count + ' pers · ' + d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' · flaskhals' : ''));
+      const subText = d.role.count + ' pers · ' + d.ownRate.toFixed(1) + '/dag' + (d.isBottleneck ? ' · flaskhals' : '');
       svg += '<text x="12" y="' + (yRow + 36) + '" font-size="11" fill="#6B5F75" font-family="inherit">' + escapeHtml(subText) + '</text>';
-      svg += '<text x="12" y="' + (yRow + 50) + '" font-size="10" fill="#9a2424" font-family="inherit">' + (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount) ? '→ ' + d.requiredHeadcount + ' pers behövs (+' + d.additionalNeeded + ')' : (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '')) + '</text>';
-      
-      // Bar mellan mastBorjaSenast och klarSenast
-      const xStart = Math.max(labelWidth, xFor(d.mastBorjaSenast));
-      const xEnd = xFor(d.klarSenast);
-      const barW = Math.max(2, xEnd - xStart);
-      const barColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
-      const barOpacity = d.overshoots ? '0.85' : '0.75';
-      
-      // Pre-projekt-segment (om mastBorjaSenast < projStart) — streckat
-      if (d.mastBorjaSenast < projStart) {
-        const xRealStart = xFor(d.mastBorjaSenast);
-        const xRealCutoff = xFor(projStart);
-        const wPre = Math.max(0, xRealCutoff - xRealStart);
-        if (wPre > 0) {
-          svg += '<rect x="' + xRealStart + '" y="' + yBar + '" width="' + wPre + '" height="' + barH + '" fill="' + barColor + '" opacity="0.25" stroke="' + barColor + '" stroke-width="1" stroke-dasharray="3,2" rx="3"/>';
+      const recBadge = (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) ? '→ ' + d.requiredHeadcount + ' pers (+' + d.additionalNeeded + ')' : (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : (isFinite(d.bufferDays) ? (d.bufferDays >= 0 ? d.bufferDays + ' dgr marginal' : Math.abs(d.bufferDays) + ' dgr försening') : ''));
+      const recColor = d.additionalNeeded > 0 ? '#9a2424' : (d.bufferDays < 0 ? '#9a2424' : '#1d6e35');
+      svg += '<text x="12" y="' + (yRow + 52) + '" font-size="10" fill="' + recColor + '" font-family="inherit">' + escapeHtml(recBadge) + '</text>';
+
+      // PLAN-BAR: mastBorjaSenast → klarSenast (vattenfall, kort om V/effectiveRate)
+      const xPlanStart = xFor(d.mastBorjaSenast);
+      const xPlanEnd = xFor(d.klarSenast);
+      const xPlanStartClamp = Math.max(labelWidth, xPlanStart);
+      const planW = Math.max(2, xPlanEnd - xPlanStartClamp);
+      const planColor = d.overshoots ? '#9a2424' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
+
+      // Pre-projekt-segment (streckat) om mastBorjaSenast < projStart
+      if (d.mastBorjaSenast < projStart0) {
+        const xPre = xFor(d.mastBorjaSenast);
+        const xPreEnd = xFor(projStart0);
+        const wPre = Math.max(0, xPreEnd - xPre);
+        if (wPre > 0) svg += '<rect x="' + xPre + '" y="' + yBar + '" width="' + wPre + '" height="' + barH + '" fill="' + planColor + '" opacity="0.18" stroke="' + planColor + '" stroke-width="1" stroke-dasharray="3,2" rx="3"/>';
+      }
+
+      svg += '<rect x="' + xPlanStartClamp + '" y="' + yBar + '" width="' + planW + '" height="' + barH + '" fill="' + planColor + '" opacity="0.78" rx="3">';
+      svg += '<title>' + escapeHtml(d.role.name) + ' (plan): ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ', ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st i takt ' + d.effectiveRate.toFixed(1) + '/dag</title>';
+      svg += '</rect>';
+
+      // Datum-texter
+      if (planW > 90) {
+        svg += '<text x="' + (xPlanStartClamp + 6) + '" y="' + (yBar + 15) + '" font-size="10" fill="#fff" font-weight="600" font-family="inherit">' + fmt(d.mastBorjaSenast) + '</text>';
+        svg += '<text x="' + (xPlanEnd - 6) + '" y="' + (yBar + 15) + '" font-size="10" fill="#fff" font-weight="600" text-anchor="end" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
+      } else {
+        svg += '<text x="' + (xPlanEnd + 4) + '" y="' + (yBar + 15) + '" font-size="10" fill="#1A1A1F" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
+      }
+
+      // PROGRESSIONS-MARKERINGAR (milestones 25/50/75/100%) — visa i baren
+      if (d.milestones && d.milestones.length > 0 && planW > 60) {
+        d.milestones.forEach(ms => {
+          if (ms.date >= d.mastBorjaSenast && ms.date <= d.klarSenast) {
+            const xM = xFor(ms.date);
+            if (xM >= xPlanStartClamp && xM <= xPlanEnd) {
+              svg += '<line x1="' + xM + '" y1="' + yBar + '" x2="' + xM + '" y2="' + (yBar + barH) + '" stroke="#fff" stroke-width="1" opacity="0.5"/>';
+            }
+          }
+        });
+      }
+
+      // ACTUAL-LINJE (forward sim) — visa som tunn streckad linje under plan-bar OM den avviker betydligt
+      if (d.actualFinish && Math.abs(d.bufferDays) >= 3) {
+        const xAS = Math.max(labelWidth, xFor(d.actualStart));
+        const xAF = xFor(d.actualFinish);
+        const yA = yBar + barH + 4;
+        if (xAF > xAS) {
+          const aColor = d.bufferDays < 0 ? '#9a2424' : '#1d6e35';
+          svg += '<line x1="' + xAS + '" y1="' + yA + '" x2="' + Math.min(xAF, 1000 - padRight) + '" y2="' + yA + '" stroke="' + aColor + '" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.7"/>';
+          if (xAF > 1000 - padRight) {
+            svg += '<text x="' + (1000 - padRight + 2) + '" y="' + (yA + 3) + '" font-size="9" fill="' + aColor + '" font-family="inherit">→ ' + fmt(d.actualFinish) + '</text>';
+          } else {
+            svg += '<text x="' + (xAF + 2) + '" y="' + (yA + 3) + '" font-size="9" fill="' + aColor + '" font-family="inherit">faktisk slut ' + fmt(d.actualFinish) + '</text>';
+          }
         }
       }
-      
-      svg += '<rect x="' + xStart + '" y="' + yBar + '" width="' + barW + '" height="' + barH + '" fill="' + barColor + '" opacity="' + barOpacity + '" rx="3">';
-      svg += '<title>' + escapeHtml(d.role.name) + ': ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ' (' + Math.round(d.daysNeeded) + ' dagar för ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st)</title>';
-      svg += '</rect>';
-      
-      // Datum-texter på/utanför baren
-      if (barW > 80) {
-        svg += '<text x="' + (xStart + 6) + '" y="' + (yBar + 14) + '" font-size="10" fill="#fff" font-weight="600" font-family="inherit">' + fmt(d.mastBorjaSenast) + '</text>';
-        svg += '<text x="' + (xEnd - 6) + '" y="' + (yBar + 14) + '" font-size="10" fill="#fff" font-weight="600" text-anchor="end" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
-      } else {
-        svg += '<text x="' + (xEnd + 4) + '" y="' + (yBar + 14) + '" font-size="10" fill="#1A1A1F" font-family="inherit">' + fmt(d.klarSenast) + '</text>';
-      }
-      
-      // Handover-gap till nästa roll (streckad linje)
+
+      // Handover-markering till nästa roll (streckad linje) — visar att överlämning sker när första item är klar, inte hela batchen
       if (i < data.length - 1) {
         const next = data[i+1];
         const xNextStart = Math.max(labelWidth, xFor(next.mastBorjaSenast));
-        const yNextBar = headerHeight + (i+1) * rowHeight + 22 + barH/2;
-        svg += '<line x1="' + xEnd + '" y1="' + (yBar + barH) + '" x2="' + xNextStart + '" y2="' + yNextBar + '" stroke="#A8A5AD" stroke-width="1" stroke-dasharray="3,2"/>';
+        const yNextBar = headerHeight + (i+1) * rowHeight + 24 + 11;
+        // Kort linje från en bit in i denna bar (där första item kommer ut) ner till nästa rolls start
+        const oneItemCal = d.ownRate > 0 ? (1 / d.ownRate) * 7 / 5 : 0;
+        const xFirstOut = xFor(new Date(d.mastBorjaSenast.getTime() + oneItemCal * dayMs));
+        const xConnect = Math.min(Math.max(xPlanStartClamp + 8, xFirstOut), xPlanEnd);
+        svg += '<path d="M ' + xConnect + ' ' + (yBar + barH) + ' L ' + xConnect + ' ' + (yNextBar - 8) + ' L ' + xNextStart + ' ' + yNextBar + '" stroke="#A8A5AD" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.7"/>';
       }
-      
-      // Sista beställning (Nätarkitekt) markerad som lila punkt
-      if (d.role.id === archRoleSet && archLastOrderDate) {
+
+      // Sista-beställning för Nätarkitekt
+      if (archRole && d.role.id === archRole.role.id && archLastOrderDate) {
         const xLast = xFor(archLastOrderDate);
         if (xLast >= labelWidth && xLast <= 1000 - padRight) {
           svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
         }
       }
     });
-    
+
     svg += '</svg>';
-    
+
     const ganttDiv = document.createElement('div');
     ganttDiv.className = 'gantt-container';
     ganttDiv.innerHTML = svg;
     container.appendChild(ganttDiv);
 
-    // Sammanfattning
+    // === Taktat tidslinje (milestones per roll, datumvisade i punkt-form) ===
+    if (data.some(d => d.milestones && d.milestones.length > 0)) {
+      const tactDiv = document.createElement('div');
+      tactDiv.className = 'tact-timeline';
+      let tactHtml = '<div class="tact-title">Takt per roll — när är hur mycket klart?</div><div class="tact-roles">';
+      data.forEach((d, i) => {
+        if (!d.milestones || d.milestones.length === 0) return;
+        tactHtml += '<div class="tact-role">';
+        tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name);
+        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + ' · ' + d.effectiveRate.toFixed(1) + '/dag</span></div>';
+        tactHtml += '<ul class="tact-list">';
+        d.milestones.forEach(ms => {
+          const pctLabel = Math.round(ms.pct * 100);
+          tactHtml += '<li><span class="tact-pct">' + pctLabel + '%</span> <span class="tact-items">' + ms.itemsDone + ' st</span> <span class="tact-date">' + fmt(ms.date) + '</span></li>';
+        });
+        tactHtml += '</ul>';
+        tactHtml += '</div>';
+      });
+      tactHtml += '</div>';
+      tactDiv.innerHTML = tactHtml;
+      container.appendChild(tactDiv);
+    }
+
+    // === Sammanfattning ===
     const summary = document.createElement('div');
     summary.className = 'matrix-summary';
     const bottleneck = data.find(d => d.isBottleneck);
     const overshooters = data.filter(d => d.overshoots);
     let summaryHtml = 'Backward-schemalagt mot deadline <strong>' + fmt(deadline) + '</strong>. ';
     if (bottleneck) {
-      summaryHtml += 'Flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> taktar ut hela kedjan på ' +
-        bottleneck.effectiveRate.toFixed(1) + '/dag och måste börja senast <strong>' +
-        fmt(bottleneck.mastBorjaSenast) + '</strong> för att hinna med ' + Math.round(V) + ' st.';
+      summaryHtml += 'Flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> taktar pipelinen i ' + bottleneck.effectiveRate.toFixed(1) + '/dag. Sista rollen måste börja senast <strong>' + fmt(data[data.length-1].mastBorjaSenast) + '</strong> för att ' + Math.round(V) + ' st ska vara klart i tid.';
     }
     if (archSubsetDates.length === 1 && archRole) {
       const s = archSubsetDates[0];
       const unitWord = archRole.role.unit === 'månad' ? 'månadsstart' : (archRole.role.unit === 'vecka' ? 'måndag' : 'dag');
-      summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> måste lägga sin sista beställning senast <strong>' +
-        fmt(s.date) + '</strong> för ' + s.tfName + ' (' + s.leadtimeDays + ' dgr ledtid, rundat till ' + unitWord + ').';
+      summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> måste lägga sin sista beställning senast <strong>' + fmt(s.date) + '</strong> för ' + s.tfName + ' (' + s.leadtimeDays + ' dgr ledtid, rundat till ' + unitWord + ').';
     } else if (archSubsetDates.length > 1 && archRole) {
       const parts = archSubsetDates.map(s => '<strong>' + s.tfName + ':</strong> ' + fmt(s.date) + ' (' + s.volume + ' st, ' + s.leadtimeDays + ' dgr)');
       summaryHtml += ' <strong>' + escapeHtml(archRole.role.name) + '</strong> sista beställning per typfall: ' + parts.join(' · ') + '.';
     }
     if (overshooters.length > 0) {
-      summaryHtml += ' <span class="matrix-warning">⚠ ' + overshooters.length + ' roll' +
-        (overshooters.length === 1 ? '' : 'er') + ' kan inte hinnas med givet projektstart ' +
-        fmt(projStart) + ' — höj kapaciteten, sänk målet eller flytta deadline.</span>';
+      summaryHtml += ' <span class="matrix-warning">⚠ ' + overshooters.length + ' roll' + (overshooters.length === 1 ? '' : 'er') + ' kan inte hinnas med givet projektstart ' + fmt(projStart0) + ' — höj kapaciteten på flaskhalsen, korta handover eller flytta deadline.</span>';
     }
     summary.innerHTML = summaryHtml;
     container.appendChild(summary);
   }
 
-    // Visar pedagogiskt tomstate-meddelande i chart-card när data saknas
+  // G1.83: Återställd efter drawRolesMatrix-refactor
   function drawChartEmptyState(message) {
     const svg = document.getElementById('chart');
     if (!svg) return;
