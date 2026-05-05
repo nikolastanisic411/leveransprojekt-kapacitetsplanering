@@ -311,7 +311,7 @@
   .tact-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
   @media (max-width: 600px) { .tact-roles { grid-template-columns: 1fr; } }
   .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 10px 12px; transition: border-color 0.15s, transform 0.1s; }
-  .tact-role:hover { border-color: #C266F0; transform: translateY(-1px); }
+  .tact-role:hover { border-color: #C266F0; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(92,14,146,0.08); }
   .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
   .tact-role-meta { font-weight: 400; color: #6B5F75; font-size: 11px; }
   .tact-list { list-style: none; padding: 0; margin: 0; }
@@ -327,7 +327,8 @@
     .plan-status-pill .psp-arrow { display: none; }
     .handover-card { break-inside: avoid; page-break-inside: avoid; }
     .handover-card .ho-role { break-inside: avoid; }
-    .ho-apply-all-btn, .ho-apply-btn, .ho-copy-btn, .scen-apply-btn, .scen-copy-btn, .exec-print-btn { display: none !important; }
+    .ho-apply-all-btn, .ho-apply-btn, .ho-copy-btn, .scen-apply-btn, .scen-copy-btn, .exec-print-btn,
+    .next-action-banner button, button[onclick*="applySuggestion"] { display: none !important; }
     .gantt-container { break-inside: avoid; page-break-inside: avoid; }
   }
   /* G1.16: Plan-status-pill — proaktiv early warning högst upp */
@@ -3063,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.540-PIPELINE-VIZ" aria-busy="true">
+<body data-build="2026-04-29-G1.560-INSIGHT-DEEP" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3494,7 +3495,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.540-PIPELINE-VIZ</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.560-INSIGHT-DEEP</span>
   </div>
 
 </div>
@@ -6839,7 +6840,7 @@
           }
         }
       } catch (_) {}
-      statusEl.innerHTML = '<strong style="color:#1d6e35">●</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st mellan <strong>' + startStr + '</strong> och <strong>' + deadline.toLocaleDateString('sv-SE') + '</strong>.' + extraInsight504;
+      statusEl.innerHTML = '<strong style="color:#1d6e35;font-size:18px;line-height:1">✓</strong> <strong style="color:#1d6e35">I mål.</strong> Nuvarande setup når <strong>' + fmtNum(Math.round(projected)) + '</strong> av målet <strong>' + fmtNum(target) + '</strong> st mellan <strong>' + startStr + '</strong> och <strong>' + deadline.toLocaleDateString('sv-SE') + '</strong>.' + extraInsight504;
     } else if (pctToTarget >= 80) {
       // G1.506: Nära mål - tillagt insikt om hur mycket flaskhalsen behöver höjas
       let nearInsight = '';
@@ -7497,7 +7498,9 @@
         }
         // Hint: om den här rollen INTE är flaskhalsen, lös flaskhalsen först
         if (!d.isBottleneck && bottleneck && bottleneck.role.id !== d.role.id) {
-          html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong> först — det kan eliminera detta behov.</em>';
+          const bnReq = bottleneck.requiredHeadcount && isFinite(bottleneck.requiredHeadcount) ? bottleneck.requiredHeadcount : null;
+          const bnHint = bnReq && bnReq > bottleneck.role.count ? ' (höj till ' + bnReq + ' pers, +' + (bnReq - bottleneck.role.count) + ')' : '';
+          html += '<br><em style="opacity:0.85">Tips: lös flaskhalsen <strong>' + escapeHtml(bottleneck.role.name) + '</strong>' + bnHint + ' först — det kan eliminera detta behov.</em>';
         }
         // G1.302/G1.508: Hävstång både för isBottleneck och isPipelineBottleneck
         if ((d.isBottleneck || d.isPipelineBottleneck) && d.daysSavedPerExtra > 0) {
@@ -7521,7 +7524,8 @@
           const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
           html += '<strong>Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + Math.max(1, d.requiredHeadcount) + ')" type="button" style="margin-left:4px">Sätt ' + Math.max(1, d.requiredHeadcount) + '</button><br>';
         }
-        html += '<strong>OK:</strong> ' + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
+        const okLbl = d.role.count === d.requiredHeadcount ? '<strong>OK – exakt rätt:</strong> ' : '<strong>OK:</strong> ';
+        html += okLbl + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
         // G1.9: Visa förväntat slutdatum + buffer-marginal
         if (d.actualFinish && isFinite(d.bufferDays)) {
           const buf = d.bufferDays;
@@ -8206,7 +8210,7 @@
     if (data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
       tactDiv.className = 'tact-timeline'; tactDiv.setAttribute('role', 'region'); tactDiv.setAttribute('aria-label', 'Taktat tidslinje per roll');
-      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
+      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>📅 Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
       data.forEach((d, i) => {
         if (!d.milestones || d.milestones.length === 0) return;
         tactHtml += '<div class="tact-role">';
