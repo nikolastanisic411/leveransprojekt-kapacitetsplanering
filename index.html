@@ -6807,7 +6807,9 @@
           if (sched_e.valid) {
             const slack = sched_e.slackDays;
             const totalDays = Math.round(sched_e.totalCalDaysNeeded);
-            const txt = '<strong>Pipeline-tid:</strong> ' + totalDays + ' kalenderdagar · ' + (slack >= 0 ? '<span style=\'color:#1d6e35\'>+' + slack + ' dgr marginal</span>' : '<span style=\'color:#9a2424\'>' + Math.abs(slack) + ' dgr försening</span>');
+            const totalSurplus_sb = sched_e.data.reduce((s, dd) => s + (dd.surplusHeadcount || 0), 0);
+            let txt = '<strong>Pipeline-tid:</strong> ' + totalDays + ' kalenderdagar · ' + (slack >= 0 ? '<span style=\'color:#1d6e35\'>+' + slack + ' dgr marginal</span>' : '<span style=\'color:#9a2424\'>' + Math.abs(slack) + ' dgr försening</span>');
+            if (totalSurplus_sb > 0) txt += ' · <span style=\'color:#5C0E92\'>' + totalSurplus_sb + ' pers frigörbara</span>';
             sb.innerHTML = txt; sb.style.display = '';
           } else { sb.style.display = 'none'; }
         } catch(_) { sb.style.display = 'none'; }
@@ -7042,7 +7044,11 @@
       txt += '   Start senast: ' + fmt(d.mastBorjaSenast || refStart) + '\n';
       txt += '   Klar senast:  ' + fmt(d.klarSenast) + '\n';
       txt += '   Volym:        ' + V + ' st\n';
-      txt += '   Takt:         ' + d.ownRate.toFixed(1) + '/dag egen' + (d.ownRate > d.effectiveRate + 0.01 ? ' / ' + d.effectiveRate.toFixed(1) + '/dag pipeline' : '') + '\n\n';
+      txt += '   Takt:         ' + d.ownRate.toFixed(1) + '/dag egen' + (d.ownRate > d.effectiveRate + 0.01 ? ' / ' + d.effectiveRate.toFixed(1) + '/dag pipeline' : '') + '\n';
+      if (typeof d.capacityUtilization === 'number') {
+        txt += '   Utnyttjande:  ' + Math.round(d.capacityUtilization * 100) + ' %' + (d.surplusHeadcount > 0 ? ' (kan frigöra ' + d.surplusHeadcount + ' pers)' : '') + '\n';
+      }
+      txt += '\n';
     });
     
     const totalAdd = data.reduce((s, d) => s + Math.max(0, (isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count) - d.role.count), 0);
@@ -7446,7 +7452,7 @@
       if (typeof d.capacityUtilization === 'number') {
         const utilPct = Math.round(d.capacityUtilization * 100);
         const utilColor = utilPct >= 80 ? '#A8E6C2' : (utilPct >= 50 ? '#FFE6A0' : '#FFB8E0');
-        const utilLabel = utilPct >= 80 ? 'fullt utnyttjad' : (utilPct >= 50 ? 'delvis utnyttjad' : 'underutnyttjad');
+        const utilLabel = utilPct >= 80 ? '✓ fullt utnyttjad' : (utilPct >= 50 ? 'delvis utnyttjad' : '⚠ underutnyttjad');
         const bar = '<span style=\'display:inline-block;width:60px;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;margin-left:6px;vertical-align:middle;overflow:hidden\'><span style=\'display:block;width:' + Math.max(2, utilPct) + '%;height:100%;background:' + utilColor + '\'></span></span>';
         html += '<div class="ho-stat" title="Pipeline taktar i ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag — rollens egen kapacitet skulle räcka till ' + (d.ownRate ? d.ownRate.toFixed(1) : '?') + '/dag, men flaskhalsen begränsar till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + bar + '</strong></div>';
       }
@@ -8207,7 +8213,7 @@
         tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' <span style="color:#5C0E92;font-weight:600">⚑ flaskhals</span>' : '');
         const firstItemMs2 = d.ownRate > 0 ? d.actualStart.getTime() + (1/d.ownRate) * 7/5 * 24*3600*1000 : null; const firstItemStr = firstItemMs2 ? fmt(new Date(firstItemMs2)) : '';
         tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klart ' + firstItemStr : '') + ' · pipeline ' + d.effectiveRate.toFixed(1) + '/dag' + (d.ownRate > d.effectiveRate + 0.01 ? ' (egen ' + d.ownRate.toFixed(1) + '/dag)' : '') + '</span></div>';
-        tactHtml += '<ul class="tact-list">';
+        tactHtml += '<ul class="tact-list" aria-label="Milestones för ' + escapeHtml(d.role.name) + '">';
         d.milestones.forEach(ms => {
           const pctLabel = Math.round(ms.pct * 100);
           const daysFromStart = Math.round((ms.date.getTime() - d.actualStart.getTime()) / (24*3600*1000));
@@ -8224,7 +8230,7 @@
         const bnRate_g313 = sched.dailyOutput || 0;
         const overviewDiv = document.createElement('div');
         overviewDiv.style.cssText = 'margin-top:10px;padding:8px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:11px;color:#6B5F75;text-align:center;';
-        const projStartFmt = (sched.projektStart && !isNaN(sched.projektStart.getTime())) ? sched.projektStart.toLocaleDateString('sv-SE') : '—'; const lastFinishFmt = (sched.lastFinish && !isNaN(sched.lastFinish.getTime())) ? sched.lastFinish.toLocaleDateString('sv-SE') : '—'; overviewDiv.innerHTML = '<strong>Pipeline:</strong> ' + projStartFmt + ' → ' + lastFinishFmt + ' (' + totalDays_g313 + ' kalenderdagar) · steady state ' + bnRate_g313.toFixed(1) + '/dag · ' + (sched.slackDays >= 0 ? sched.slackDays + ' dgr marginal' : Math.abs(sched.slackDays) + ' dgr försening');
+        const projStartFmt = (sched.projektStart && !isNaN(sched.projektStart.getTime())) ? sched.projektStart.toLocaleDateString('sv-SE') : '—'; const lastFinishFmt = (sched.lastFinish && !isNaN(sched.lastFinish.getTime())) ? sched.lastFinish.toLocaleDateString('sv-SE') : '—'; overviewDiv.innerHTML = '<strong>Pipeline:</strong> ' + projStartFmt + ' → ' + lastFinishFmt + ' (' + totalDays_g313 + ' kalenderdagar) · steady state ' + bnRate_g313.toFixed(1) + '/dag · ' + (sched.slackDays >= 0 ? '<span style="color:#1d6e35">' + sched.slackDays + ' dgr marginal</span>' : '<span style="color:#9a2424">' + Math.abs(sched.slackDays) + ' dgr försening</span>');
         tactDiv.appendChild(overviewDiv);
       }
       container.appendChild(tactDiv);
