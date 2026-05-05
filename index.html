@@ -309,7 +309,8 @@
   .tact-timeline { margin-top: 16px; padding: 14px 16px; background: linear-gradient(135deg, #FAFAFD 0%, #F5F0FA 100%); border: 0.5px solid #E5E2EA; border-radius: 10px; }
   .tact-title { font-size: 13px; font-weight: 600; color: #1A1A1F; margin-bottom: 10px; }
   .tact-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-  .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 10px 12px; }
+  .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 10px 12px; transition: border-color 0.15s, transform 0.1s; }
+  .tact-role:hover { border-color: #C266F0; transform: translateY(-1px); }
   .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
   .tact-role-meta { font-weight: 400; color: #6B5F75; font-size: 11px; }
   .tact-list { list-style: none; padding: 0; margin: 0; }
@@ -323,7 +324,7 @@
     .plan-status-pill .psp-arrow { display: none; }
     .handover-card { break-inside: avoid; page-break-inside: avoid; }
     .handover-card .ho-role { break-inside: avoid; }
-    .ho-apply-all-btn, .ho-apply-btn, .ho-copy-btn { display: none !important; }
+    .ho-apply-all-btn, .ho-apply-btn, .ho-copy-btn, .scen-apply-btn, .scen-copy-btn, .exec-print-btn { display: none !important; }
     .gantt-container { break-inside: avoid; page-break-inside: avoid; }
   }
   /* G1.16: Plan-status-pill — proaktiv early warning högst upp */
@@ -3392,22 +3393,22 @@
     </div>
     <div class="exec-grid">
       <div class="exec-kpi exec-kpi-primary">
-        <div class="exec-kpi-label">Mål till deadline</div>
+        <div class="exec-kpi-label" title="Andel av målet som nuvarande setup når innan deadline (pipeline-takt × tid)">Mål till deadline</div>
         <div class="exec-kpi-value" id="exec-progress-pct">—</div>
         <div class="exec-kpi-sub" id="exec-progress-sub">—</div>
       </div>
       <div class="exec-kpi">
-        <div class="exec-kpi-label">Bemanning</div>
+        <div class="exec-kpi-label" title="Total bemanning över alla aktiva roller">Bemanning</div>
         <div class="exec-kpi-value" id="exec-headcount">—</div>
         <div class="exec-kpi-sub" id="exec-headcount-sub">—</div>
       </div>
       <div class="exec-kpi">
-        <div class="exec-kpi-label">Effektiv takt</div>
+        <div class="exec-kpi-label" title="Pipelinens steady-state-takt — begränsas av flaskhalsen">Effektiv takt</div>
         <div class="exec-kpi-value" id="exec-rate">—</div>
         <div class="exec-kpi-sub" id="exec-rate-sub">—</div>
       </div>
       <div class="exec-kpi">
-        <div class="exec-kpi-label">Flaskhals</div>
+        <div class="exec-kpi-label" title="Den roll med lägst egen-takt — sätter taket för pipeline-output">Flaskhals</div>
         <div class="exec-kpi-value" id="exec-bottleneck">—</div>
         <div class="exec-kpi-sub" id="exec-bottleneck-sub">—</div>
       </div>
@@ -3432,6 +3433,7 @@
     </div>
 
     <div class="exec-status" id="exec-status">—</div>
+    <div style="text-align:right;margin-top:10px;font-size:11px"><a href="#section-handover" style="color:#5C0E92;text-decoration:none;font-weight:500">→ Se detaljerad sammanfattning per roll</a></div>
   </div>
 
 
@@ -6724,7 +6726,7 @@
         hitrateLabel = 'faktisk';
       }
     }
-    const hitColor = actualHitrate >= 90 ? '#1d6e35' : actualHitrate >= 75 ? '#5C0E92' : '#b8410e';
+    const hitColor = actualHitrate >= 90 ? '#1d6e35' : actualHitrate >= 75 ? '#c2570d' : '#b8410e';
     drawDoughnut('exec-doughnut-hitrate', actualHitrate, 100, hitColor, actualHitrate + '%');
     document.getElementById('exec-doughnut-hitrate-caption').textContent = hitrateLabel + ' hitrate';
 
@@ -7294,6 +7296,8 @@
       const dailyRate = d.ownRate.toFixed(1);
       const unitDisplay = d.role.unit === 'vecka' ? '/vecka' : d.role.unit === 'månad' ? '/månad' : '/dag';
       const ownRateInUnit = d.role.unit === 'vecka' ? (d.ownRate * 5).toFixed(1) : d.role.unit === 'månad' ? (d.ownRate * 21).toFixed(1) : d.ownRate.toFixed(1);
+      const effRateInUnit = d.role.unit === 'vecka' ? (d.effectiveRate * 5).toFixed(1) : d.role.unit === 'månad' ? (d.effectiveRate * 21).toFixed(1) : d.effectiveRate.toFixed(1);
+      const effLowerThanOwn = d.effectiveRate < d.ownRate - 0.01;
       // G1.43: Bygg aria-label för roll-card så skärmläsare får hela bilden
       const ariaParts = [d.role.name, d.role.count + ' personer', 'takt ' + ownRateInUnit + ' ' + unitDisplay];
       if (d.isBottleneck) ariaParts.push('flaskhals');
@@ -7309,7 +7313,7 @@
         html += '<div class="ho-stat"><span>Antal att leverera</span><strong>' + Math.round(V) + ' st</strong></div>';
       }
       html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
-      html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + '</strong></div>';
+      html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + (effLowerThanOwn ? ' <span style=\'opacity:0.7;font-weight:400;font-size:10px\'>(pipeline ' + effRateInUnit + ' p.g.a. flaskhals)</span>' : '') + '</strong></div>';
       html += '<div class="ho-period">';
       const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
       html += '<strong>Måste börja senast:</strong> ' + fmt(d.mastBorjaSenast) + startWarn + '<br>';
@@ -7362,8 +7366,12 @@
         html += '<button class="ho-copy-btn" onclick="copyRoleRecommendation(\'' + d.role.id + '\')" type="button" title="Kopiera rekommendation som text för att skicka till resursägaren">Kopiera till urklipp</button>';
         html += '</div>';
       } else if (isFinite(d.requiredHeadcount)) {
-        // OK — bemanning räcker
+        // OK — bemanning räcker. Om STOR marginal: föreslå att frigöra resurser
         html += '<div class="ho-action ok">';
+        if (d.bufferDays >= 30 && d.role.count > Math.max(1, d.requiredHeadcount) + 1) {
+          const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
+          html += '<strong>Överbalanserad:</strong> ' + d.role.count + ' personer räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + spar_g192 + ' personer</strong> till andra projekt och fortfarande hålla deadline.<br>';
+        }
         html += '<strong>OK:</strong> ' + d.role.count + ' personer räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
         // G1.9: Visa förväntat slutdatum + buffer-marginal
         if (d.actualFinish && isFinite(d.bufferDays)) {
@@ -7380,7 +7388,16 @@
     content.innerHTML = html;
 
     let footerHtml = 'Total volym: <strong style="color:#fff">' + Math.round(V) + ' st</strong> till deadline <strong style="color:#fff">' + fmt(deadline) +
-      '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '');
+      '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter pipeline-takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '');
+    // G1.172: Första leverans-datum (när första item går genom hela kedjan)
+    if (data.length > 0 && data[data.length-1].actualStart) {
+      const lastRoleStartMs = data[data.length-1].actualStart.getTime();
+      const lastRoleOwnRate = data[data.length-1].ownRate;
+      if (lastRoleOwnRate > 0) {
+        const firstDeliveryMs = lastRoleStartMs + (1 / lastRoleOwnRate) * 7 / 5 * dayMs;
+        footerHtml += ' Första leverans: <strong style="color:#fff">' + fmt(new Date(firstDeliveryMs)) + '</strong>.';
+      }
+    }
     // G1.9: Förväntat projektslut idag (sista rollens actualFinish) + delta mot deadline
     const lastRole = data[data.length - 1];
     if (lastRole && lastRole.actualFinish) {
@@ -7962,7 +7979,7 @@
         const xPre = xFor(d.mastBorjaSenast);
         const xPreEnd = xFor(projStart0);
         const wPre = Math.max(0, xPreEnd - xPre);
-        if (wPre > 0) svg += '<rect x="' + xPre + '" y="' + yBar + '" width="' + wPre + '" height="' + barH + '" fill="' + planColor + '" opacity="0.18" stroke="' + planColor + '" stroke-width="1" stroke-dasharray="3,2" rx="3"/>';
+        if (wPre > 0) svg += '<rect x="' + xPre + '" y="' + yBar + '" width="' + wPre + '" height="' + barH + '" fill="' + planColor + '" opacity="0.18" stroke="' + planColor + '" stroke-width="1" stroke-dasharray="3,2" rx="3"><title>' + escapeHtml(d.role.name) + ' behöver tekniskt börja före projektstart för att hinna — överväg mer bemanning eller flytta deadline</title></rect>';
       }
 
       svg += '<rect x="' + xPlanStartClamp + '" y="' + yBar + '" width="' + planW + '" height="' + barH + '" fill="' + planColor + '" opacity="0.78" rx="3">';
@@ -8029,25 +8046,26 @@
     svg += '</svg>';
 
     const ganttDiv = document.createElement('div');
-    ganttDiv.className = 'gantt-container';
+    ganttDiv.className = 'gantt-container'; ganttDiv.setAttribute('role', 'region'); ganttDiv.setAttribute('aria-label', 'Gantt-schema för rollernas pipeline');
     ganttDiv.innerHTML = svg;
     container.appendChild(ganttDiv);
 
     // === Taktat tidslinje (milestones per roll, datumvisade i punkt-form) ===
     if (data.some(d => d.milestones && d.milestones.length > 0)) {
       const tactDiv = document.createElement('div');
-      tactDiv.className = 'tact-timeline';
-      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline.">Takt per roll — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(progression mot deadline)</span></div><div class="tact-roles">';
+      tactDiv.className = 'tact-timeline'; tactDiv.setAttribute('role', 'region'); tactDiv.setAttribute('aria-label', 'Taktat tidslinje per roll');
+      let tactHtml = '<div class="tact-title" title="Visar progression mot deadline. Datumen är estimerade utifrån varje rolls effektiva takt och vattenfalls-pipeline."><strong>Takt per roll</strong> — när är hur mycket klart? <span style="font-weight:400;color:#6B5F75;font-size:11px">(steady state begränsas av flaskhalsen)</span></div><div class="tact-roles">';
       data.forEach((d, i) => {
         if (!d.milestones || d.milestones.length === 0) return;
         tactHtml += '<div class="tact-role">';
         tactHtml += '<div class="tact-role-head">' + (i+1) + '. ' + escapeHtml(d.role.name) + (d.isBottleneck ? ' <span style="color:#5C0E92;font-weight:600">⚑ flaskhals</span>' : '');
         const firstItemMs2 = d.ownRate > 0 ? d.actualStart.getTime() + (1/d.ownRate) * 7/5 * 24*3600*1000 : null; const firstItemStr = firstItemMs2 ? fmt(new Date(firstItemMs2)) : '';
-        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klar ' + firstItemStr : '') + ' · ' + d.effectiveRate.toFixed(1) + '/dag pipeline</span></div>';
+        tactHtml += ' <span class="tact-role-meta">startar ' + fmt(d.actualStart) + (firstItemStr ? ' · första klar ' + firstItemStr : '') + ' · pipeline ' + d.effectiveRate.toFixed(1) + '/dag' + (d.ownRate > d.effectiveRate + 0.01 ? ' (egen ' + d.ownRate.toFixed(1) + '/dag)' : '') + '</span></div>';
         tactHtml += '<ul class="tact-list">';
         d.milestones.forEach(ms => {
           const pctLabel = Math.round(ms.pct * 100);
-          tactHtml += '<li><span class="tact-pct">' + pctLabel + '%</span> <span class="tact-items">' + ms.itemsDone + ' st</span> <span class="tact-date">' + fmt(ms.date) + '</span></li>';
+          const daysFromStart = Math.round((ms.date.getTime() - d.actualStart.getTime()) / (24*3600*1000));
+          tactHtml += '<li><span class="tact-pct">' + pctLabel + '%</span> <span class="tact-items">' + ms.itemsDone + ' st</span> <span class="tact-date">' + fmt(ms.date) + ' <span style="color:#A8A5AD;font-size:10px">+' + daysFromStart + 'd</span></span></li>';
         });
         tactHtml += '</ul>';
         tactHtml += '</div>';
