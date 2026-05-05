@@ -3062,7 +3062,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.504-INSIGHT" aria-busy="true">
+<body data-build="2026-04-29-G1.540-PIPELINE-VIZ" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3493,7 +3493,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.504-INSIGHT</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.540-PIPELINE-VIZ</span>
   </div>
 
 </div>
@@ -6829,7 +6829,7 @@
           const totalSurplus = sched_es.data.reduce((s, d) => s + (d.surplusHeadcount || 0), 0);
           const wastedRoles = sched_es.data.filter(d => (d.capacityUtilization || 1) < 0.5 && !d.isBottleneck);
           if (totalSurplus >= 2 && wastedRoles.length > 0) {
-            extraInsight504 = ' <strong>Insikt:</strong> Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> sätter taket — du kan frigöra <strong>' + totalSurplus + ' personer</strong> från ' + wastedRoles.map(d => d.role.name).join(', ') + ' utan effekt på leveransen.';
+            extraInsight504 = ' <strong title="Pipeline-modellen identifierar att fler resurser uppströms inte ger mer output — flaskhalsen sätter taket">Insikt:</strong> Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> sätter taket — du kan frigöra <strong>' + totalSurplus + ' personer</strong> från ' + wastedRoles.map(d => d.role.name).join(', ') + ' utan effekt på leveransen.';
           } else {
             const slackTxt = sched_es.slackDays >= 0 ? sched_es.slackDays + ' dgr marginal' : Math.abs(sched_es.slackDays) + ' dgr försening';
             extraInsight504 = ' Sista rollen blir klar med <strong>' + slackTxt + '</strong> mot deadline.';
@@ -7441,12 +7441,13 @@
       }
       html += '<div class="ho-stat"><span>Personer</span><strong>' + d.role.count + '</strong></div>';
       html += '<div class="ho-stat"><span>Takt</span><strong>' + ownRateInUnit + ' ' + unitDisplay + (effLowerThanOwn ? ' <span style=\'opacity:0.7;font-weight:400;font-size:10px\'>(pipeline ' + effRateInUnit + ' p.g.a. flaskhals)</span>' : '') + '</strong></div>';
-      // G1.502: Kapacitets-utnyttjande
+      // G1.502/G1.537: Kapacitets-utnyttjande med mini-bar
       if (typeof d.capacityUtilization === 'number') {
         const utilPct = Math.round(d.capacityUtilization * 100);
         const utilColor = utilPct >= 80 ? '#A8E6C2' : (utilPct >= 50 ? '#FFE6A0' : '#FFB8E0');
         const utilLabel = utilPct >= 80 ? 'fullt utnyttjad' : (utilPct >= 50 ? 'delvis utnyttjad' : 'underutnyttjad');
-        html += '<div class="ho-stat" title="Pipeline taktar i ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag — rollens egen kapacitet skulle räcka till ' + (d.ownRate ? d.ownRate.toFixed(1) : '?') + '/dag, men flaskhalsen begränsar till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + '</strong></div>';
+        const bar = '<span style=\'display:inline-block;width:60px;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;margin-left:6px;vertical-align:middle;overflow:hidden\'><span style=\'display:block;width:' + Math.max(2, utilPct) + '%;height:100%;background:' + utilColor + '\'></span></span>';
+        html += '<div class="ho-stat" title="Pipeline taktar i ' + (typeof d.effectiveRate === 'number' ? d.effectiveRate.toFixed(1) : '?') + '/dag — rollens egen kapacitet skulle räcka till ' + (d.ownRate ? d.ownRate.toFixed(1) : '?') + '/dag, men flaskhalsen begränsar till ' + utilPct + ' %."><span>Kapacitet</span><strong style=\'color:' + utilColor + '\'>' + utilPct + ' % ' + utilLabel + bar + '</strong></div>';
       }
       html += '<div class="ho-period">';
       const startWarn = d.overshoots ? ' <span style="color:#FFD6F0;font-weight:600">(passerat — kräver fler personer)</span>' : '';
