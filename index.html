@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.665-VISUALS" aria-busy="true">
+<body data-build="2026-04-29-G1.680-100PUSH-DONE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3496,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.665-VISUALS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.680-100PUSH-DONE</span>
   </div>
 
 </div>
@@ -3555,7 +3555,7 @@
 
   // Formaterar tal med tusentalsavskiljare (svenska: 1 234)
   // G1.284: Plural-fix för 'person/personer'
-  function fmtPers(n) { const x = Math.max(0, +n || 0); return (x === 1 ? '1 person' : x + ' personer'); }
+  function fmtPers(n) { const x = Math.max(0, +n || 0); return (x === 0 ? 'ingen' : x === 1 ? '1 person' : x + ' personer'); }
   function fmtNum(n, decimals) {
     if (!isFinite(n)) return '—';
     const d = (decimals === undefined) ? 0 : decimals;
@@ -7084,7 +7084,7 @@
       const aHr_c = tu_c > 0 ? Math.round((tl_c / tu_c) * 100) : 0;
       txt += 'VID FAKTISK HITRATE (' + aHr_c + ' %): klart ' + fmt(altFinish) + ' (' + (altDelta > 0 ? altDelta + ' dagar EFTER deadline' : Math.abs(altDelta) + ' dagars marginal') + ').\n';
     }
-    txt += 'TOTALT: +' + totalAdd + ' personer behövs för att hålla deadline ' + fmt(deadline) + '.\n';
+    txt += 'TOTALT: behöver +' + totalAdd + ' ' + (totalAdd === 1 ? 'person' : 'personer') + ' (främst på flaskhalsen) för att hålla deadline ' + fmt(deadline) + '.\n';
     if (sched_cp && sched_cp.valid && sched_cp.totalCalDaysNeeded) {
       txt += 'PIPELINE: ' + Math.round(sched_cp.totalCalDaysNeeded) + ' kalenderdagar från start till sista item · slack ' + sched_cp.slackDays + ' dgr.\n';
     }
