@@ -308,7 +308,8 @@
   /* G1.83: Taktat tidslinje per roll — milestones i punktform */
   .tact-timeline { margin-top: 16px; padding: 14px 16px; background: linear-gradient(135deg, #FAFAFD 0%, #F5F0FA 100%); border: 0.5px solid #E5E2EA; border-radius: 10px; }
   .tact-title { font-size: 13px; font-weight: 600; color: #1A1A1F; margin-bottom: 10px; }
-  .tact-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .tact-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  @media (max-width: 600px) { .tact-roles { grid-template-columns: 1fr; } }
   .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 10px 12px; transition: border-color 0.15s, transform 0.1s; }
   .tact-role:hover { border-color: #C266F0; transform: translateY(-1px); }
   .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
@@ -6768,7 +6769,7 @@
 
     // Doughnut: Måluppfyllnad
     const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
-    drawDoughnut('exec-doughnut-progress', projected, target || 1, progColor, target > 0 ? pctToTarget + '%' : '—');
+    drawDoughnut('exec-doughnut-progress', projected, target || 1, progColor, target > 0 ? (pctToTarget >= 100 ? '✓ I mål' : pctToTarget + '%') : '—');
     document.getElementById('exec-doughnut-progress-caption').textContent = target > 0
       ? (pctToTarget >= 100 ? 'I mål' : pctToTarget >= 80 ? 'Nära mål' : 'Ej i mål')
       : 'Inget mål satt';
@@ -7529,8 +7530,11 @@
     });
     content.innerHTML = html;
 
+    // G1.548: Footer med flaskhals + total surplus
+    const totalSurplus_ft = data.reduce((s, d) => s + (d.surplusHeadcount || 0), 0);
+    const surplusInfo_ft = totalSurplus_ft > 0 ? ' <strong style="color:#FFD6F0">' + totalSurplus_ft + ' personer kan frigöras</strong> från överbalanserade roller.' : '';
     let footerHtml = 'Total volym: <strong style="color:#fff">' + Math.round(V) + ' st</strong> till deadline <strong style="color:#fff">' + fmt(deadline) +
-      '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter pipeline-takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '');
+      '</strong>.' + (bottleneck ? ' Flaskhals: <strong style="color:#fff">' + escapeHtml(bottleneck.role.name) + '</strong> sätter pipeline-takten på ' + bottleneck.effectiveRate.toFixed(1) + '/dag.' : '') + surplusInfo_ft;
     // G1.172: Första leverans-datum (när första item går genom hela kedjan)
     if (data.length > 0 && data[data.length-1].actualStart) {
       const lastRoleStartMs = data[data.length-1].actualStart.getTime();
@@ -8019,7 +8023,7 @@
     let flowHtml = '<strong>Pipeline:</strong> ';
     data.forEach((d, i) => {
       const cls = d.isBottleneck ? 'pipeline-bottleneck' : 'pipeline-step';
-      flowHtml += '<span class="' + cls + '">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
+      flowHtml += '<span class="' + cls + '" title="' + escapeHtml(d.role.name) + ': ' + d.role.count + ' pers, ' + d.ownRate.toFixed(1) + '/dag (' + (d.isBottleneck ? 'flaskhals — sätter pipeline-takten' : Math.round((d.capacityUtilization||0)*100) + '% utnyttjad') + ')">' + escapeHtml(d.role.name) + (d.isBottleneck ? ' ⚑' : '') + '</span>';
       if (i < data.length - 1) flowHtml += '<span class="pipeline-arrow">→</span>';
     });
     flowHtml += '<span class="pipeline-hint" title="Pipelinen taktar i flaskhalsens hastighet. Roll i+1 börjar så fort roll i producerat första item + handover. Detta är en vattenfalls-modell som överlappar steg parallellt — ingen roll behöver vänta på hela batchen.">Vattenfalls-pipeline — drag för att sortera</span>';
