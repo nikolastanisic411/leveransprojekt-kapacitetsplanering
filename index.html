@@ -1818,6 +1818,23 @@
     font-weight: 400;
     margin-left: 8px;
   }
+  /* G1.925: Styrgrupps-dashboard */
+  .utfall-dashboard { background: #ffffff; border: 0.5px solid #E5E2EA; border-radius: 12px; padding: 18px 20px; margin: 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .utfall-dashboard .ud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid #E5E2EA; }
+  .utfall-dashboard .ud-title { font-size: 14px; font-weight: 600; color: #1A1A1F; }
+  .utfall-dashboard .ud-status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+  .utfall-dashboard .ud-status.ok { background: #E8F5EE; color: #1A4A28; }
+  .utfall-dashboard .ud-status.warn { background: #FFF8E5; color: #5A3A10; }
+  .utfall-dashboard .ud-status.fail { background: #FFE5EE; color: #5A1530; }
+  .utfall-dashboard .ud-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .utfall-dashboard .ud-kpi { padding: 10px 12px; background: #FCFAFD; border: 0.5px solid #E5E2EA; border-radius: 8px; }
+  .utfall-dashboard .ud-kpi-label { font-size: 10px; color: #888590; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 4px; }
+  .utfall-dashboard .ud-kpi-value { font-size: 22px; font-weight: 600; color: #1A1A1F; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .utfall-dashboard .ud-kpi-sub { font-size: 11px; color: #6B5F75; margin-top: 2px; }
+  .utfall-dashboard .ud-trend { padding: 10px 0 0; }
+  .utfall-dashboard .ud-trend-title { font-size: 11px; color: #888590; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
+  .utfall-dashboard .ud-trend svg { width: 100%; height: auto; max-height: 140px; }
+
   .utfall-card { background: #ffffff; border: 0.5px solid #E5E2EA; border-radius: 12px; padding: 18px 20px; margin-top: 6px; }
   .utfall-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid #E5E2EA; }
   .utfall-gran { display: flex; align-items: center; gap: 6px; }
@@ -3073,7 +3090,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.924-NO-EMOJI" aria-busy="true">
+<body data-build="2026-04-29-G1.925-STYRGRUPP" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3463,6 +3480,40 @@
 
     <div class="section" role="heading" aria-level="2" id="step-8"><span class="step-num">8</span>Uppföljning <span class="section-hint">— rapportera vad ni faktiskt levererat per period och jämför mot plan</span></div>
 
+  <!-- G1.925: Styrgrupps-dashboard — snabb visuell summary av progress -->
+  <div class="utfall-dashboard" id="utfall-dashboard" style="display:none">
+    <div class="ud-header">
+      <div class="ud-title">Status för styrgrupp</div>
+      <div class="ud-status" id="ud-status">—</div>
+    </div>
+    <div class="ud-grid">
+      <div class="ud-kpi">
+        <div class="ud-kpi-label">Registrerat</div>
+        <div class="ud-kpi-value" id="ud-registrerat">—</div>
+        <div class="ud-kpi-sub" id="ud-registrerat-sub">av plan</div>
+      </div>
+      <div class="ud-kpi">
+        <div class="ud-kpi-label">Levererat</div>
+        <div class="ud-kpi-value" id="ud-levererat">—</div>
+        <div class="ud-kpi-sub" id="ud-levererat-sub">av mål</div>
+      </div>
+      <div class="ud-kpi">
+        <div class="ud-kpi-label">Hitrate</div>
+        <div class="ud-kpi-value" id="ud-hitrate">—</div>
+        <div class="ud-kpi-sub" id="ud-hitrate-sub">trend</div>
+      </div>
+      <div class="ud-kpi">
+        <div class="ud-kpi-label">Prognos</div>
+        <div class="ud-kpi-value" id="ud-prognos">—</div>
+        <div class="ud-kpi-sub" id="ud-prognos-sub">mot deadline</div>
+      </div>
+    </div>
+    <div class="ud-trend">
+      <div class="ud-trend-title">Levererat över tid</div>
+      <svg id="ud-trend-svg" viewBox="0 0 800 120" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Trend över levererat per period"></svg>
+    </div>
+  </div>
+
   <div class="utfall-card">
     <div class="utfall-controls">
       <div class="utfall-gran">
@@ -3505,7 +3556,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.924-NO-EMOJI</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.925-STYRGRUPP</span>
   </div>
 
 </div>
@@ -4091,7 +4142,121 @@
     return utfallEntryTotal(entry);
   }
 
-  // Returnerar kumulativ utfalls-array sorterad efter period:
+  
+  // G1.925: Uppdatera styrgrupps-dashboard
+  function updateUtfallDashboard() {
+    const dash = document.getElementById('utfall-dashboard');
+    if (!dash) return;
+    const entries = (state.utfall && state.utfall.entries) || [];
+    const target = +state.onskadVolym || 0;
+    const deadline = state.deadline ? new Date(state.deadline) : null;
+    if (entries.length === 0 || target === 0 || !deadline || isNaN(deadline.getTime())) {
+      dash.style.display = 'none';
+      return;
+    }
+    dash.style.display = '';
+
+    const totalRegistered = entries.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+    const totalDelivered = entries.reduce((s, e) => s + utfallEntryTotal(e), 0);
+    const hitrate = totalRegistered > 0 ? Math.round((totalDelivered / totalRegistered) * 100) : 0;
+
+    // Senaste 3 vs tidigare hitrate-trend
+    const sorted = entries.slice().sort((a, b) => (a.period || '').localeCompare(b.period || ''));
+    const recent = sorted.slice(-3);
+    const older = sorted.slice(0, -3);
+    const recentReg = recent.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+    const recentDel = recent.reduce((s, e) => s + utfallEntryTotal(e), 0);
+    const olderReg = older.reduce((s, e) => s + utfallEntryUtlagt(e), 0);
+    const olderDel = older.reduce((s, e) => s + utfallEntryTotal(e), 0);
+    const recentHr = recentReg > 0 ? (recentDel / recentReg) * 100 : 0;
+    const olderHr = olderReg > 0 ? (olderDel / olderReg) * 100 : 0;
+    const hrDelta = older.length > 0 ? recentHr - olderHr : 0;
+    const hrTrend = hrDelta > 5 ? '↑ stigande' : hrDelta < -5 ? '↓ fallande' : '→ stabil';
+
+    // KPI fyllning
+    document.getElementById('ud-registrerat').textContent = fmtNum(totalRegistered);
+    document.getElementById('ud-registrerat-sub').textContent = totalRegistered > 0 ? entries.length + ' rapporterade perioder' : 'inga perioder';
+    document.getElementById('ud-levererat').textContent = fmtNum(totalDelivered);
+    document.getElementById('ud-levererat-sub').textContent = target > 0 ? Math.round((totalDelivered/target)*100) + ' % av mål (' + fmtNum(target) + ')' : '';
+    document.getElementById('ud-hitrate').textContent = hitrate + ' %';
+    document.getElementById('ud-hitrate-sub').textContent = hrTrend;
+
+    // Prognos: extrapolera från senaste perioden
+    const lastEntry = sorted[sorted.length - 1];
+    const lastDelivered = lastEntry ? utfallEntryTotal(lastEntry) : 0;
+    // Antar vi rapporterar med samma takt fram till deadline
+    const projektStart = state.projektStart ? new Date(state.projektStart) : new Date();
+    const today = new Date();
+    const daysSinceStart = Math.max(1, (today - projektStart) / (1000*60*60*24));
+    const dailyRate = totalDelivered / daysSinceStart;
+    const daysToDeadline = Math.max(0, (deadline - today) / (1000*60*60*24));
+    const projectedFinal = totalDelivered + dailyRate * daysToDeadline;
+    const projPct = target > 0 ? Math.round((projectedFinal / target) * 100) : 0;
+    const prognosEl = document.getElementById('ud-prognos');
+    const prognosSubEl = document.getElementById('ud-prognos-sub');
+    prognosEl.textContent = fmtNum(Math.round(projectedFinal)) + ' st';
+    if (projectedFinal >= target) {
+      prognosSubEl.textContent = 'i tid (' + projPct + ' % av mål)';
+      prognosSubEl.style.color = '#1d6e35';
+    } else {
+      prognosSubEl.textContent = 'saknar ' + fmtNum(target - Math.round(projectedFinal)) + ' (' + projPct + ' % av mål)';
+      prognosSubEl.style.color = '#9a2424';
+    }
+
+    // Status-badge
+    const statusEl = document.getElementById('ud-status');
+    if (projectedFinal >= target) {
+      statusEl.className = 'ud-status ok';
+      statusEl.textContent = 'PÅ PLAN';
+    } else if (projPct >= 80) {
+      statusEl.className = 'ud-status warn';
+      statusEl.textContent = 'BEVAKAS';
+    } else {
+      statusEl.className = 'ud-status fail';
+      statusEl.textContent = 'AVVIKER';
+    }
+
+    // Trend-graf: bar-chart över perioder, registrerat (ljus) + levererat (mörk)
+    const svg = document.getElementById('ud-trend-svg');
+    if (svg && sorted.length > 0) {
+      const w = 800, hgt = 120, m = { top: 16, right: 8, bottom: 24, left: 36 };
+      const innerW = w - m.left - m.right;
+      const innerH = hgt - m.top - m.bottom;
+      const maxV = Math.max(1, ...sorted.map(e => Math.max(utfallEntryUtlagt(e), utfallEntryTotal(e))));
+      const barW = Math.max(4, (innerW / sorted.length) - 4);
+      let s = '';
+      // Y-axel ticks
+      [0, 0.5, 1].forEach(p => {
+        const y = m.top + innerH * (1 - p);
+        const v = Math.round(maxV * p);
+        s += '<line x1="' + m.left + '" y1="' + y + '" x2="' + (m.left + innerW) + '" y2="' + y + '" stroke="#F0EDF4" stroke-width="0.5"/>';
+        s += '<text x="' + (m.left - 6) + '" y="' + (y + 3) + '" font-size="9" fill="#888590" text-anchor="end" font-family="inherit">' + v + '</text>';
+      });
+      sorted.forEach((e, i) => {
+        const reg = utfallEntryUtlagt(e);
+        const del = utfallEntryTotal(e);
+        const x = m.left + i * (innerW / sorted.length) + 2;
+        const hReg = (reg / maxV) * innerH;
+        const hDel = (del / maxV) * innerH;
+        // Registrerat (bakgrund)
+        s += '<rect x="' + x + '" y="' + (m.top + innerH - hReg) + '" width="' + barW + '" height="' + hReg + '" fill="#D8C5E8" rx="2"/>';
+        // Levererat (förgrund)
+        s += '<rect x="' + x + '" y="' + (m.top + innerH - hDel) + '" width="' + barW + '" height="' + hDel + '" fill="#5C0E92" rx="2"/>';
+        // Period-label var 3:e för läsbarhet
+        if (i % Math.max(1, Math.floor(sorted.length / 6)) === 0) {
+          const periodShort = (e.period || '').slice(5);
+          s += '<text x="' + (x + barW/2) + '" y="' + (hgt - 8) + '" font-size="9" fill="#6B5F75" text-anchor="middle" font-family="inherit">' + periodShort + '</text>';
+        }
+      });
+      // Legend
+      s += '<rect x="' + (m.left) + '" y="4" width="8" height="8" fill="#5C0E92" rx="1"/>';
+      s += '<text x="' + (m.left + 12) + '" y="11" font-size="10" fill="#6B5F75" font-family="inherit">levererat</text>';
+      s += '<rect x="' + (m.left + 80) + '" y="4" width="8" height="8" fill="#D8C5E8" rx="1"/>';
+      s += '<text x="' + (m.left + 92) + '" y="11" font-size="10" fill="#6B5F75" font-family="inherit">registrerat</text>';
+      svg.innerHTML = s;
+    }
+  }
+// Returnerar kumulativ utfalls-array sorterad efter period:
   // [{ date: Date, cumulative: total_klara_t.o.m_perioden }, ...]
   function getCumulativeUtfall() {
     if (!state.utfall || !Array.isArray(state.utfall.entries)) return [];
@@ -4151,6 +4316,7 @@
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
+    if (typeof updateUtfallDashboard === 'function') updateUtfallDashboard();
 
     wrap.querySelectorAll('input[data-id]').forEach(inp => {
       inp.addEventListener('input', (ev) => {
