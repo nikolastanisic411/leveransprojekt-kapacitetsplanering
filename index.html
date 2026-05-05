@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.656-CONSOLIDATE" aria-busy="true">
+<body data-build="2026-04-29-G1.665-VISUALS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3496,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.656-CONSOLIDATE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.665-VISUALS</span>
   </div>
 
 </div>
@@ -6744,7 +6744,7 @@
       : 'Sätt mål för att se måluppfyllnad';
 
     // KPI: Bemanning
-    document.getElementById('exec-headcount').textContent = totalHeadcount + ' pers';
+    document.getElementById('exec-headcount').textContent = (totalHeadcount > 0 ? totalHeadcount + ' pers' : '⚠ 0 pers');
     {
       const totalDailyCap = active.reduce((s, r) => s + (typeof roleEffectivePerDay === 'function' ? roleEffectivePerDay(r) : 0), 0);
       document.getElementById('exec-headcount-sub').textContent = active.length + ' av ' + (state.roles || []).length + ' aktiva roller · totalkapacitet ' + totalDailyCap.toFixed(0) + '/dag';
@@ -6753,7 +6753,7 @@
     // KPI: Effektiv takt
     {
       const rateEl = document.getElementById('exec-rate');
-      rateEl.textContent = fmtNum(Math.round(monthlyRate)) + '/mån';
+      rateEl.textContent = monthlyRate > 0 ? fmtNum(Math.round(monthlyRate)) + '/mån' : '—';
       rateEl.style.color = monthlyRate > 0 ? '' : '#A8A5AD';
     }
     {
@@ -7531,12 +7531,12 @@
         html += '<div class="ho-action ok">';
         if (typeof d.surplusHeadcount === 'number' && d.surplusHeadcount >= 1 && !d.isBottleneck) {
           const utilPct503 = Math.round((d.capacityUtilization || 0) * 100);
-          html += '<strong>Pipeline-flaskhalsen begränsar:</strong> rollens kapacitet används till <strong>' + utilPct503 + ' %</strong>. Du kan frigöra <strong>' + fmtPers(d.surplusHeadcount) + '</strong> utan effekt på leveransen — flaskhalsen sätter taket oavsett. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button" style="margin-left:4px">Sätt ' + d.requiredHeadcount + '</button><br>';
+          html += '<strong>⚠ Pipeline-flaskhalsen begränsar:</strong> rollens kapacitet används till <strong>' + utilPct503 + ' %</strong>. Du kan frigöra <strong>' + fmtPers(d.surplusHeadcount) + '</strong> utan effekt på leveransen — flaskhalsen sätter taket oavsett. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button" style="margin-left:4px">Sätt ' + d.requiredHeadcount + '</button><br>';
         } else if (d.bufferDays >= 30 && d.role.count > Math.max(1, d.requiredHeadcount) + 1) {
           const spar_g192 = d.role.count - Math.max(1, d.requiredHeadcount);
-          html += '<strong>Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + Math.max(1, d.requiredHeadcount) + ')" type="button" style="margin-left:4px">Sätt ' + Math.max(1, d.requiredHeadcount) + '</button><br>';
+          html += '<strong>● Överbalanserad:</strong> ' + fmtPers(d.role.count) + ' räcker med <strong>' + d.bufferDays + ' dagars marginal</strong>. Du kan frigöra <strong>' + fmtPers(spar_g192) + '</strong> till andra projekt och fortfarande hålla deadline. <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + Math.max(1, d.requiredHeadcount) + ')" type="button" style="margin-left:4px">Sätt ' + Math.max(1, d.requiredHeadcount) + '</button><br>';
         }
-        const okLbl = d.role.count === d.requiredHeadcount ? '<strong>OK – exakt rätt:</strong> ' : '<strong>OK:</strong> ';
+        const okLbl = d.role.count === d.requiredHeadcount ? '<strong>✓ OK – exakt rätt:</strong> ' : '<strong>✓ OK:</strong> ';
         html += okLbl + fmtPers(d.role.count) + ' räcker. Start senast <strong>' + fmt(d.mastBorjaSenast) + '</strong>, klar senast <strong>' + fmt(d.klarSenast) + '</strong>.';
         // G1.9: Visa förväntat slutdatum + buffer-marginal
         if (d.actualFinish && isFinite(d.bufferDays)) {
