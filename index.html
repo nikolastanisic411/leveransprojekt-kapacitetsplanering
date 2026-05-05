@@ -310,7 +310,7 @@
   .tact-title { font-size: 13px; font-weight: 600; color: #1A1A1F; margin-bottom: 10px; }
   .tact-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
   @media (max-width: 600px) { .tact-roles { grid-template-columns: 1fr; } }
-  .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 10px 12px; transition: border-color 0.15s, transform 0.1s; }
+  .tact-role { background: #fff; border: 0.5px solid #E5E2EA; border-radius: 8px; padding: 12px 14px; transition: border-color 0.15s, transform 0.1s; }
   .tact-role:hover { border-color: #C266F0; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(92,14,146,0.08); }
   .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
   .tact-role-meta { font-weight: 400; color: #6B5F75; font-size: 11px; }
@@ -2961,7 +2961,7 @@
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
   }
   .exec-kpi-clickable { cursor: pointer; }
-  .exec-kpi-clickable:hover { transform: translateY(-2px); border-color: #C266F0; box-shadow: 0 2px 8px rgba(92,14,146,0.12); }
+  .exec-kpi-clickable:hover { transform: translateY(-1px); border-color: #C266F0; box-shadow: 0 2px 6px rgba(92,14,146,0.10); }
   .exec-kpi-clickable:focus { outline: 2px solid #5C0E92; outline-offset: 2px; }
   .exec-kpi:hover:not(.exec-kpi-primary) {
     border-color: #D8C5E8;
@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.600-MILESTONE" aria-busy="true">
+<body data-build="2026-04-29-G1.620-BALANCED" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3496,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.600-MILESTONE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.620-BALANCED</span>
   </div>
 
 </div>
@@ -6833,10 +6833,13 @@
         if (sched_es.valid) {
           const totalSurplus = sched_es.data.reduce((s, d) => s + (d.surplusHeadcount || 0), 0);
           const wastedRoles = sched_es.data.filter(d => (d.capacityUtilization || 1) < 0.5 && !d.isBottleneck);
+          const allHigh = sched_es.data.every(d => (d.capacityUtilization || 0) >= 0.7);
+          const slackTxt = sched_es.slackDays >= 0 ? sched_es.slackDays + ' dgr marginal' : Math.abs(sched_es.slackDays) + ' dgr försening';
           if (totalSurplus >= 2 && wastedRoles.length > 0) {
             extraInsight504 = ' <strong title="Pipeline-modellen identifierar att fler resurser uppströms inte ger mer output — flaskhalsen sätter taket">Insikt:</strong> Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> sätter taket — du kan frigöra <strong>' + totalSurplus + ' personer</strong> från ' + wastedRoles.map(d => d.role.name).join(', ') + ' utan effekt på leveransen.';
+          } else if (allHigh) {
+            extraInsight504 = ' <strong>Alla roller balanserade</strong> — pipelinen utnyttjas optimalt med <strong>' + slackTxt + '</strong>.';
           } else {
-            const slackTxt = sched_es.slackDays >= 0 ? sched_es.slackDays + ' dgr marginal' : Math.abs(sched_es.slackDays) + ' dgr försening';
             extraInsight504 = ' Sista rollen blir klar med <strong>' + slackTxt + '</strong> mot deadline.';
           }
         }
@@ -7074,7 +7077,7 @@
       txt += 'VID FAKTISK HITRATE (' + aHr_c + ' %): klart ' + fmt(altFinish) + ' (' + (altDelta > 0 ? altDelta + ' dagar EFTER deadline' : Math.abs(altDelta) + ' dagars marginal') + ').\n';
     }
     txt += 'TOTALT: +' + totalAdd + ' personer behövs för att hålla deadline ' + fmt(deadline) + '.\n';
-    if (sched_cp && sched_cp.totalCalDaysNeeded) {
+    if (sched_cp && sched_cp.valid && sched_cp.totalCalDaysNeeded) {
       txt += 'PIPELINE: ' + Math.round(sched_cp.totalCalDaysNeeded) + ' kalenderdagar från start till sista item · slack ' + sched_cp.slackDays + ' dgr.\n';
     }
     // G1.39: Inkludera smart-tips (alternativ till mer bemanning) när planen släpar
