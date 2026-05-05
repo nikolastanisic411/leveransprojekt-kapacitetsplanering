@@ -3065,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.770-100PUSH-COMPLETED" aria-busy="true">
+<body data-build="2026-04-29-G1.780-CAPTIONS" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3497,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.770-100PUSH-COMPLETED</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.780-CAPTIONS</span>
   </div>
 
 </div>
@@ -6789,9 +6789,21 @@
     // Doughnut: Måluppfyllnad
     const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
     drawDoughnut('exec-doughnut-progress', projected, target || 1, progColor, target > 0 ? (pctToTarget >= 100 ? '✓ I mål' : pctToTarget + '%') : '—');
-    document.getElementById('exec-doughnut-progress-caption').textContent = target > 0
-      ? (pctToTarget >= 100 ? 'I mål' : pctToTarget >= 80 ? 'Nära mål' : 'Ej i mål')
-      : 'Inget mål satt';
+    {
+      const dpc = document.getElementById('exec-doughnut-progress-caption');
+      if (target > 0) {
+        if (pctToTarget >= 100) {
+          const overshoot = projected - target;
+          dpc.textContent = overshoot > target * 0.05 ? 'I mål med ' + Math.round(overshoot) + ' st marginal' : 'I mål';
+        } else if (pctToTarget >= 80) {
+          dpc.textContent = 'Nära mål — saknar ' + (target - Math.round(projected)) + ' st';
+        } else {
+          dpc.textContent = 'Ej i mål — saknar ' + (target - Math.round(projected)) + ' st';
+        }
+      } else {
+        dpc.textContent = 'Inget mål satt';
+      }
+    }
 
     // Doughnut: Bemanning per roll
     const palette = ['#5C0E92', '#990AE3', '#C266F0', '#E0BCF5', '#1d6e35'];
@@ -8244,7 +8256,8 @@
         d.milestones.forEach(ms => {
           const pctLabel = Math.round(ms.pct * 100);
           const daysFromStart = Math.round((ms.date.getTime() - d.actualStart.getTime()) / (24*3600*1000));
-          tactHtml += '<li><span class="tact-pct">' + pctLabel + '%</span> <span class="tact-items">' + ms.itemsDone + ' st</span> <span class="tact-date">' + fmt(ms.date) + ' <span style="color:#A8A5AD;font-size:10px">+' + daysFromStart + 'd</span></span></li>';
+          const lateMs777 = ms.date > sched.deadline; const dateColor777 = lateMs777 ? '#9a2424' : '#6B5F75';
+          tactHtml += '<li><span class="tact-pct">' + pctLabel + '%</span> <span class="tact-items">' + ms.itemsDone + ' st</span> <span class="tact-date" style="color:' + dateColor777 + '">' + fmt(ms.date) + ' <span style="color:#A8A5AD;font-size:10px">+' + daysFromStart + 'd</span>' + (lateMs777 ? ' ⚠' : '') + '</span></li>';
         });
         tactHtml += '</ul>';
         tactHtml += '</div>';
@@ -8255,6 +8268,7 @@
       if (sched.totalCalDaysNeeded && isFinite(sched.totalCalDaysNeeded)) {
         const totalDays_g313 = Math.round(sched.totalCalDaysNeeded);
         const bnRate_g313 = sched.dailyOutput || 0;
+        const fullyUsed_g772 = sched.data.filter(d => (d.capacityUtilization || 0) >= 0.7).length;
         const overviewDiv = document.createElement('div');
         overviewDiv.style.cssText = 'margin-top:10px;padding:8px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:11px;color:#6B5F75;text-align:center;';
         const projStartFmt = (sched.projektStart && !isNaN(sched.projektStart.getTime())) ? sched.projektStart.toLocaleDateString('sv-SE') : '—'; const lastFinishFmt = (sched.lastFinish && !isNaN(sched.lastFinish.getTime())) ? sched.lastFinish.toLocaleDateString('sv-SE') : '—'; overviewDiv.innerHTML = '<strong>Pipeline:</strong> ' + projStartFmt + ' → ' + lastFinishFmt + ' (' + totalDays_g313 + ' kalenderdagar) · steady state ' + bnRate_g313.toFixed(1) + '/dag · ' + (sched.slackDays >= 0 ? '<span style="color:#1d6e35">' + sched.slackDays + ' dgr marginal</span>' : '<span style="color:#9a2424">' + Math.abs(sched.slackDays) + ' dgr försening</span>');
