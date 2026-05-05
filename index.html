@@ -2842,7 +2842,7 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
     
     /* === ÖVERSIKT i print === */
-    .exec-view { page-break-before: always; break-before: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 12mm; }
+    .exec-view { page-break-before: always; break-before: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 10mm; }
     .exec-kpi, .exec-chart-card, .exec-status, .exec-kpi-primary, .exec-doughnut-progress, .exec-doughnut-roles, .exec-doughnut-hitrate { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .exec-grid { gap: 8px; }
     .exec-kpi { padding: 10px 12px; break-inside: avoid; page-break-inside: avoid; }
@@ -3061,7 +3061,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.396-FULL-FIX" aria-busy="true">
+<body data-build="2026-04-29-G1.500-FINAL" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3492,7 +3492,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.396-FULL-FIX</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.500-FINAL</span>
   </div>
 
 </div>
@@ -6718,16 +6718,30 @@
     document.getElementById('exec-headcount-sub').textContent = active.length + ' av ' + (state.roles || []).length + ' aktiva roller';
 
     // KPI: Effektiv takt
-    document.getElementById('exec-rate').textContent = fmtNum(Math.round(monthlyRate)) + '/mån';
+    {
+      const rateEl = document.getElementById('exec-rate');
+      rateEl.textContent = fmtNum(Math.round(monthlyRate)) + '/mån';
+      rateEl.style.color = monthlyRate > 0 ? '' : '#A8A5AD';
+    }
     {
       const factor_e = (typeof getActualVsPlanFactor === 'function') ? getActualVsPlanFactor() : 1;
       const ratePrefix = factor_e < 1 ? 'utfall-justerad: ' : '';
-      document.getElementById('exec-rate-sub').textContent = ratePrefix + minEffDay.toFixed(1) + '/dag · ' + state.hitrate + '% plan-hitrate' + (factor_e < 1 ? ' (utfall ' + Math.round(factor_e*100) + '% av plan)' : '');
+      const hrText = state.hitrate >= 100 ? 'ingen loss' : state.hitrate + '% plan-hitrate';
+      document.getElementById('exec-rate-sub').textContent = ratePrefix + minEffDay.toFixed(1) + '/dag · ' + hrText + (factor_e < 1 ? ' (utfall ' + Math.round(factor_e*100) + '% av plan)' : '');
     }
 
     // KPI: Flaskhals
     document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : '—';
-    document.getElementById('exec-bottleneck-sub').textContent = bottleneck ? roleEffectivePessimistic(bottleneck).toFixed(1) + '/dag sätter taket — höj bemanning här först' : 'inga aktiva roller';
+    {
+      const bnSub = document.getElementById('exec-bottleneck-sub');
+      if (bottleneck) {
+        const factor_b = (typeof getActualVsPlanFactor === 'function') ? getActualVsPlanFactor() : 1;
+        const meets = (target > 0 && projected >= target);
+        bnSub.textContent = roleEffectivePessimistic(bottleneck).toFixed(1) + '/dag · ' + (meets ? 'pipeline-takten räcker' : 'höj här först');
+      } else {
+        bnSub.textContent = 'inga aktiva roller';
+      }
+    }
 
     // Doughnut: Måluppfyllnad
     const progColor = pctToTarget >= 100 ? '#1d6e35' : pctToTarget >= 80 ? '#5C0E92' : '#b8410e';
@@ -6961,7 +6975,7 @@
     data.forEach((d, i) => {
       const reqCount = isFinite(d.requiredHeadcount) ? d.requiredHeadcount : d.role.count;
       const additional = Math.max(0, reqCount - d.role.count);
-      txt += (i+1) + '. ' + d.role.name.toUpperCase() + '\n';
+      txt += (i+1) + '. ' + d.role.name.toUpperCase() + (data.find(x => x.role.id === d.role.id && x.isBottleneck) ? ' (FLASKHALS)' : '') + '\n';
       txt += '   Bemanning: ' + fmtPers(reqCount) + ' (idag: ' + d.role.count + (additional > 0 ? ', behov: +' + additional : ', ok') + ')\n';
       txt += '   Start senast: ' + fmt(d.mastBorjaSenast || refStart) + '\n';
       txt += '   Klar senast:  ' + fmt(d.klarSenast) + '\n';
@@ -7220,7 +7234,7 @@
 
     // Scrolla mjukt till ett steg och fokusera primärt fält så användaren kan börja skriva direkt
   function scrollToStep(n) {
-    const el = document.getElementById('step-' + n);
+    const el = (n === 9) ? document.getElementById('section-exec') : document.getElementById('step-' + n);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // Auto-fokus på primärt fält — väntar tills scrollen är klar
     setTimeout(() => {
@@ -7230,6 +7244,7 @@
       else if (n === 3) target = document.getElementById('apply-cta-btn');
       else if (n === 4) target = document.querySelector('input[type=range][data-field="count"]');
       else if (n === 8) target = document.querySelector('.utfall-table input[type=date]');
+      else if (n === 9) target = document.getElementById('section-exec');
       if (target && target.focus) try { target.focus({ preventScroll: true }); } catch (_) {}
     }, 350);
   }
@@ -8093,7 +8108,7 @@
       if (archRole && d.role.id === archRole.role.id && archLastOrderDate) {
         const xLast = xFor(archLastOrderDate);
         if (xLast >= labelWidth && xLast <= 1000 - padRight) {
-          svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning för Nätarkitekt: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
+          svg += '<circle cx="' + xLast + '" cy="' + (yBar + barH/2) + '" r="5" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning för Nätarkitekt: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
         }
       }
     });
@@ -8133,7 +8148,7 @@
         const bnRate_g313 = sched.dailyOutput || 0;
         const overviewDiv = document.createElement('div');
         overviewDiv.style.cssText = 'margin-top:10px;padding:8px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:11px;color:#6B5F75;text-align:center;';
-        const projStartFmt = (sched.projektStart && !isNaN(sched.projektStart.getTime())) ? sched.projektStart.toLocaleDateString('sv-SE') : '—'; const lastFinishFmt = (sched.lastFinish && !isNaN(sched.lastFinish.getTime())) ? sched.lastFinish.toLocaleDateString('sv-SE') : '—'; overviewDiv.innerHTML = '<strong>Pipeline:</strong> ' + projStartFmt + ' → ' + lastFinishFmt + ' (' + totalDays_g313 + ' kalenderdagar) · steady state ' + bnRate_g313.toFixed(1) + '/dag · slack ' + sched.slackDays + ' dgr mot deadline';
+        const projStartFmt = (sched.projektStart && !isNaN(sched.projektStart.getTime())) ? sched.projektStart.toLocaleDateString('sv-SE') : '—'; const lastFinishFmt = (sched.lastFinish && !isNaN(sched.lastFinish.getTime())) ? sched.lastFinish.toLocaleDateString('sv-SE') : '—'; overviewDiv.innerHTML = '<strong>Pipeline:</strong> ' + projStartFmt + ' → ' + lastFinishFmt + ' (' + totalDays_g313 + ' kalenderdagar) · steady state ' + bnRate_g313.toFixed(1) + '/dag · ' + (sched.slackDays >= 0 ? sched.slackDays + ' dgr marginal' : Math.abs(sched.slackDays) + ' dgr försening');
         tactDiv.appendChild(overviewDiv);
       }
       container.appendChild(tactDiv);
@@ -9213,7 +9228,7 @@
       toggleUiMode();
     }
     // G1.36: Alt+1..8 hoppar till respektive steg
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && /^[1-8]$/.test(e.key)) {
+    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && /^[1-9]$/.test(e.key)) {
       e.preventDefault();
       scrollToStep(+e.key);
     }
