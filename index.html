@@ -315,7 +315,8 @@
   .tact-role-head { font-size: 12px; font-weight: 600; color: #1A1A1F; margin-bottom: 6px; }
   .tact-role-meta { font-weight: 400; color: #6B5F75; font-size: 11px; }
   .tact-list { list-style: none; padding: 0; margin: 0; }
-  .tact-list li { display: flex; gap: 8px; align-items: baseline; font-size: 11px; padding: 3px 0; border-bottom: 0.5px dashed #F0EDF4; font-variant-numeric: tabular-nums; transition: background 0.1s; }
+  .tact-list li { display: flex; gap: 8px; align-items: baseline; font-size: 11px; padding: 4px 0; border-bottom: 0.5px dashed #F0EDF4; font-variant-numeric: tabular-nums; transition: background 0.1s; }
+  .tact-list .tact-pct, .tact-list .tact-items, .tact-list .tact-date { white-space: nowrap; }
   .tact-list li:hover { background: #F8F5FB; }
   .tact-list li:last-child { border-bottom: 0; font-weight: 700; padding-top: 6px; color: #5C0E92; border-top: 0.5px solid #E5E2EA; margin-top: 2px; }
   .tact-list li:last-child::before { content: '✓ '; opacity: 0.7; }
@@ -3064,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.730-100PUSH-FINAL" aria-busy="true">
+<body data-build="2026-04-29-G1.770-100PUSH-COMPLETED" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3496,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.730-100PUSH-FINAL</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.770-100PUSH-COMPLETED</span>
   </div>
 
 </div>
@@ -6747,7 +6748,7 @@
     document.getElementById('exec-headcount').textContent = (totalHeadcount > 0 ? totalHeadcount + ' pers' : '⚠ 0 pers');
     {
       const totalDailyCap = active.reduce((s, r) => s + (typeof roleEffectivePerDay === 'function' ? roleEffectivePerDay(r) : 0), 0);
-      document.getElementById('exec-headcount-sub').textContent = active.length + ' av ' + (state.roles || []).length + ' aktiva roller · totalkapacitet ' + totalDailyCap.toFixed(0) + '/dag';
+      document.getElementById('exec-headcount-sub').textContent = (active.length === 0 ? 'ingen aktiv roll' : (active.length + ' av ' + (state.roles || []).length + ' aktiva roller')) + (totalDailyCap > 0 ? ' · totalkapacitet ' + totalDailyCap.toFixed(0) + '/dag' : '');
     }
 
     // KPI: Effektiv takt
