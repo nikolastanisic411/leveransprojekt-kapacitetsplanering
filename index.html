@@ -3071,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.911-TF-PLAN" aria-busy="true">
+<body data-build="2026-04-29-G1.912-NO-FAKE-BOTTLENECK" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.911-TF-PLAN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.912-NO-FAKE-BOTTLENECK</span>
   </div>
 
 </div>
@@ -4522,14 +4522,17 @@
     const active = activeRoles();
     if (active.length === 0) return;
 
-    // Använd effektiv kapacitet (inkl per-roll hitrate) för konsekvent flaskhals-identifiering
+    // G1.912: Använd effektiv kapacitet och flagga BARA om en roll är meningsfullt långsammare.
+    // Om alla roller har samma takt finns ingen flaskhals — pipelinen är balanserad.
     const caps = active.map(r => ({ id: r.id, name: r.name, val: roleEffectivePerDay(r), raw: roleCapPerDay(r) }));
     const minCap = Math.min(...caps.map(c => c.val));
+    const maxCap = Math.max(...caps.map(c => c.val));
+    const hasMeaningfulBottleneck = (maxCap - minCap) > maxCap * 0.05; // 5% spread
 
     active.forEach((role, idx) => {
       const cap = roleCapPerDay(role);
       const effCap = roleEffectivePerDay(role);
-      const isBottleneck = Math.abs(effCap - minCap) < 1e-9;
+      const isBottleneck = hasMeaningfulBottleneck && Math.abs(effCap - minCap) < 1e-9;
 
       const step = document.createElement('div');
       step.className = 'pf-step' + (isBottleneck ? ' bottleneck' : '');
@@ -5748,8 +5751,16 @@
       return { id: r.id, name: r.name, raw: roleCapPerDay(r), eff, hitrate: roleHitrate(r), roleVol, timeNeededDays };
     });
     const maxTime = Math.max(...caps.map(c => isFinite(c.timeNeededDays) ? c.timeNeededDays : 0));
+    const minTime = Math.min(...caps.map(c => isFinite(c.timeNeededDays) && c.timeNeededDays > 0 ? c.timeNeededDays : Infinity));
+    // G1.912: Bara markera som flaskhals om det finns en meningsfull skillnad i TAKT (≥5%).
+    // Om alla roller har samma takt finns ingen flaskhals — de som hanterar mer volym
+    // är inte 'långsammare', de har bara mer att göra.
+    const maxOwnRate_r = Math.max(...caps.map(c => c.eff || 0));
+    const minOwnRate_r = Math.min(...caps.map(c => c.eff || 0));
+    const hasMeaningfulSpread_r = maxOwnRate_r > 0 && (maxOwnRate_r - minOwnRate_r) > maxOwnRate_r * 0.05;
     const bottleneck = caps.find(c => c.timeNeededDays === maxTime && isFinite(c.timeNeededDays)) || caps[0];
     const minEff = bottleneck.eff;
+    if (!hasMeaningfulSpread_r) bottleneck._noBottleneck = true;
     // Behåll minCap-variabeln för bakåtkompatibilitet — men det är nu effektiv-min
     const minCap = bottleneck.raw;
 
@@ -6828,9 +6839,10 @@
     const monthlyRate = minEffDay * 21;
     // G1.906: Tids-baserad flaskhals (volym/takt), inte takt-baserad
     let bottleneck = null;
+    let hasMeaningfulBottleneck_e = false;
     if (active.length > 0) {
       const subs_e = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
-      let maxT = -1;
+      let maxT = -1, minT = Infinity;
       active.forEach(r => {
         const eff = roleEffectivePessimistic(r);
         let vol = +state.onskadVolym || 0;
@@ -6839,8 +6851,15 @@
         }
         const t = (eff > 0) ? vol / eff : Infinity;
         if (isFinite(t) && t > maxT) { maxT = t; bottleneck = r; }
+        if (isFinite(t) && t > 0 && t < minT) minT = t;
       });
       if (!bottleneck) bottleneck = active[0];
+      // G1.912: Bara meningsfull flaskhals om det finns spread i TAKT (inte tid)
+      const ownRates_e = active.map(r => roleEffectivePessimistic(r));
+      const maxRate_e = Math.max(...ownRates_e);
+      const minRate_e = Math.min(...ownRates_e);
+      hasMeaningfulBottleneck_e = maxRate_e > 0 && (maxRate_e - minRate_e) > maxRate_e * 0.05;
+      if (!hasMeaningfulBottleneck_e) bottleneck = null;
     }
     
     // Beräkna projected volume mot deadline
@@ -6888,10 +6907,12 @@
     }
 
     // KPI: Flaskhals
-    document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : 'ingen';
+    document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : '✓ balanserad';
     {
       const bnSub = document.getElementById('exec-bottleneck-sub');
-      if (bottleneck) {
+      if (!bottleneck) {
+        bnSub.textContent = 'alla roller balanserade — ingen flaskhals';
+      } else if (bottleneck) {
         const factor_b = (typeof getActualVsPlanFactor === 'function') ? getActualVsPlanFactor() : 1;
         const meets = (target > 0 && projected >= target);
         const surplusBn = (typeof getActualVsPlanFactor === 'function') ? null : null; // placeholder
@@ -6986,7 +7007,9 @@
           const wastedRoles = sched_es.wastedRoles || [];
           const allHigh = sched_es.data.every(d => (d.capacityUtilization || 0) >= 0.7);
           const slackTxt = sched_es.slackDays >= 0 ? sched_es.slackDays + ' dgr marginal' : Math.abs(sched_es.slackDays) + ' dgr försening';
-          if (totalSurplus >= 2 && wastedRoles.length > 0) {
+          if (!bottleneck) {
+            extraInsight504 = ' <strong>Pipelinen är balanserad</strong> — alla roller har samma takt.';
+          } else if (totalSurplus >= 2 && wastedRoles.length > 0) {
             extraInsight504 = ' <strong title="Pipeline-modellen identifierar att fler resurser uppströms inte ger mer output — flaskhalsen sätter taket">Insikt:</strong> Flaskhalsen <strong>' + (bottleneck ? bottleneck.name : '—') + '</strong> sätter taket — du kan frigöra <strong>' + totalSurplus + ' personer</strong> från ' + wastedRoles.map(d => d.role.name).join(', ') + ' utan effekt på leveransen.';
           } else if (allHigh) {
             extraInsight504 = ' <strong>Alla roller balanserade</strong> — pipelinen utnyttjas optimalt med <strong>' + slackTxt + '</strong>.';
