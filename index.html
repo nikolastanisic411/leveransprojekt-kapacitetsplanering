@@ -3071,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.912-NO-FAKE-BOTTLENECK" aria-busy="true">
+<body data-build="2026-04-29-G1.913-PHASE-FLOW" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.912-NO-FAKE-BOTTLENECK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.913-PHASE-FLOW</span>
   </div>
 
 </div>
@@ -5560,6 +5560,42 @@
         participants: participants.map(p => p.name),
       };
     }).sort((a, b) => (a.daysCal || 0) - (b.daysCal || 0));
+  }
+
+  // G1.913: Per-fas/roll throughput — vad orderläggs/planeras/levereras i snitt/mån?
+  // Tar projektets totala längd och delar rollens volym på det. Ger meningsfull
+  // 'samtidig aktivitets-takt' per fas — de pågår ju parallellt mot deadline.
+  function computePhaseThroughput(active, projektStart, deadline, usePessimistic) {
+    if (!active.length || !deadline || !projektStart) return [];
+    const dayMs = 1000 * 60 * 60 * 24;
+    const totalMs = deadline.getTime() - projektStart.getTime();
+    const totalMonths = totalMs / (dayMs * 30.44);
+    if (totalMonths <= 0) return [];
+    const subs = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
+    const rateOf = (r) => usePessimistic ? roleEffectivePerDayWithRework(r) * getActualVsPlanFactor() : roleEffectivePerDay(r);
+    return active.map((r, idx) => {
+      let vol = +state.onskadVolym || 0;
+      if (r.typfalls && typeof r.typfalls === 'object' && subs.length > 0) {
+        vol = 0; subs.forEach(s => { if (r.typfalls[s.tf]) vol += s.volume; });
+      }
+      const ownPerDay = rateOf(r);
+      const ownPerMonth = ownPerDay * 21;
+      // Snitt/mån över projekttiden = vol / projekttid_i_månader
+      const avgPerMonth = totalMonths > 0 ? vol / totalMonths : 0;
+      const avgPerDay = avgPerMonth / 21;
+      // Tid att hinna roll-volym med egen takt
+      const daysNeededOwn = ownPerDay > 0 ? vol / ownPerDay : Infinity;
+      const calDaysNeededOwn = isFinite(daysNeededOwn) ? daysNeededOwn * 7/5 : Infinity;
+      const finishDate = isFinite(calDaysNeededOwn) ? new Date(projektStart.getTime() + calDaysNeededOwn * dayMs) : null;
+      return {
+        idx, role: r,
+        roleVolume: vol,
+        ownPerDay, ownPerMonth,
+        avgPerDay, avgPerMonth,
+        finishDate,
+        utilization: ownPerDay > 0 ? Math.min(1, avgPerDay / ownPerDay) : 0,
+      };
+    });
   }
 
 
@@ -8252,6 +8288,32 @@
       tfHtml += '</tbody></table>';
       tfDiv.innerHTML = tfHtml;
       container.appendChild(tfDiv);
+    }
+
+    // G1.913: Per-fas throughput — vad sker per månad i varje fas?
+    const phases = computePhaseThroughput(active, projStart0, deadline, true);
+    if (phases.length > 0) {
+      const phDiv = document.createElement('div');
+      phDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
+      let phHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">⚙ Aktivitet per fas — vad pågår parallellt varje månad?</div>';
+      phHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+      phHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Fas</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Snitt/mån</th><th style="text-align:right;padding:4px 8px">Snitt/dag</th><th style="text-align:right;padding:4px 8px">Egen takt</th><th style="text-align:right;padding:4px 8px">Utnyttjande</th></tr></thead><tbody>';
+      phases.forEach(p => {
+        const utilPct = Math.round(p.utilization * 100);
+        const utilCol = utilPct >= 80 ? '#9a2424' : (utilPct >= 50 ? '#c2570d' : '#1d6e35');
+        phHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
+        phHtml += '<td style="padding:6px 8px"><strong>' + (p.idx+1) + '. ' + escapeHtml(p.role.name) + '</strong></td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + p.roleVolume + ' st</td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">' + p.avgPerMonth.toFixed(0) + '/mån</td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:#6B5F75">' + p.avgPerDay.toFixed(1) + '/dag</td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:#6B5F75">' + p.ownPerDay.toFixed(1) + '/dag</td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:' + utilCol + '">' + utilPct + ' %</td>';
+        phHtml += '</tr>';
+      });
+      phHtml += '</tbody></table>';
+      phHtml += '<div style="margin-top:8px;font-size:11px;color:#6B5F75">Snitt/mån = rollens volym fördelad över projekttiden (parallellt med andra faser). Utnyttjande = hur mycket av rollens egen kapacitet som behövs.</div>';
+      phDiv.innerHTML = phHtml;
+      container.appendChild(phDiv);
     }
 
     // Sista-beställning per Nätarkitekt-subset (samma som tidigare logik)
