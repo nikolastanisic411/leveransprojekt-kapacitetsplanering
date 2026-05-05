@@ -3071,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.915-NO-JARGON" aria-busy="true">
+<body data-build="2026-04-29-G1.916-TAKT-CRAV" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.915-NO-JARGON</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.916-TAKT-CRAV</span>
   </div>
 
 </div>
@@ -5549,6 +5549,11 @@
       const daysWork = minRate > 0 ? s.volume / minRate : Infinity;
       const daysCal = isFinite(daysWork) ? daysWork * 7 / 5 : Infinity;
       const finishDate = isFinite(daysCal) ? new Date(projektStart.getTime() + daysCal * dayMs) : null;
+      // G1.916: Krav-takt per period — vad MÅSTE levereras per månad/vecka för att hinna i tid?
+      const monthsToFinish = isFinite(daysCal) ? daysCal / 30.44 : Infinity;
+      const weeksToFinish = isFinite(daysCal) ? daysCal / 7 : Infinity;
+      const requiredPerMonth = monthsToFinish > 0 ? s.volume / monthsToFinish : 0;
+      const requiredPerWeek = weeksToFinish > 0 ? s.volume / weeksToFinish : 0;
       return {
         tf: s.tf,
         name: s.name,
@@ -5558,6 +5563,9 @@
         finishDate,
         bottleneck: bnRole,
         participants: participants.map(p => p.name),
+        requiredPerMonth,
+        requiredPerWeek,
+        monthsToFinish,
       };
     }).sort((a, b) => (a.daysCal || 0) - (b.daysCal || 0));
   }
@@ -8247,16 +8255,18 @@
       tfDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:linear-gradient(135deg,#FAFAFD 0%,#F8F5FB 100%);border:0.5px solid #E5E2EA;border-radius:10px;';
       let tfHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">📦 Leveransplan per typfall — när hinns vad?</div>';
       tfHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-      tfHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Typfall</th><th style="text-align:left;padding:4px 8px">Volym</th><th style="text-align:left;padding:4px 8px">Flöde</th><th style="text-align:left;padding:4px 8px">Flaskhals</th><th style="text-align:left;padding:4px 8px">Klart senast</th></tr></thead><tbody>';
+      tfHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Typfall</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Krav-takt</th><th style="text-align:left;padding:4px 8px">Flaskhals</th><th style="text-align:left;padding:4px 8px">Klart senast</th></tr></thead><tbody>';
       tfPlan.forEach(t => {
         const dateStr = t.finishDate ? t.finishDate.toLocaleDateString('sv-SE') : '—';
         const inTime = t.finishDate && t.finishDate <= deadline;
         const dateColor = inTime ? '#1d6e35' : '#9a2424';
         const dateIcon = inTime ? '✓' : '⚠';
+        const rateMonth = t.requiredPerMonth > 0 ? Math.round(t.requiredPerMonth) + '/mån' : '—';
+        const rateWeek = t.requiredPerWeek > 0 ? Math.round(t.requiredPerWeek) + '/vecka' : '—';
         tfHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
-        tfHtml += '<td style="padding:6px 8px"><strong>' + escapeHtml(t.name) + '</strong></td>';
-        tfHtml += '<td style="padding:6px 8px;font-variant-numeric:tabular-nums">' + t.volume + ' st</td>';
-        tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + t.participants.join(' → ') + '</td>';
+        tfHtml += '<td style="padding:6px 8px"><strong>' + escapeHtml(t.name) + '</strong><div style="font-size:10px;color:#6B5F75;font-weight:400">via ' + t.participants.join(' → ') + '</div></td>';
+        tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + t.volume + ' st</td>';
+        tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums"><strong>' + rateMonth + '</strong><div style="font-size:10px;color:#6B5F75">' + rateWeek + '</div></td>';
         tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + escapeHtml(t.bottleneck.name) + ' (' + t.rateThisFlow.toFixed(2) + '/dag)</td>';
         tfHtml += '<td style="padding:6px 8px;color:' + dateColor + ';font-weight:600">' + dateIcon + ' ' + dateStr + '</td>';
         tfHtml += '</tr>';
