@@ -3065,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.780-CAPTIONS" aria-busy="true">
+<body data-build="2026-04-29-G1.800-100PUSH-DELIVERED" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3410,10 +3410,10 @@
         <div class="exec-kpi-value" id="exec-headcount">—</div>
         <div class="exec-kpi-sub" id="exec-headcount-sub">—</div>
       </div>
-      <div class="exec-kpi">
+      <div class="exec-kpi exec-kpi-clickable" onclick="scrollToStep(5)" role="button" tabindex="0" title="Klicka för att se Detaljerad planering med Gantt och milestones">
         <div class="exec-kpi-label" title="Pipelinens steady-state-takt — begränsas av flaskhalsen">Pipeline-takt</div>
         <div class="exec-kpi-value" id="exec-rate">—</div>
-        <div class="exec-kpi-sub" id="exec-rate-sub">—</div>
+        <div class="exec-kpi-sub" id="exec-rate-sub" title="Pipeline-takt = lägsta egen-takt över alla roller × global hitrate">—</div>
       </div>
       <div class="exec-kpi exec-kpi-clickable" onclick="scrollToStep(4)" role="button" tabindex="0" title="Klicka för att hoppa till bemanning">
         <div class="exec-kpi-label" title="Den roll med lägst egen-takt — sätter taket för pipeline-output">Flaskhals</div>
@@ -3497,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.780-CAPTIONS</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.800-100PUSH-DELIVERED</span>
   </div>
 
 </div>
@@ -6766,7 +6766,7 @@
     }
 
     // KPI: Flaskhals
-    document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : '—';
+    document.getElementById('exec-bottleneck').textContent = bottleneck ? bottleneck.name : 'ingen';
     {
       const bnSub = document.getElementById('exec-bottleneck-sub');
       if (bottleneck) {
@@ -6840,7 +6840,7 @@
             const totalDays = Math.round(sched_e.totalCalDaysNeeded);
             const totalSurplus_sb = sched_e.totalSurplus || 0;
             let txt = '<strong>Pipeline-tid:</strong> ' + totalDays + ' kalenderdagar · ' + (slack >= 0 ? '<span style=\'color:#1d6e35\'>+' + slack + ' dgr marginal</span>' : '<span style=\'color:#9a2424\'>' + Math.abs(slack) + ' dgr försening</span>');
-            if (totalSurplus_sb > 0) txt += ' · <span style=\'color:#5C0E92\'>' + totalSurplus_sb + ' pers frigörbara</span>';
+            if (totalSurplus_sb > 0) txt += ' · <span style=\'color:#5C0E92;font-weight:600\'>' + totalSurplus_sb + ' pers frigörbara</span>';
             sb.innerHTML = txt; sb.style.display = '';
           } else { sb.style.display = 'none'; }
         } catch(_) { sb.style.display = 'none'; }
