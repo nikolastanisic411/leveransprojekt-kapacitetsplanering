@@ -3065,7 +3065,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.906-TIME-BOTTLENECK" aria-busy="true">
+<body data-build="2026-04-29-G1.907-MAX30-KUND" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3497,7 +3497,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.906-TIME-BOTTLENECK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.907-MAX30-KUND</span>
   </div>
 
 </div>
@@ -3506,9 +3506,9 @@
   const STORAGE_KEY = 'maxtakt-state-v7';
 
   const defaultRoles = [
-    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
-    { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
-    { id: 'r3', name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
+    { id: 'r1', name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+    { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+    { id: 'r3', name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
   ];
   const defaultScenarios = [
     { id: 's1', name: 'Scenario 1', target: 0, unit: 'månad' },
@@ -3822,9 +3822,9 @@
 
   function addStandardRoles() {
     state.roles = [
-      { id: 'r1-' + Date.now(), name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
-      { id: 'r2-' + Date.now(), name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 15, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
-      { id: 'r3-' + Date.now(), name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 40, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
+      { id: 'r1-' + Date.now(), name: 'Orderläggare', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+      { id: 'r2-' + Date.now(), name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
+      { id: 'r3-' + Date.now(), name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
     ];
     saveState();
     renderRoles();
@@ -3967,7 +3967,7 @@
 
   function addRole() {
     const newId = 'r' + Date.now();
-    state.roles.push({ id: newId, name: 'Ny roll', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'dag', enabled: true, max: 20, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true } });
+    state.roles.push({ id: newId, name: 'Ny roll', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'dag', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 3, typfalls: { tf1: true, tf2: true, tf3: true } });
     saveState();
     renderRoles();
     renderActivities();
@@ -4392,13 +4392,13 @@
             const targetPerDay = (u === 'dag') ? target : (u === 'vecka') ? target / 5 : (u === 'år') ? target / 252 : target / 21;
             const requiredCountAtBottleneck = perPerson > 0 ? Math.ceil(targetPerDay / perPerson) : Infinity;
             const extraAtBottleneck = Math.max(0, requiredCountAtBottleneck - bottleneckRole.role.count);
-            if (extraAtBottleneck > 0 && isFinite(requiredCountAtBottleneck) && requiredCountAtBottleneck <= (bottleneckRole.role.max || 50)) {
+            if (extraAtBottleneck > 0 && isFinite(requiredCountAtBottleneck) && requiredCountAtBottleneck <= (bottleneckRole.role.max || 30)) {
               deltaText += '. Riktat: <strong>+' + extraAtBottleneck + ' till ' + escapeHtml(bottleneckRole.role.name) + '</strong> (flaskhals)';
               // G1.50: Applicera-knapp som sätter bottleneck-bemanning direkt
               deltaText += ' <button class="scen-apply-btn" onclick="applyScenarioRecommendation(\'' + bottleneckRole.role.id + '\', ' + requiredCountAtBottleneck + ')" type="button" title="Sätt ' + bottleneckRole.role.name + ' till ' + requiredCountAtBottleneck + ' personer">Applicera</button>';
               deltaText += ' <button class="scen-copy-btn" onclick="copyScenarioRecommendation(\'' + scen.id + '\')" type="button" title="Kopiera scenariots åtgärdstext för delning">Kopiera</button>';
-            } else if (extraAtBottleneck > 0 && requiredCountAtBottleneck > (bottleneckRole.role.max || 50)) {
-              deltaText += '. Riktat: <strong>över max</strong> (' + bottleneckRole.role.name + ' max=' + (bottleneckRole.role.max || 50) + ', behovet är ' + requiredCountAtBottleneck + ')';
+            } else if (extraAtBottleneck > 0 && requiredCountAtBottleneck > (bottleneckRole.role.max || 30)) {
+              deltaText += '. Riktat: <strong>över max</strong> (' + bottleneckRole.role.name + ' max=' + (bottleneckRole.role.max || 30) + ', behovet är ' + requiredCountAtBottleneck + ')';
             }
           }
         } else if (factor < 1) {
@@ -4460,7 +4460,7 @@
     if (failing.length === 0) {
       html = '<strong>✓ Alla ' + scenarios.length + ' scenarier räcker</strong> med nuvarande bemanning.';
     } else {
-      const easiest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount) && bottleneckRole && a.requiredCount <= (bottleneckRole.role.max || 50))
+      const easiest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount) && bottleneckRole && a.requiredCount <= (bottleneckRole.role.max || 30))
                              .sort((a, b) => a.extra - b.extra)[0];
       const toughest = failing.filter(a => a.extra > 0 && isFinite(a.requiredCount))
                               .sort((a, b) => b.extra - a.extra)[0];
@@ -6991,11 +6991,11 @@
   function applyRoleRecommendation(roleId, newCount) {
     const role = state.roles.find(r => r.id === roleId);
     if (!role) return;
-    const cap = Math.min(role.max || 50, Math.max(1, +newCount || 1));
+    const cap = Math.min(role.max || 30, Math.max(1, +newCount || 1));
     role.count = cap;
     // Justera spannet runt nya värdet
     role.countMin = Math.max(1, cap - 1);
-    role.countMax = Math.min(role.max || 50, cap + 1);
+    role.countMax = Math.min(role.max || 30, cap + 1);
     state.suggestionApplied = true;
     saveState();
     applyStateToInputs();
@@ -7020,10 +7020,10 @@
   function applyScenarioRecommendation(roleId, newCount) {
     const role = state.roles.find(r => r.id === roleId);
     if (!role) return;
-    const cap = Math.min(role.max || 50, Math.max(1, +newCount || 1));
+    const cap = Math.min(role.max || 30, Math.max(1, +newCount || 1));
     role.count = cap;
     role.countMin = Math.max(1, cap - 1);
-    role.countMax = Math.min(role.max || 50, cap + 1);
+    role.countMax = Math.min(role.max || 30, cap + 1);
     state.suggestionApplied = true;
     saveState();
     applyStateToInputs();
@@ -7079,8 +7079,8 @@
       if (extra > 0 && isFinite(requiredCount)) {
         txt += '\nÅTGÄRDSFÖRSLAG (riktat på flaskhalsen):\n';
         txt += '  • Sätt ' + bottleneck.role.name + ' till ' + requiredCount + ' personer (idag ' + bottleneck.role.count + ', +' + extra + ')\n';
-        if (requiredCount > (bottleneck.role.max || 50)) {
-          txt += '  • OBS: behovet (' + requiredCount + ') överstiger rollens max (' + (bottleneck.role.max || 50) + ') — kapaciteten kan inte skalas tillräckligt med enbart denna roll.\n';
+        if (requiredCount > (bottleneck.role.max || 30)) {
+          txt += '  • OBS: behovet (' + requiredCount + ') överstiger rollens max (' + (bottleneck.role.max || 30) + ') — kapaciteten kan inte skalas tillräckligt med enbart denna roll.\n';
         }
       }
     }
@@ -7101,11 +7101,11 @@
       const [roleId, countStr] = p.split(':');
       const role = state.roles.find(r => r.id === roleId);
       if (!role) return;
-      const newCount = Math.min(role.max || 50, Math.max(1, +countStr || 1));
+      const newCount = Math.min(role.max || 30, Math.max(1, +countStr || 1));
       if (role.count !== newCount) {
         role.count = newCount;
         role.countMin = Math.max(1, newCount - 1);
-        role.countMax = Math.min(role.max || 50, newCount + 1);
+        role.countMax = Math.min(role.max || 30, newCount + 1);
         changed++;
       }
     });
