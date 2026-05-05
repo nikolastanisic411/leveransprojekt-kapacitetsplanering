@@ -3071,7 +3071,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.913-PHASE-FLOW" aria-busy="true">
+<body data-build="2026-04-29-G1.914-CONSISTENT" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3503,7 +3503,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.913-PHASE-FLOW</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.914-CONSISTENT</span>
   </div>
 
 </div>
@@ -5878,9 +5878,11 @@
     const leadtimeMonths = effLeadtimeDays / 21; // 21 arbetsdagar/månad
     // Full ramp gäller alltid och räknas från projektstart
     const effectiveRamp = state.rampMonths;
-    // Effektiv tid att starta leveranser = total projekttid - ledtid (sista startdag = deadline - ledtid)
-    const effectiveStartMonths = Math.max(0, monthsAvailable - leadtimeMonths);
-    // Potentiell volym över hela projektet (från projektstart till deadline)
+    // G1.914: I pipeline-modellen är ledtid inbäddat i pipeline-flow-tiden — inte separat subtraktion.
+    // Tidigare räknade vi (monthsAvailable - leadtimeMonths) vilket gav dubbel-tap mot Översiktens
+    // beräkning. Använder nu samma som Översikt: monthsAvailable från projektstart till deadline.
+    const effectiveStartMonths = monthsAvailable; // hela projekttiden
+    // Potentiell volym = pipeline-output över hela projekttiden (med ramp)
     const potentialVolym = Math.max(0, cumulativeAt(effectiveStartMonths, effMonth, effectiveRamp));
 
     document.getElementById('vol-out').textContent = Math.round(potentialVolym);
@@ -6906,8 +6908,8 @@
     if (deadline && !isNaN(deadline.getTime()) && deadline > today && minEffDay > 0) {
       const monthsAvailable = Math.max(0, (deadline - projektStartDate) / (1000 * 60 * 60 * 24 * 30));
       const ramp = +state.rampMonths || 0;
-      const eff = monthsAvailable >= ramp ? (monthsAvailable - 0.5 * ramp) : (0.5 * monthsAvailable * monthsAvailable / Math.max(ramp, 0.001));
-      projected = monthlyRate * eff;
+      // G1.914: Använd samma cumulativeAt som Resultat för full enhetlighet
+      projected = (typeof cumulativeAt === 'function') ? cumulativeAt(monthsAvailable, monthlyRate, ramp) : monthlyRate * Math.max(0, monthsAvailable - 0.5 * ramp);
     }
 
     // KPI: Mål till deadline
