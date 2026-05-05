@@ -323,6 +323,27 @@
   .tact-pct { width: 36px; color: #5C0E92; font-weight: 600; }
   .tact-items { width: 70px; color: #1A1A1F; }
   .tact-date { color: #6B5F75; }
+  /* G1.927: Print-board-läge — bara styrgruppsrelevanta vyer */
+  @media print {
+    body.print-board > .step-progress,
+    body.print-board > .next-action-banner,
+    body.print-banner,
+    body.print-board #step-1,
+    body.print-board #step-2,
+    body.print-board #step-3,
+    body.print-board #step-4,
+    body.print-board .scen-grid,
+    body.print-board .activities-section,
+    body.print-board .constraints-section,
+    body.print-board #section-analys,
+    body.print-board #section-analys ~ * { display: none !important; }
+    body.print-board .next-action-banner,
+    body.print-board .plan-status-pill { display: none !important; }
+    body.print-board .utfall-controls,
+    body.print-board .utfall-actions,
+    body.print-board .utfall-table { display: none !important; }
+    body.print-board .ud-trend svg { max-height: 100px; }
+  }
   @media print {
     .plan-status-pill { display: flex !important; break-inside: avoid; animation: none !important; box-shadow: none !important; position: static !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
     .plan-status-pill .psp-arrow { display: none; }
@@ -3090,7 +3111,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.926-CAPACITY-CHECK" aria-busy="true">
+<body data-build="2026-04-29-G1.927-PRINT-BOARD" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3484,7 +3505,10 @@
   <div class="utfall-dashboard" id="utfall-dashboard" style="display:none">
     <div class="ud-header">
       <div class="ud-title">Status för styrgrupp</div>
-      <div class="ud-status" id="ud-status">—</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="ud-status" id="ud-status">—</div>
+        <button onclick="printForBoard()" style="background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer" title="Skriv ut/exportera som PDF för styrgruppen">Skriv ut / PDF</button>
+      </div>
     </div>
     <div class="ud-grid">
       <div class="ud-kpi">
@@ -3556,7 +3580,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.926-CAPACITY-CHECK</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.927-PRINT-BOARD</span>
   </div>
 
 </div>
@@ -4144,6 +4168,16 @@
 
   
   // G1.925: Uppdatera styrgrupps-dashboard
+
+  // G1.927: Skriv ut för styrgrupp — döljer tekniska delar, visar bara översikt+sammanfattning+leveransplan+uppföljning
+  function printForBoard() {
+    document.body.classList.add('print-board');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => document.body.classList.remove('print-board'), 1500);
+    }, 100);
+  }
+
   function updateUtfallDashboard() {
     const dash = document.getElementById('utfall-dashboard');
     if (!dash) return;
