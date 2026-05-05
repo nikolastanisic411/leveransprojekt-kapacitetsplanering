@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.647-FRIGOR" aria-busy="true">
+<body data-build="2026-04-29-G1.656-CONSOLIDATE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3496,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.647-FRIGOR</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.656-CONSOLIDATE</span>
   </div>
 
 </div>
@@ -6817,7 +6817,7 @@
           if (sched_e.valid) {
             const slack = sched_e.slackDays;
             const totalDays = Math.round(sched_e.totalCalDaysNeeded);
-            const totalSurplus_sb = sched_e.data.reduce((s, dd) => s + (dd.surplusHeadcount || 0), 0);
+            const totalSurplus_sb = sched_e.totalSurplus || 0;
             let txt = '<strong>Pipeline-tid:</strong> ' + totalDays + ' kalenderdagar · ' + (slack >= 0 ? '<span style=\'color:#1d6e35\'>+' + slack + ' dgr marginal</span>' : '<span style=\'color:#9a2424\'>' + Math.abs(slack) + ' dgr försening</span>');
             if (totalSurplus_sb > 0) txt += ' · <span style=\'color:#5C0E92\'>' + totalSurplus_sb + ' pers frigörbara</span>';
             sb.innerHTML = txt; sb.style.display = '';
@@ -6839,8 +6839,8 @@
       try {
         const sched_es = computePipelineSchedule({ active, V: target, deadline, projektStart: projektStartDate, usePessimistic: true });
         if (sched_es.valid) {
-          const totalSurplus = sched_es.data.reduce((s, d) => s + (d.surplusHeadcount || 0), 0);
-          const wastedRoles = sched_es.data.filter(d => (d.capacityUtilization || 1) < 0.5 && !d.isBottleneck);
+          const totalSurplus = sched_es.totalSurplus || 0;
+          const wastedRoles = sched_es.wastedRoles || [];
           const allHigh = sched_es.data.every(d => (d.capacityUtilization || 0) >= 0.7);
           const slackTxt = sched_es.slackDays >= 0 ? sched_es.slackDays + ' dgr marginal' : Math.abs(sched_es.slackDays) + ' dgr försening';
           if (totalSurplus >= 2 && wastedRoles.length > 0) {
@@ -8151,7 +8151,7 @@
       }
 
       svg += '<rect x="' + xPlanStartClamp + '" y="' + yBar + '" width="' + planW + '" height="' + barH + '" fill="' + planColor + '" opacity="0.78" rx="3">';
-      svg += '<title>' + escapeHtml(d.role.name) + ' (plan): ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ', ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st i takt ' + d.effectiveRate.toFixed(1) + '/dag pipeline. Egen-takt ' + d.ownRate.toFixed(1) + '/dag (' + d.role.count + ' pers).</title>';
+      svg += '<title>' + escapeHtml(d.role.name) + ' (plan): ' + fmt(d.mastBorjaSenast) + ' → ' + fmt(d.klarSenast) + ', ' + Math.round(V) + (d.reworkVolume > 0 ? '+' + d.reworkVolume + ' rework' : '') + ' st i takt ' + d.effectiveRate.toFixed(1) + '/dag pipeline. Egen-takt ' + d.ownRate.toFixed(1) + '/dag (' + d.role.count + ' pers).' + (d.isBottleneck && d.daysSavedPerExtra > 0 ? ' +1 person sparar ~' + d.daysSavedPerExtra + ' dgr.' : '') + '</title>';
       svg += '</rect>';
 
       // Datum-texter
