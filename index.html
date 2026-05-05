@@ -3064,7 +3064,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.590-POLISH-DEEP" aria-busy="true">
+<body data-build="2026-04-29-G1.600-MILESTONE" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3410,7 +3410,7 @@
         <div class="exec-kpi-sub" id="exec-headcount-sub">—</div>
       </div>
       <div class="exec-kpi">
-        <div class="exec-kpi-label" title="Pipelinens steady-state-takt — begränsas av flaskhalsen">Effektiv takt</div>
+        <div class="exec-kpi-label" title="Pipelinens steady-state-takt — begränsas av flaskhalsen">Pipeline-takt</div>
         <div class="exec-kpi-value" id="exec-rate">—</div>
         <div class="exec-kpi-sub" id="exec-rate-sub">—</div>
       </div>
@@ -3496,7 +3496,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.590-POLISH-DEEP</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.600-MILESTONE</span>
   </div>
 
 </div>
@@ -5409,7 +5409,7 @@
       if (d.effectiveRate > 0 && isFinite(d.effectiveRate)) {
         const stops = [0.25, 0.5, 0.75, 1.0];
         stops.forEach(p => {
-          const itemsDone = Math.round(d.effV * p);
+          const itemsDone = Math.min(Math.round(d.effV * p), d.effV);
           const calOffset = (itemsDone / d.effectiveRate) * 7 / 5;
           const dt = new Date(d.actualStart.getTime() + calOffset * dayMs);
           ms.push({ pct: p, itemsDone, date: dt });
@@ -7438,7 +7438,7 @@
       const ariaParts = [d.role.name, d.role.count + ' personer', 'takt ' + ownRateInUnit + ' ' + unitDisplay];
       if (d.isBottleneck) ariaParts.push('flaskhals');
       if (d.overshoots) ariaParts.push('hinner inte');
-      if (isFinite(d.bufferDays)) ariaParts.push(d.bufferDays >= 0 ? d.bufferDays + ' dagars marginal' : Math.abs(d.bufferDays) + ' dagars försening');
+      if (isFinite(d.bufferDays)) ariaParts.push(d.bufferDays >= 0 ? d.bufferDays + ' dagars marginal' : Math.abs(d.bufferDays) + ' dagars försening'); if (typeof d.capacityUtilization === 'number') ariaParts.push(Math.round(d.capacityUtilization*100) + ' procent kapacitet utnyttjad');
       const ariaLabel = ariaParts.join(', ');
       html += '<div class="' + roleClass + '" role="group" aria-label="' + escapeHtml(ariaLabel) + '">';
       html += '<div class="ho-name">' + (i+1) + '. ' + escapeHtml(d.role.name) + flag + '</div>';
