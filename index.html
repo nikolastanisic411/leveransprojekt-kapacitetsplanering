@@ -3119,7 +3119,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.940-NO-DUP-BTN" aria-busy="true">
+<body data-build="2026-04-29-G1.941-MISSING-HINT" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3570,7 +3570,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.940-NO-DUP-BTN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.941-MISSING-HINT</span>
   </div>
 
 </div>
@@ -7046,6 +7046,24 @@
     const target = +state.onskadVolym || 0;
     const active = activeRoles();
     const totalHeadcount = state.roles ? state.roles.reduce((s, r) => s + (r.enabled !== false ? (+r.count || 0) : 0), 0) : 0;
+    // G1.941: Visa tydlig hint överst i Dashboarden om kritiska inputs saknas
+    const deadlineSet = state.deadline && new Date(state.deadline).getTime() && !isNaN(new Date(state.deadline).getTime());
+    const missing = [];
+    if (target <= 0) missing.push('mål-volym (steg 1)');
+    if (!deadlineSet) missing.push('deadline (steg 2)');
+    if (active.length === 0) missing.push('aktiv roll (steg 3)');
+    let banner = view.querySelector('.exec-missing-banner');
+    if (missing.length > 0) {
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.className = 'exec-missing-banner';
+        banner.style.cssText = 'margin-bottom:14px;padding:10px 14px;background:#FFF8E5;border:0.5px solid #E8C97A;border-radius:8px;color:#5A3A10;font-size:12px';
+        view.insertBefore(banner, view.firstChild);
+      }
+      banner.innerHTML = '⚠ Saknar: <strong>' + missing.join(', ') + '</strong>. Fyll i för att se beräknade värden.';
+    } else if (banner) {
+      banner.remove();
+    }
     // G1.60/G1.61/G1.69: Pessimistisk takt — rework × actual-vs-plan-faktor när utfall finns
     const minEffDay = active.length > 0 ? Math.min(...active.map(roleEffectivePessimistic)) : 0;
     const monthlyRate = minEffDay * 21;
