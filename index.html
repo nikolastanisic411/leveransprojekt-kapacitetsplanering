@@ -3119,7 +3119,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.937-NO-EMPTY-DASH" aria-busy="true">
+<body data-build="2026-04-29-G1.938-CONSIST-BN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3569,7 +3569,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.937-NO-EMPTY-DASH</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.938-CONSIST-BN</span>
   </div>
 
 </div>
@@ -4700,17 +4700,28 @@
     const active = activeRoles();
     if (active.length === 0) return;
 
-    // G1.912: Använd effektiv kapacitet och flagga BARA om en roll är meningsfullt långsammare.
-    // Om alla roller har samma takt finns ingen flaskhals — pipelinen är balanserad.
-    const caps = active.map(r => ({ id: r.id, name: r.name, val: roleEffectivePerDay(r), raw: roleCapPerDay(r) }));
-    const minCap = Math.min(...caps.map(c => c.val));
-    const maxCap = Math.max(...caps.map(c => c.val));
-    const hasMeaningfulBottleneck = (maxCap - minCap) > maxCap * 0.05; // 5% spread
+    // G1.938: Synka med _recalc — flaskhals = roll med längst TID (volym/takt),
+    // inte bara lägst takt. Används samma logik som tabellen och status-text för
+    // konsistens. En roll som hanterar mindre volym kan ha lägre takt utan att
+    // vara den begränsande faktorn för deadline.
+    const subs_pf = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
+    const caps = active.map(r => {
+      let vol = +state.onskadVolym || 0;
+      if (r.typfalls && typeof r.typfalls === 'object' && subs_pf.length > 0) {
+        vol = 0; subs_pf.forEach(s => { if (r.typfalls[s.tf]) vol += s.volume; });
+      }
+      const eff = roleEffectivePerDay(r);
+      return { id: r.id, name: r.name, val: eff, raw: roleCapPerDay(r), vol, t: eff > 0 ? vol / eff : Infinity };
+    });
+    const maxT_pf = Math.max(...caps.map(c => isFinite(c.t) ? c.t : 0));
+    const minT_pf = Math.min(...caps.map(c => isFinite(c.t) && c.t > 0 ? c.t : Infinity));
+    // Meningsfull flaskhals = stor spread i tid mellan rollerna (≥10 %)
+    const hasMeaningfulBottleneck = isFinite(maxT_pf) && isFinite(minT_pf) && (maxT_pf - minT_pf) > maxT_pf * 0.10;
+    const bottleneckId_pf = hasMeaningfulBottleneck ? caps.find(c => c.t === maxT_pf).id : null;
 
     active.forEach((role, idx) => {
       const cap = roleCapPerDay(role);
-      const effCap = roleEffectivePerDay(role);
-      const isBottleneck = hasMeaningfulBottleneck && Math.abs(effCap - minCap) < 1e-9;
+      const isBottleneck = role.id === bottleneckId_pf;
 
       const step = document.createElement('div');
       step.className = 'pf-step' + (isBottleneck ? ' bottleneck' : '');
