@@ -3119,7 +3119,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.939-CHART-FIX" aria-busy="true">
+<body data-build="2026-04-29-G1.940-NO-DUP-BTN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3288,9 +3288,10 @@
     <span class="saved-indicator" id="saved-indicator" role="status" aria-live="polite">sparat</span>
   </div>
 
-  <div class="apply-suggestion-cta" id="apply-cta">
-    <button class="apply-suggestion-btn" id="apply-cta-btn" onclick="applySuggestion()" aria-keyshortcuts="Control+Enter Meta+Enter" title="Tangentbordsgenväg: Ctrl+Enter (Cmd+Enter på Mac)">Applicera förslaget <span style="opacity:0.7;font-weight:400;font-size:11px;margin-left:6px">⌘+↵</span></button>
-    <span class="apply-suggestion-hint" id="apply-cta-hint" role="status" aria-live="polite">Sätter optimal bemanning baserat på mål, deadline och typfall — du kan justera spannet efteråt.</span>
+  <!-- G1.940: Dubblerad 'Applicera förslaget'-knapp borttagen — Förslag-kortet ovan har redan en -->
+  <div class="apply-suggestion-cta" id="apply-cta" style="display:none">
+    <button class="apply-suggestion-btn" id="apply-cta-btn" onclick="applySuggestion()" aria-keyshortcuts="Control+Enter Meta+Enter">Applicera förslaget</button>
+    <span class="apply-suggestion-hint" id="apply-cta-hint"></span>
   </div>
 
   <div class="ui-mode-toggle">
@@ -3569,7 +3570,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.939-CHART-FIX</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.940-NO-DUP-BTN</span>
   </div>
 
 </div>
