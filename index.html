@@ -3119,7 +3119,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.943-NO-FALSE-BN" aria-busy="true">
+<body data-build="2026-04-29-G1.944-SPECIFIC-EMPTY" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3268,7 +3268,7 @@
       <div class="title" id="suggest-title">Förslag på bemanning</div>
       <button class="suggest" id="suggest-card-btn" onclick="applySuggestion()" aria-label="Applicera förslaget på bemanningen">Applicera förslag</button>
     </div>
-    <div class="body" id="suggest-body">Fyll i mål och deadline ovan så räknar verktyget fram bemanning per roll.</div>
+    <div class="body" id="suggest-body">Saknas: <strong>mål-volym</strong> (steg 1), <strong>deadline</strong> (steg 2). Fyll i för att få ett förslag.</div>
 
     <div class="margin-row">
       <label><span class="tt" tabindex="0" data-tip="Buffert utöver minimibemanningen. 10% klarar sjukdom och variationer.">Marginal</span>
@@ -3570,7 +3570,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.943-NO-FALSE-BN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.944-SPECIFIC-EMPTY</span>
   </div>
 
 </div>
@@ -6365,7 +6365,14 @@
       } else {
         currentSuggestion = null;
         if (card) card.classList.add('no-data');
-        const errMsg = (fallback && fallback.error) ? fallback.message : 'Fyll i mål och deadline ovan så räknar verktyget fram bemanning per roll.';
+        // G1.944: Specifik tom-state — säg exakt vad som saknas
+        const missing_s = [];
+        if ((+state.onskadVolym || 0) <= 0) missing_s.push('<strong>mål-volym</strong> (steg 1)');
+        const dl_s = state.deadline ? new Date(state.deadline) : null;
+        if (!dl_s || isNaN(dl_s.getTime())) missing_s.push('<strong>deadline</strong> (steg 2)');
+        if (state.roles.filter(r => r.enabled !== false).length === 0) missing_s.push('<strong>aktiv roll</strong> (steg 3)');
+        const errMsg = (fallback && fallback.error) ? fallback.message :
+          (missing_s.length > 0 ? 'Saknas: ' + missing_s.join(', ') + '. Fyll i för att få ett förslag.' : 'Förslag kunde inte räknas — kontrollera takt och bemanning per roll.');
         if (body) body.innerHTML = errMsg;
         if (rolesEl) rolesEl.innerHTML = '';
         if (outcomeEl) outcomeEl.innerHTML = '';
