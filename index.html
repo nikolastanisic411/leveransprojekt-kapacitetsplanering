@@ -3118,7 +3118,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.932-VALIDATION" aria-busy="true">
+<body data-build="2026-04-29-G1.933-NO-GANTT" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3568,7 +3568,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.932-VALIDATION</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.933-NO-GANTT</span>
   </div>
 
 </div>
@@ -8588,124 +8588,8 @@
       else archDateMap[archRole.role.id] = archSubsetDates.map(s => s.tfName + ': ' + fmt(s.date)).join(' · ');
     }
 
-    // === MILSTOLPE-TIDSLINJE per roll ===
-    // Ersätter Gantt-staplar — istället en ren tidslinje per roll med 4 milstolpar.
-    // Inget visuellt brus, ingen överlappning. Datum + volym läses direkt vid varje prick.
-    const today_g = new Date(); today_g.setHours(0,0,0,0);
-    const earliestVisible = data.reduce((min, d) => d.mastBorjaSenast < min ? d.mastBorjaSenast : min, projStart0);
-    const ganttStart = earliestVisible < projStart0 ? earliestVisible : projStart0;
-    const ganttEnd = new Date(deadline);
-    const totalSpanMs = Math.max(1, ganttEnd.getTime() - ganttStart.getTime());
-
-    const rowHeight = 56;
-    const headerHeight = 36;
-    const labelWidth = 180;
-    const padRight = 60;
-    const ganttHeight = headerHeight + data.length * rowHeight + 28;
-
-    let svg = '<svg class="gantt-svg" viewBox="0 0 1000 ' + ganttHeight + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Milstolpe-tidslinje per roll">';
-    const xFor = (date) => labelWidth + ((date.getTime() - ganttStart.getTime()) / totalSpanMs) * (1000 - labelWidth - padRight);
-
-    // Tidsaxel-tickar (5 jämnt fördelade)
-    svg += '<g>';
-    for (let i = 0; i <= 4; i++) {
-      const t = ganttStart.getTime() + (totalSpanMs * i / 4);
-      const x = labelWidth + (i / 4) * (1000 - labelWidth - padRight);
-      const dt = new Date(t);
-      svg += '<line x1="' + x + '" y1="' + (headerHeight - 4) + '" x2="' + x + '" y2="' + (ganttHeight - 22) + '" stroke="#F0EDF4" stroke-width="0.5"/>';
-      svg += '<text x="' + x + '" y="' + (headerHeight - 8) + '" font-size="10" fill="#888590" text-anchor="middle" font-family="inherit">' + fmtShort(dt) + '</text>';
-    }
-    svg += '</g>';
-
-    // Idag-linje (subtil grön)
-    if (today_g >= ganttStart && today_g <= ganttEnd) {
-      const xToday = xFor(today_g);
-      svg += '<line x1="' + xToday + '" y1="' + headerHeight + '" x2="' + xToday + '" y2="' + (ganttHeight - 22) + '" stroke="#1d6e35" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>';
-      svg += '<text x="' + xToday + '" y="' + (ganttHeight - 6) + '" font-size="9" fill="#1d6e35" text-anchor="middle" font-family="inherit">idag</text>';
-    }
-    // Projektstart-linje
-    if (projStart0 >= ganttStart && projStart0 <= ganttEnd) {
-      const xPS = xFor(projStart0);
-      svg += '<line x1="' + xPS + '" y1="' + headerHeight + '" x2="' + xPS + '" y2="' + (ganttHeight - 22) + '" stroke="#5C0E92" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>';
-      svg += '<text x="' + xPS + '" y="' + (ganttHeight - 6) + '" font-size="9" fill="#5C0E92" text-anchor="middle" font-family="inherit">start</text>';
-    }
-    // Deadline-linje
-    const xDeadline = xFor(ganttEnd);
-    svg += '<line x1="' + xDeadline + '" y1="' + headerHeight + '" x2="' + xDeadline + '" y2="' + (ganttHeight - 22) + '" stroke="#9a2424" stroke-width="1.5" opacity="0.7"/>';
-    svg += '<text x="' + xDeadline + '" y="' + (ganttHeight - 6) + '" font-size="9" fill="#9a2424" text-anchor="end" font-family="inherit">deadline</text>';
-
-    // Per roll: en horisontell linje med 4 prickar (25%, 50%, 75%, 100%)
-    data.forEach((d, i) => {
-      const yRow = headerHeight + i * rowHeight;
-      const yLine = yRow + 28;
-
-      if (i % 2 === 0) svg += '<rect x="0" y="' + yRow + '" width="1000" height="' + rowHeight + '" fill="#FCFAFD" />';
-
-      // Roll-label
-      const labelText = (i+1) + '. ' + d.role.name;
-      svg += '<text x="14" y="' + (yRow + 22) + '" font-size="12" font-weight="600" fill="#1A1A1F" font-family="inherit">' + escapeHtml(labelText) + '</text>';
-      const subText = d.role.count + ' pers · ' + Math.round(d.roleVolume || d.effV || V) + ' st';
-      svg += '<text x="14" y="' + (yRow + 38) + '" font-size="10" fill="#888590" font-family="inherit">' + escapeHtml(subText) + '</text>';
-      if (d.isBottleneck) {
-        svg += '<text x="14" y="' + (yRow + 50) + '" font-size="10" fill="#5C0E92" font-weight="600" font-family="inherit">flaskhals</text>';
-      }
-
-      // Tidslinje-bas (ljus grå)
-      const xLineStart = xFor(d.mastBorjaSenast);
-      const xLineEnd = xFor(d.klarSenast);
-      const xLineStartClamp = Math.max(labelWidth, xLineStart);
-      const lineColor = d.overshoots ? '#7a1a1a' : (d.isBottleneck ? '#5C0E92' : '#990AE3');
-
-      // Pre-projekt-segment (streckat) om mastBorjaSenast < projStart
-      if (d.mastBorjaSenast < projStart0) {
-        const xPre = xFor(d.mastBorjaSenast);
-        const xPreEnd = xFor(projStart0);
-        if (xPreEnd > xPre) {
-          svg += '<line x1="' + xPre + '" y1="' + yLine + '" x2="' + xPreEnd + '" y2="' + yLine + '" stroke="' + lineColor + '" stroke-width="2" stroke-dasharray="3,3" opacity="0.4"/>';
-        }
-      }
-
-      // Aktiv linje (tunn, inte tjock stapel)
-      svg += '<line x1="' + xLineStartClamp + '" y1="' + yLine + '" x2="' + xLineEnd + '" y2="' + yLine + '" stroke="' + lineColor + '" stroke-width="3" opacity="0.6" stroke-linecap="round"/>';
-
-      // Milstolpe-prickar vid 25%, 50%, 75%, 100% av rollens volym
-      const milestones = [0.25, 0.5, 0.75, 1.0];
-      const dayMs_g = 1000 * 60 * 60 * 24;
-      const lineMs = d.klarSenast.getTime() - d.mastBorjaSenast.getTime();
-      milestones.forEach((p, mi) => {
-        const msMs = d.mastBorjaSenast.getTime() + lineMs * p;
-        const msDate = new Date(msMs);
-        const xM = xFor(msDate);
-        if (xM < labelWidth || xM > 1000 - padRight + 5) return;
-        const itemsAt = Math.round((d.roleVolume || d.effV || V) * p);
-        const isLast = (p === 1.0);
-        const r = isLast ? 6 : 4;
-        // Prick
-        svg += '<circle cx="' + xM + '" cy="' + yLine + '" r="' + r + '" fill="' + lineColor + '" stroke="#fff" stroke-width="1.5">';
-        svg += '<title>' + Math.round(p*100) + ' % klart: ' + itemsAt + ' av ' + Math.round(d.roleVolume || d.effV || V) + ' st den ' + msDate.toLocaleDateString('sv-SE') + '</title>';
-        svg += '</circle>';
-        // Datum-text under prick (bara 50% och 100% för att inte spamma)
-        if (isLast || p === 0.5) {
-          const lbl = isLast ? msDate.toLocaleDateString('sv-SE', {month:'short',day:'numeric'}) + ' · ' + itemsAt + ' st' : Math.round(p*100) + '% · ' + msDate.toLocaleDateString('sv-SE', {month:'short',day:'numeric'});
-          svg += '<text x="' + xM + '" y="' + (yLine + 16) + '" font-size="9" fill="#6B5F75" text-anchor="middle" font-family="inherit">' + lbl + '</text>';
-        }
-      });
-
-      // Sista-beställning för Nätarkitekt (lila prick på linjen)
-      if (archRole && d.role.id === archRole.role.id && archLastOrderDate) {
-        const xLast = xFor(archLastOrderDate);
-        if (xLast >= labelWidth && xLast <= 1000 - padRight) {
-          svg += '<circle cx="' + xLast + '" cy="' + yLine + '" r="4" fill="#FFE6A0" stroke="#5C0E92" stroke-width="1.5"><title>Sista beställning: ' + escapeHtml(archDateMap[d.role.id] || fmt(archLastOrderDate)) + '</title></circle>';
-        }
-      }
-    });
-
-    svg += '</svg>';
-
-    const ganttDiv = document.createElement('div');
-    ganttDiv.className = 'gantt-container'; ganttDiv.setAttribute('role', 'region'); ganttDiv.setAttribute('aria-label', 'Gantt-schema för rollernas pipeline');
-    ganttDiv.innerHTML = svg;
-    container.appendChild(ganttDiv);
+    // G1.933: Milstolpe-tidslinjen borttagen — TF-leveransplan + Aktivitet per fas
+    // + Dashboardens per-roll-tidslinje täcker redan denna info
 
     // G1.910: Tact-timeline borttaget — redundant med Gantt
     if (false && data.length > 0 && data.some(d => d.milestones && d.milestones.length > 0)) {
