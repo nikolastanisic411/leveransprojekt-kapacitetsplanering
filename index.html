@@ -3118,7 +3118,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.934-MIX-CLEAN" aria-busy="true">
+<body data-build="2026-04-29-G1.936-CHART-FIX" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3568,7 +3568,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.934-MIX-CLEAN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.936-CHART-FIX</span>
   </div>
 
 </div>
@@ -8843,7 +8843,6 @@
 
     // === PROJEKTSTART-MARKÖR (om i framtiden) ===
     if (startDelayMonths > 0 && startDelayMonths < monthsLeft) {
-      const psX = xScale(startDelayMonths);
       const psLine = document.createElementNS(ns, 'line');
       psLine.setAttribute('x1', psX); psLine.setAttribute('x2', psX);
       psLine.setAttribute('y1', M.top - 4); psLine.setAttribute('y2', M.top + innerH);
@@ -8854,7 +8853,7 @@
       svg.appendChild(psLine);
 
       const psLbl = document.createElementNS(ns, 'text');
-      psLbl.setAttribute('x', psX); psLbl.setAttribute('y', M.top - 10);
+      psLbl.setAttribute('x', psX); psLbl.setAttribute('y', _labelY('ps'));
       psLbl.setAttribute('text-anchor', 'middle'); psLbl.setAttribute('font-size', '10');
       psLbl.setAttribute('fill', '#5C0E92'); psLbl.setAttribute('font-weight', '600');
       psLbl.setAttribute('font-family', 'inherit');
@@ -9258,16 +9257,33 @@
       svg.appendChild(progLbl);
     }
 
-    // === RAMP- OCH LEDTID-MARKERINGAR ===
-    // Räkna ut positioner och placera etiketter på olika höjder om de krockar
+    // === LABEL-PLACERING — PROJEKTSTART, 1:A KLAR, FULL TAKT på olika rader ===
+    // G1.936: Sortera labels på X-pos och stapla vertikalt om de kolliderar (< 80px)
+    const psActive_g = startDelayMonths > 0;
+    const psX = psActive_g ? xScale(startDelayMonths) : null;
     const rampActive = rampMonths && rampMonths > 0 && (startDelayMonths + rampMonths) < monthsLeft;
     const ltActive = lt > 0 && (lt + startDelayMonths) < monthsLeft;
     const rampX = rampActive ? xScale(startDelayMonths + rampMonths) : null;
     const ltX = ltActive ? xScale(startDelayMonths + lt) : null;
-    // Om båda finns och ligger nära varandra (< 60px), stapla etiketter vertikalt
-    const labelsCollide = rampActive && ltActive && Math.abs(rampX - ltX) < 60;
-    const labelY1 = M.top + 4;       // Övre rad
-    const labelY2 = M.top + 16;      // Undre rad (om kollision)
+    // Bygg lista över aktiva labels med default-rad
+    const _allLbls = [];
+    if (psActive_g) _allLbls.push({ key: 'ps', x: psX });
+    if (ltActive) _allLbls.push({ key: 'lt', x: ltX });
+    if (rampActive) _allLbls.push({ key: 'ramp', x: rampX });
+    _allLbls.sort((a, b) => a.x - b.x);
+    // Tilldela rad: om föregående label är < 80px bort, gå till nästa rad
+    let _lastX = -Infinity, _curRow = 0;
+    const _rowOf = {};
+    _allLbls.forEach(lbl => {
+      if (lbl.x - _lastX < 80) _curRow++;
+      else _curRow = 0;
+      _rowOf[lbl.key] = _curRow;
+      _lastX = lbl.x;
+    });
+    const _labelY = (key) => M.top - 10 - (_rowOf[key] || 0) * 12;
+    const labelsCollide = rampActive && ltActive && Math.abs(rampX - ltX) < 80;
+    const labelY1 = _labelY('ramp');
+    const labelY2 = _labelY('lt');
 
     if (rampActive) {
       const rampLine = document.createElementNS(ns, 'line');
@@ -9282,7 +9298,7 @@
       const rampLbl = document.createElementNS(ns, 'text');
       rampLbl.setAttribute('x', rampX);
       // Om kollision: ramp får övre rad (eftersom den ofta är till vänster om ledtid)
-      rampLbl.setAttribute('y', labelsCollide ? labelY1 : (M.top + 4));
+      rampLbl.setAttribute('y', _labelY('ramp'));
       rampLbl.setAttribute('text-anchor', 'middle');
       rampLbl.setAttribute('font-size', '9');
       rampLbl.setAttribute('fill', '#888590');
@@ -9305,7 +9321,7 @@
       const ltLbl = document.createElementNS(ns, 'text');
       ltLbl.setAttribute('x', ltX);
       // Om kollision: ledtid får undre rad
-      ltLbl.setAttribute('y', labelsCollide ? labelY2 : (M.top + 4));
+      ltLbl.setAttribute('y', _labelY('lt'));
       ltLbl.setAttribute('text-anchor', 'middle');
       ltLbl.setAttribute('font-size', '9');
       ltLbl.setAttribute('fill', '#888590');
@@ -9406,18 +9422,22 @@
     bubbleVal.setAttribute('font-family', 'inherit');
     bubbleVal.setAttribute('font-variant-numeric', 'tabular-nums');
     bubbleVal.textContent = volStr;
+    // Om ingen sub-text, centrera bara värdet vertikalt i den lägre bubblan
+    if (!subStr) bubbleVal.setAttribute('y', finalBubbleY + 18);
     svg.appendChild(bubbleVal);
 
-    const bubbleSub = document.createElementNS(ns, 'text');
-    bubbleSub.setAttribute('x', finalBubbleX + bubbleW / 2);
-    bubbleSub.setAttribute('y', finalBubbleY + 30);
-    bubbleSub.setAttribute('text-anchor', 'middle');
-    bubbleSub.setAttribute('font-size', '9');
-    bubbleSub.setAttribute('fill', subColor);
-    bubbleSub.setAttribute('font-family', 'inherit');
-    bubbleSub.setAttribute('letter-spacing', '0.04em');
-    bubbleSub.textContent = subStr;
-    svg.appendChild(bubbleSub);
+    if (subStr) {
+      const bubbleSub = document.createElementNS(ns, 'text');
+      bubbleSub.setAttribute('x', finalBubbleX + bubbleW / 2);
+      bubbleSub.setAttribute('y', finalBubbleY + 30);
+      bubbleSub.setAttribute('text-anchor', 'middle');
+      bubbleSub.setAttribute('font-size', '9');
+      bubbleSub.setAttribute('fill', subColor);
+      bubbleSub.setAttribute('font-family', 'inherit');
+      bubbleSub.setAttribute('letter-spacing', '0.04em');
+      bubbleSub.textContent = subStr;
+      svg.appendChild(bubbleSub);
+    }
 
     // === MÅL-BUBBLA (om mål är angivet) ===
     if (targetMonthly && targetMonthly > 0) {
