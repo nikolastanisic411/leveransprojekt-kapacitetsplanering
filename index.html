@@ -3118,7 +3118,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.933-NO-GANTT" aria-busy="true">
+<body data-build="2026-04-29-G1.934-MIX-CLEAN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3229,7 +3229,7 @@
         <span class="mix-lbl">Typfall 3<small id="mix-lbl-tf3">100 dagar</small></span>
         <input type="number" id="mix-tf3" min="0" step="1" value="0" inputmode="numeric" aria-label="Antal Typfall 3-leveranser i mixen">
       </div>
-      <div class="mix-summary" id="mix-summary">summa: 0 / 0 · viktad ledtid: — dagar</div>
+      <div class="mix-summary" id="mix-summary">summa: 0 / 0</div>
     </div>
   </div>
 
@@ -3568,7 +3568,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.933-NO-GANTT</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.934-MIX-CLEAN</span>
   </div>
 
 </div>
@@ -5149,32 +5149,21 @@
     const effLt = getEffectiveLeadtime();
     const target = +state.onskadVolym || 0;
 
-    // Per-subset breakdown
-    const lt = getTypfallLedtider();
-    const breakdown = [];
-    if (t1 > 0) breakdown.push('<span style="color:#5C0E92">TF1: ' + t1 + ' st × ' + lt.tf1 + ' dgr</span>');
-    if (t2 > 0) breakdown.push('<span style="color:#5C0E92">TF2: ' + t2 + ' st × ' + lt.tf2 + ' dgr</span>');
-    if (t3 > 0) breakdown.push('<span style="color:#5C0E92">TF3: ' + t3 + ' st × ' + lt.tf3 + ' dgr</span>');
-    const breakdownStr = breakdown.length > 0 ? ' · ' + breakdown.join(' · ') : '';
-
+    // G1.934: Förenklad mix-summa — bara totalsumma vs mål, ingen ledtidssoppa
     if (target <= 0) {
       summary.classList.remove('warning');
-      summary.innerHTML = 'summa: <strong>' + fmtNum(sum) + '</strong>' + breakdownStr +
-        ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>' +
-        ' <span style="color:#A8A5AD">(sätt mål-volym ovan för att jämföra)</span>';
+      summary.innerHTML = 'summa: <strong>' + fmtNum(sum) + '</strong> <span style="color:#A8A5AD">(sätt mål-volym ovan)</span>';
       return;
     }
 
     const matches = sum === target;
     summary.classList.toggle('warning', !matches);
     if (matches) {
-      summary.innerHTML = '<span style="color:#1d6e35;font-weight:600">summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + '</span>' + breakdownStr +
-        ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
+      summary.innerHTML = '<span style="color:#1d6e35;font-weight:600">summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + ' &check;</span>';
     } else {
       const diff = target - sum;
-      const diffText = diff > 0 ? '(saknar ' + fmtNum(diff) + ' st)' : '(' + fmtNum(Math.abs(diff)) + ' st över målet)';
-      summary.innerHTML = '<span style="color:#9a2424;font-weight:600">summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + ' ' + diffText + '</span>' + breakdownStr +
-        ' · snitt-ledtid: <strong>' + effLt.toFixed(1) + ' dagar</strong>';
+      const diffText = diff > 0 ? 'saknar ' + fmtNum(diff) + ' st' : fmtNum(Math.abs(diff)) + ' st över målet';
+      summary.innerHTML = '<span style="color:#9a2424;font-weight:600">summa: ' + fmtNum(sum) + ' / ' + fmtNum(target) + ' — ' + diffText + '</span>';
     }
   }
 
