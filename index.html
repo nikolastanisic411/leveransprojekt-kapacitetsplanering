@@ -3118,7 +3118,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.929-MERGED-DASHBOARD" aria-busy="true">
+<body data-build="2026-04-29-G1.930-LEAN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3153,8 +3153,8 @@
   <div class="step-progress" id="step-progress" role="navigation" aria-label="Steg-navigering">
     <div class="sp-step" data-step="1" onclick="scrollToStep(1)" tabindex="0" role="button" aria-label="Gå till steg 1: Mål" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(1);}"><span class="sp-num">1</span><span class="sp-label">Mål</span></div>
     <div class="sp-step" data-step="2" onclick="scrollToStep(2)" tabindex="0" role="button" aria-label="Gå till steg 2: Tid" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(2);}"><span class="sp-num">2</span><span class="sp-label">Tid</span></div>
-    <div class="sp-step" data-step="3" onclick="scrollToStep(3)" tabindex="0" role="button" aria-label="Gå till steg 3: Förslag" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(3);}"><span class="sp-num">3</span><span class="sp-label">Förslag</span></div>
-    <div class="sp-step" data-step="4" onclick="scrollToStep(4)" tabindex="0" role="button" aria-label="Gå till steg 4: Bemanning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(4);}"><span class="sp-num">4</span><span class="sp-label">Bemanning</span></div>
+    
+    <div class="sp-step" data-step="4" onclick="scrollToStep(4)" tabindex="0" role="button" aria-label="Gå till steg 4: Bemanning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(4);}"><span class="sp-num">3</span><span class="sp-label">Bemanning</span></div>
     <div class="sp-step" data-step="5" onclick="scrollToStep(5)" tabindex="0" role="button" aria-label="Gå till steg 5: Resultat" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(5);}"><span class="sp-num">5</span><span class="sp-label">Resultat</span></div>
     <div class="sp-step" data-step="6" onclick="scrollToStep(6)" tabindex="0" role="button" aria-label="Gå till steg 6: Sammanfattning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(6);}"><span class="sp-num">6</span><span class="sp-label">Dashboard</span></div>
     <div class="sp-step" data-step="7" onclick="scrollToStep(7)" tabindex="0" role="button" aria-label="Gå till steg 7: Scenarier" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(7);}"><span class="sp-num">7</span><span class="sp-label">Scenarier</span></div>
@@ -3260,8 +3260,8 @@
     <button class="next-step-btn" onclick="scrollToStep(3)">Förslag →</button>
   </div>
 
-  <div class="section" role="heading" aria-level="2" id="step-3"><span class="step-num">3</span>Förslag <span class="section-hint">— ett räkneförslag du kan applicera direkt eller använda som utgångspunkt</span></div>
-
+  <!-- G1.931: Förslag mergat in i Bemanning (steg 4) — egen step-3 borttagen -->
+  <div id="step-3" style="display:none"></div>
   <div class="suggest-card" id="suggest-card">
     <div class="head">
       <div class="title" id="suggest-title">Förslag på bemanning</div>
@@ -3280,10 +3280,6 @@
     <div class="roles" id="suggest-roles"></div>
 
     <div class="outcome" id="suggest-outcome">—</div>
-  </div>
-
-  <div class="next-step-row">
-    <button class="next-step-btn" onclick="scrollToStep(4)">Bemanning & kapacitet →</button>
   </div>
 
   <div class="section" role="heading" aria-level="2" id="step-4">
@@ -3389,34 +3385,16 @@
   </div>
   </div>
 
-  <div class="section" role="heading" aria-level="2" id="step-5"><span class="step-num">5</span>Resultat <span class="section-hint">— vad ger din setup för utfall?</span></div>
+  <div class="section" role="heading" aria-level="2" id="step-5"><span class="step-num">5</span>Detaljerad planering <span class="section-hint">— kumulativ volym och tidslinje per roll</span></div>
 
-  <div class="summary">
-    <div class="stat">
-      <div class="lbl"><span class="tt" tabindex="0" data-tip="MIN(alla rollers kapaciteter) × hitrate. Den lägsta kapaciteten i kedjan sätter taket.">Per dag</span></div>
-      <div class="val" id="day-out">—</div>
-      <div class="sub">flaskhals: <span id="bottleneck">—</span></div>
-    </div>
-    <div class="stat">
-      <div class="lbl"><span class="tt" tabindex="0" data-tip="Vad ni levererar per månad vid full takt — alltså efter ev. rampperiod är klar.">Per månad</span></div>
-      <div class="val" id="month-out">—</div>
-      <div class="sub" id="month-sub">—</div>
-    </div>
-    <div class="stat">
-      <div class="lbl"><span class="tt" tabindex="0" data-tip="Total volym ni hinner leverera fram till deadline med nuvarande bemanning. Tar hänsyn till ramp om den är aktiv.">Totalt till deadline</span></div>
-      <div class="val" id="vol-out">—</div>
-      <div class="sub" id="vol-sub">—</div>
-    </div>
-  </div>
-
-  <div class="timeline" id="timeline">—</div>
-
+  <!-- G1.930: KPI-rader borttagna — Dashboard har dem. Behåll bara grafen + planering -->
+  <span id="day-out" style="display:none">0</span><span id="bottleneck" style="display:none">—</span>
+  <span id="month-out" style="display:none">0</span><span id="month-sub" style="display:none">—</span>
+  <span id="vol-out" style="display:none">0</span><span id="vol-sub" style="display:none">—</span>
+  <span id="timeline" style="display:none">—</span>
   <div class="goal-warning" id="goal-warning" style="display: none;">
     <div class="gw-icon">⚠</div>
-    <div class="gw-text">
-      <strong id="gw-title">Målet nås inte</strong>
-      <span id="gw-detail">—</span>
-    </div>
+    <div class="gw-text"><strong id="gw-title">Målet nås inte</strong><span id="gw-detail">—</span></div>
   </div>
 
   <div class="chart-card">
@@ -3562,7 +3540,8 @@
     <div class="utfall-summary" id="utfall-summary"></div>
   </div>
 
-<div class="section" role="heading" aria-level="2" id="section-analys">Analys <span class="section-hint">— aktiviteter, begränsningar och anteckningar för djupare granskning</span></div>
+<details id="section-analys" style="margin:24px 0 0">
+  <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:12px 0;border-top:0.5px solid #E5E2EA"><span style="font-size:13px;font-weight:600;color:#1A1A1F">Analys</span><span style="font-size:11px;color:#888590">— aktiviteter, begränsningar, anteckningar (klicka för att öppna)</span></summary>
 
   <div class="analysis-block">
     <h3>Aktiviteter per roll</h3>
@@ -3582,13 +3561,14 @@
     <div class="desc">Frågor att ta ställning till, beslut, ägarskap, åtgärder.</div>
     <textarea class="constraints-textarea" id="notes" aria-label="Anteckningar och åtgärder" placeholder="t.ex. NOC måste höjas till 8/dag — ägare X, klart Y. Entreprenör behöver utökas senast Z..."></textarea>
   </div>
+</details>
 
 
 
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.929-MERGED-DASHBOARD</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.930-LEAN</span>
   </div>
 
 </div>
@@ -7765,7 +7745,8 @@
   function updatePlanStatusPill(opts) {
     const pill = document.getElementById('plan-status-pill');
     if (!pill) return;
-    if (!opts || !opts.show) {
+    // G1.930: Visa bara pill vid kritiska problem — annars dölj (Dashboard har redan status)
+    if (!opts || !opts.show || (opts.variant !== 'red' && opts.variant !== 'pink')) {
       pill.style.display = 'none';
       pill.className = 'plan-status-pill';
       _lastPillVariant = null;
@@ -8506,27 +8487,19 @@
     if (phases.length > 0) {
       const phDiv = document.createElement('div');
       phDiv.style.cssText = 'margin:14px 0;padding:16px 18px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
-      let phHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:12px;color:#1A1A1F">Aktivitet per fas <span style="font-weight:400;color:#888590;font-size:11px">— månadssnitt parallellt mot deadline</span></div>';
-      phHtml += '<div style="display:flex;align-items:stretch;gap:0;flex-wrap:nowrap;overflow-x:auto">';
-      phases.forEach((p, idx) => {
+      let phHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">Aktivitet per fas <span style="font-weight:400;color:#888590;font-size:11px">— månadssnitt parallellt mot deadline</span></div>';
+      phHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Fas</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Snitt/mån</th><th style="text-align:right;padding:4px 8px">Utnyttjande</th></tr></thead><tbody>';
+      phases.forEach((p) => {
         const utilPct = Math.round(p.utilization * 100);
         const utilCol = utilPct >= 80 ? '#9a2424' : (utilPct >= 50 ? '#c2570d' : '#1d6e35');
-        // Card för fas
-        phHtml += '<div style="flex:1;min-width:0;padding:14px 12px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;display:flex;flex-direction:column;gap:6px">';
-        phHtml += '<div style="font-size:10px;color:#888590;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">FAS ' + (p.idx+1) + '</div>';
-        phHtml += '<div style="font-size:14px;font-weight:600;color:#1A1A1F">' + escapeHtml(p.role.name) + '</div>';
-        phHtml += '<div style="display:flex;align-items:baseline;gap:4px;margin-top:4px"><span style="font-size:24px;font-weight:700;color:#5C0E92;font-variant-numeric:tabular-nums">' + p.avgPerMonth.toFixed(0) + '</span><span style="font-size:11px;color:#888590">/mån</span></div>';
-        phHtml += '<div style="font-size:11px;color:#6B5F75">' + p.avgPerDay.toFixed(1) + '/dag · ' + p.roleVolume + ' st totalt</div>';
-        // Utnyttjande-bar
-        phHtml += '<div style="margin-top:6px"><div style="display:flex;justify-content:space-between;font-size:10px;color:#6B5F75;margin-bottom:3px"><span>Utnyttjande</span><span style="color:' + utilCol + ';font-weight:600">' + utilPct + ' %</span></div>';
-        phHtml += '<div style="height:6px;background:#F0EDF4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + Math.max(2, utilPct) + '%;background:' + utilCol + '"></div></div></div>';
-        phHtml += '</div>';
-        // Pil mellan faserna
-        if (idx < phases.length - 1) {
-          phHtml += '<div style="display:flex;align-items:center;justify-content:center;width:24px;color:#A8A5AD;font-size:18px">→</div>';
-        }
+        phHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
+        phHtml += '<td style="padding:6px 8px"><strong>' + (p.idx+1) + '. ' + escapeHtml(p.role.name) + '</strong></td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + p.roleVolume + ' st</td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">' + p.avgPerMonth.toFixed(0) + '/mån</td>';
+        phHtml += '<td style="padding:6px 8px;text-align:right;color:' + utilCol + '">' + utilPct + ' %</td>';
+        phHtml += '</tr>';
       });
-      phHtml += '</div>';
+      phHtml += '</tbody></table>';
       phDiv.innerHTML = phHtml;
       container.appendChild(phDiv);
     }
