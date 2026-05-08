@@ -3118,7 +3118,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.930-LEAN" aria-busy="true">
+<body data-build="2026-04-29-G1.932-VALIDATION" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3197,7 +3197,7 @@
     <label>Mål — total volym<span class="required-mark" title="Sätt ditt projekts målvolym — annars är jämförelsen mot mål meningslös" aria-hidden="true">*</span>
       <span class="hint">antal som ska vara klara till deadline</span>
     </label>
-    <input type="number" id="onskad-volym" value="0" min="0" step="1" placeholder="t.ex. 390" inputmode="numeric" aria-label="Mål — total volym leveranser" aria-required="true" title="Antal leveranser som ska vara klara till deadline" oninvalid="this.setCustomValidity('Sätt en målvolym större än 0')" oninput="this.setCustomValidity('')">
+    <input type="number" id="onskad-volym" value="0" min="0" max="1000000" step="1" placeholder="t.ex. 390" inputmode="numeric" aria-label="Mål — total volym leveranser" aria-required="true" title="Antal leveranser som ska vara klara till deadline" oninvalid="this.setCustomValidity('Sätt en målvolym större än 0')" oninput="this.setCustomValidity('')">
   </div>
 
   <div class="target-cell">
@@ -3251,7 +3251,7 @@
     <label>Deadline<span class="required-mark" title="Sätt ditt projekts deadline — annars räknas tiden mot ett godtyckligt datum" aria-hidden="true">*</span>
       <span class="hint">datumet då allt ska vara levererat — räknas baklänges per roll med handover-tider</span>
     </label>
-    <input type="date" id="deadline" value="" min="2020-01-01" max="2099-12-31" aria-label="Projektets deadline" aria-required="true" required oninvalid="this.setCustomValidity('Sätt deadline för ditt projekt')" oninput="this.setCustomValidity('')">
+    <input type="date" id="deadline" value="" min="2020-01-01" max="2099-12-31" data-validation="future-and-reasonable" aria-label="Projektets deadline" aria-required="true" required oninvalid="this.setCustomValidity('Sätt deadline för ditt projekt')" oninput="this.setCustomValidity('')">
     <div id="deadline-info" class="date-info" style="font-size:11px;color:#6B6770;margin-top:4px;display:none"></div>
     <div id="deadline-warn" class="date-warn" style="display:none;font-size:11px;color:#b8410e;margin-top:4px"></div>
   </div>
@@ -3568,7 +3568,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.930-LEAN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.932-VALIDATION</span>
   </div>
 
 </div>
@@ -7631,6 +7631,66 @@
       el.innerHTML = '<div class="sw-title">⚠ Deadline har redan passerat</div>' +
         'Deadline <strong>' + fmt0(deadline) + '</strong> är ' + Math.round((today00 - deadline) / dayMs0) + ' dagar bakåt i tiden. ' +
         'Uppdatera deadline för att kunna planera framåt.';
+      el.style.display = 'block';
+      return;
+    }
+    // G1.932: Validering — orealistiska gränsvärden
+    const yearsToDeadline = (deadline - today00) / (dayMs0 * 365);
+    if (yearsToDeadline > 5) {
+      el.innerHTML = '<div class="sw-title">⚠ Deadline är ' + Math.round(yearsToDeadline) + ' år bort</div>' +
+        'Långsiktig planering över ' + Math.round(yearsToDeadline) + ' år är osäker — överväg att dela upp i kortare faser.';
+      el.style.display = 'block';
+      return;
+    }
+    if (target > 100000) {
+      el.innerHTML = '<div class="sw-title">⚠ Mycket stor volym (' + fmtNum(target) + ' st)</div>' +
+        'Verktyget är optimerat för projekt upp till 100 000 leveranser. Större projekt kan ge orealistiska resursförslag — överväg uppdelning per fas eller geografi.';
+      el.style.display = 'block';
+      return;
+    }
+    // Mix-summa måste matcha total volym
+    if (state.leadtimeDays === 'mix') {
+      const mixSum = (+state.typfallMix.tf1 || 0) + (+state.typfallMix.tf2 || 0) + (+state.typfallMix.tf3 || 0);
+      if (mixSum > 0 && Math.abs(mixSum - target) > 1) {
+        el.innerHTML = '<div class="sw-title">⚠ Typfall-mix matchar inte målet</div>' +
+          'TF1+TF2+TF3 = <strong>' + fmtNum(mixSum) + '</strong> st men målet är <strong>' + fmtNum(target) + '</strong> st. ' +
+          'Justera mixen i steg 1 så summan stämmer.';
+        el.style.display = 'block';
+        return;
+      }
+    }
+    // Aktiva roller med 0 takt
+    const zeroRateRoles = (state.roles || []).filter(r => r.enabled !== false && (!r.takt || +r.takt <= 0));
+    if (zeroRateRoles.length > 0) {
+      el.innerHTML = '<div class="sw-title">⚠ Roll(er) har ingen takt</div>' +
+        zeroRateRoles.map(r => '<strong>' + escapeHtml(r.name) + '</strong>').join(', ') +
+        ' har takt = 0. Sätt takt > 0 i steg 4 (Bemanning) eller deaktivera rollen.';
+      el.style.display = 'block';
+      return;
+    }
+    // Aktiva roller med 0 personer
+    const zeroCountRoles = (state.roles || []).filter(r => r.enabled !== false && (!r.count || +r.count <= 0));
+    if (zeroCountRoles.length > 0) {
+      el.innerHTML = '<div class="sw-title">⚠ Roll(er) har 0 personer</div>' +
+        zeroCountRoles.map(r => '<strong>' + escapeHtml(r.name) + '</strong>').join(', ') +
+        ' har 0 personer. Sätt minst 1 i steg 3 (Bemanning) eller deaktivera rollen.';
+      el.style.display = 'block';
+      return;
+    }
+    // Aktiv roll utan TF-pills
+    const noTfRoles = (state.roles || []).filter(r => r.enabled !== false && r.typfalls && !r.typfalls.tf1 && !r.typfalls.tf2 && !r.typfalls.tf3);
+    if (noTfRoles.length > 0) {
+      el.innerHTML = '<div class="sw-title">⚠ Roll(er) saknar typfall</div>' +
+        noTfRoles.map(r => '<strong>' + escapeHtml(r.name) + '</strong>').join(', ') +
+        ' har inga TF-pills aktiverade. Klicka TF1/TF2/TF3 för att aktivera rollen i pipelinen.';
+      el.style.display = 'block';
+      return;
+    }
+    // Hitrate utanför rimligt spann
+    const hr = +state.hitrate || 100;
+    if (hr < 50) {
+      el.innerHTML = '<div class="sw-title">⚠ Mycket låg hitrate (' + hr + ' %)</div>' +
+        'Hitrate under 50 % är orimligt lågt för ett produktionsprojekt — kontrollera värdet i Avancerat-läget.';
       el.style.display = 'block';
       return;
     }
