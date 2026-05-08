@@ -3119,7 +3119,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.942-VALIDATE-RATE" aria-busy="true">
+<body data-build="2026-04-29-G1.943-NO-FALSE-BN" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3570,7 +3570,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.942-VALIDATE-RATE</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.943-NO-FALSE-BN</span>
   </div>
 
 </div>
@@ -4716,8 +4716,10 @@
     });
     const maxT_pf = Math.max(...caps.map(c => isFinite(c.t) ? c.t : 0));
     const minT_pf = Math.min(...caps.map(c => isFinite(c.t) && c.t > 0 ? c.t : Infinity));
-    // Meningsfull flaskhals = stor spread i tid mellan rollerna (≥10 %)
-    const hasMeaningfulBottleneck = isFinite(maxT_pf) && isFinite(minT_pf) && (maxT_pf - minT_pf) > maxT_pf * 0.10;
+    // G1.943: Bara flagga flaskhals om EN roll har UNIK längsta tid.
+    // Om flera roller delar samma max-tid är ingen ensamt 'flaskhalsen' — pipelinen är balanserad
+    const atMaxCount = caps.filter(c => Math.abs(c.t - maxT_pf) < 1e-6).length;
+    const hasMeaningfulBottleneck = isFinite(maxT_pf) && isFinite(minT_pf) && (maxT_pf - minT_pf) > maxT_pf * 0.10 && atMaxCount === 1;
     const bottleneckId_pf = hasMeaningfulBottleneck ? caps.find(c => c.t === maxT_pf).id : null;
 
     active.forEach((role, idx) => {
@@ -5988,12 +5990,11 @@
     });
     const maxTime = Math.max(...caps.map(c => isFinite(c.timeNeededDays) ? c.timeNeededDays : 0));
     const minTime = Math.min(...caps.map(c => isFinite(c.timeNeededDays) && c.timeNeededDays > 0 ? c.timeNeededDays : Infinity));
-    // G1.912: Bara markera som flaskhals om det finns en meningsfull skillnad i TAKT (≥5%).
-    // Om alla roller har samma takt finns ingen flaskhals — de som hanterar mer volym
-    // är inte 'långsammare', de har bara mer att göra.
+    // G1.912/G1.943: Spread i TAKT + en unik roll med längsta tid
     const maxOwnRate_r = Math.max(...caps.map(c => c.eff || 0));
     const minOwnRate_r = Math.min(...caps.map(c => c.eff || 0));
-    const hasMeaningfulSpread_r = maxOwnRate_r > 0 && (maxOwnRate_r - minOwnRate_r) > maxOwnRate_r * 0.05;
+    const atMaxTimeCount = caps.filter(c => Math.abs(c.timeNeededDays - maxTime) < 1e-6).length;
+    const hasMeaningfulSpread_r = maxOwnRate_r > 0 && (maxOwnRate_r - minOwnRate_r) > maxOwnRate_r * 0.05 && atMaxTimeCount === 1;
     const bottleneck = caps.find(c => c.timeNeededDays === maxTime && isFinite(c.timeNeededDays)) || caps[0];
     const minEff = bottleneck.eff;
     if (!hasMeaningfulSpread_r) bottleneck._noBottleneck = true;
@@ -6002,7 +6003,7 @@
 
     state.roles.forEach(r => {
       const row = document.getElementById('row-' + r.id);
-      if (row) row.classList.toggle('bottleneck', r.id === bottleneck.id);
+      if (row) row.classList.toggle('bottleneck', hasMeaningfulSpread_r && r.id === bottleneck.id);
     });
 
     const effDay = minEff;
@@ -7094,7 +7095,17 @@
       const ownRates_e = active.map(r => roleEffectivePessimistic(r));
       const maxRate_e = Math.max(...ownRates_e);
       const minRate_e = Math.min(...ownRates_e);
-      hasMeaningfulBottleneck_e = maxRate_e > 0 && (maxRate_e - minRate_e) > maxRate_e * 0.05;
+      // G1.943: Krav även här — unik max-tid-roll
+      const tCounts = active.map(r => {
+        const eff = roleEffectivePessimistic(r);
+        let vol = +state.onskadVolym || 0;
+        if (r.typfalls && typeof r.typfalls === 'object' && subs_e.length > 0) {
+          vol = 0; subs_e.forEach(s => { if (r.typfalls[s.tf]) vol += s.volume; });
+        }
+        return eff > 0 ? vol / eff : Infinity;
+      });
+      const atMaxE = tCounts.filter(t => Math.abs(t - maxT) < 1e-6).length;
+      hasMeaningfulBottleneck_e = maxRate_e > 0 && (maxRate_e - minRate_e) > maxRate_e * 0.05 && atMaxE === 1;
       if (!hasMeaningfulBottleneck_e) bottleneck = null;
     }
     
