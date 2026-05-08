@@ -3119,7 +3119,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.938-CONSIST-BN" aria-busy="true">
+<body data-build="2026-04-29-G1.939-CHART-FIX" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3569,7 +3569,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.938-CONSIST-BN</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.939-CHART-FIX</span>
   </div>
 
 </div>
@@ -8686,6 +8686,11 @@
     startDelayMonths = startDelayMonths || 0;
     lowRate = lowRate || rate;
     highRate = highRate || rate;
+    // G1.939: Tom-state om rate eller deadline saknas — undvik att visa axlar utan kurva
+    if (!rate || rate <= 0 || !monthsLeft || monthsLeft <= 0) {
+      drawChartEmptyState('Sätt mål, deadline och bemanning för att se grafen.');
+      return;
+    }
     const svg = document.getElementById('chart');
     svg.innerHTML = '';
     const W = 800, H = 360;
@@ -8845,11 +8850,13 @@
     todayDot.setAttribute('r', 3); todayDot.setAttribute('fill', '#1A1A1F');
     svg.appendChild(todayDot);
 
+    // G1.939: 'idag'-text döljs om monthsLeft är väldigt liten (idag = nästan första tick-month)
+    // — annars överlappar texterna. Visas högt upp ovan första tick istället.
     const todayLbl = document.createElementNS(ns, 'text');
-    todayLbl.setAttribute('x', xScale(0)); todayLbl.setAttribute('y', M.top + innerH + 16);
-    todayLbl.setAttribute('text-anchor', 'middle'); todayLbl.setAttribute('font-size', '10');
-    todayLbl.setAttribute('fill', '#1A1A1F'); todayLbl.setAttribute('font-weight', '500');
-    todayLbl.setAttribute('font-family', 'inherit');
+    todayLbl.setAttribute('x', xScale(0));
+    todayLbl.setAttribute('y', M.top - 4);
+    todayLbl.setAttribute('text-anchor', 'middle'); todayLbl.setAttribute('font-size', '9');
+    todayLbl.setAttribute('fill', '#888590'); todayLbl.setAttribute('font-family', 'inherit');
     todayLbl.textContent = 'idag';
     svg.appendChild(todayLbl);
 
