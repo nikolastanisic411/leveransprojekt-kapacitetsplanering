@@ -1958,6 +1958,13 @@
   .handover-card .ho-role .ho-status-line { font-size: 12px; margin: 4px 0; line-height: 1.4; }
   .handover-card .ho-role .ho-status-line .ho-apply-btn { display: inline-block; margin-left: 6px; padding: 2px 8px; font-size: 11px; }
   .handover-card .ho-role .ho-dates-line { display: flex; gap: 14px; font-size: 11px; color: #6B5F75; margin-top: 4px; padding-top: 6px; border-top: 0.5px solid #E5E2EA; }
+  .handover-card .ho-role .ho-timeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 0.5px solid #E5E2EA; }
+  .handover-card .ho-role .ho-tl-step { text-align: center; padding: 4px 2px; background: #fff; border-radius: 4px; border: 0.5px solid #E5E2EA; }
+  .handover-card .ho-role .ho-tl-step:first-child { border-color: #1d6e35; background: #F4FBF6; }
+  .handover-card .ho-role .ho-tl-step:last-child { border-color: #5C0E92; background: #F8F2FC; }
+  .handover-card .ho-role .ho-tl-label { font-size: 9px; color: #888590; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+  .handover-card .ho-role .ho-tl-date { font-size: 11px; color: #1A1A1F; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .handover-card .ho-role .ho-tl-items { font-size: 10px; color: #6B5F75; font-variant-numeric: tabular-nums; }
   .handover-card .ho-role .ho-name {
     font-size: 14px;
     font-weight: 600;
@@ -3111,7 +3118,7 @@
   }
 </style>
 </head>
-<body data-build="2026-04-29-G1.927-PRINT-BOARD" aria-busy="true">
+<body data-build="2026-04-29-G1.928-CLEANUP" aria-busy="true">
   <a href="#main-content" class="skip-link">Hoppa till huvudinnehåll</a>
 <noscript>
   <div style="background:#fff8e5;border:1px solid #f4d78a;padding:20px;margin:20px;border-radius:10px;color:#4a3a0d">
@@ -3580,7 +3587,7 @@
   <div class="footer-note" id="footer-note">
     Takten i flödet sätts av flaskhalsen — den lägsta effektiva kapaciteten bland aktiva roller. Allt sparas automatiskt i din webbläsare.
     <a href="#main-content" style="margin-left:8px;color:#5C0E92;text-decoration:none;font-weight:500" aria-label="Hoppa till toppen av sidan">↑ Tillbaka upp</a>
-    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.927-PRINT-BOARD</span>
+    <span style="float:right;color:#A8A5AD;font-size:10px" title="Build-stämpel — bra att ha vid felsökning">build 2026-04-29-G1.928-CLEANUP</span>
   </div>
 
 </div>
@@ -3593,11 +3600,7 @@
     { id: 'r2', name: 'Nätarkitekt', count: 1, countMin: 1, countMax: 1, takt: 5, unit: 'vecka', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 5, typfalls: { tf1: false, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 0, tf3: 0 } },
     { id: 'r3', name: 'Entreprenör', count: 1, countMin: 1, countMax: 1, takt: 3, unit: 'dag', enabled: true, max: 30, cap: null, hitrate: null, handoverToNext: 0, typfalls: { tf1: true, tf2: true, tf3: true }, prepDaysPerTf: { tf1: 0, tf2: 10, tf3: 10 } },
   ];
-  const defaultScenarios = [
-    { id: 's1', name: 'Scenario 1', target: 0, unit: 'månad' },
-    { id: 's2', name: 'Scenario 2', target: 0, unit: 'månad' },
-    { id: 's3', name: 'Scenario 3', target: 0, unit: 'månad' },
-  ];
+  const defaultScenarios = [];
   const defaultConstraints = [
     { id: 'c1', text: '', done: false },
     { id: 'c2', text: '', done: false },
@@ -3720,7 +3723,12 @@
             }
           });
         }
-        // G1.64: Self-heal mix-mismatch — gamla saved states kan ha leadtimeDays='mix'
+
+        // G1.928: Migration — rensa gamla tomma 's1/s2/s3'-scenarier
+        if (Array.isArray(state.scenarios)) {
+          state.scenarios = state.scenarios.filter(s => !(s.id && /^s[123]$/.test(s.id) && (!s.target || s.target === 0)));
+        }
+                // G1.64: Self-heal mix-mismatch — gamla saved states kan ha leadtimeDays='mix'
         // med mixSum != onskadVolym. Synka onskadVolym till mixSum så alla beräkningar
         // använder samma sanning utan manuell input.
         if (state.leadtimeDays === 'mix' && state.typfallMix) {
@@ -5574,8 +5582,15 @@
       const calV = d.daysNeededCal;
       d.mastBorjaSenastRaw = new Date(S1ms + d.startupOffsetCal * dayMs);
       d.klarSenastRaw = new Date(d.mastBorjaSenastRaw.getTime() + calV * dayMs);
-      d.mastBorjaSenast = d.mastBorjaSenastRaw;
-      d.klarSenast = d.klarSenastRaw;
+      // G1.928 punkt 6: aldrig föreslå start FÖRE projektstart — clamp upp till projektstart
+      const minStartMs = projektStart.getTime();
+      if (d.mastBorjaSenastRaw.getTime() < minStartMs) {
+        d.mastBorjaSenast = new Date(minStartMs);
+        d.klarSenast = new Date(minStartMs + calV * dayMs);
+      } else {
+        d.mastBorjaSenast = d.mastBorjaSenastRaw;
+        d.klarSenast = d.klarSenastRaw;
+      }
     });
 
     // 5) Forward simulation från projektStart (med nuvarande bemanning)
@@ -5719,7 +5734,7 @@
   // G1.911: Per-TF leveransplan — när levereras vilken typfall-volym?
   // Varje TF har sin egen flaskhals (lägsta takt bland deltagande roller).
   // TF1-flödet kan flyta snabbare än TF2 om Nätarkitekt bara deltar i TF2.
-  function computeTfDeliveryPlan(active, projektStart, usePessimistic) {
+  function computeTfDeliveryPlan(active, projektStart, usePessimistic, deadline) {
     const subs = (typeof getActiveSubsets === 'function') ? getActiveSubsets() : [];
     if (!subs.length || !active.length) return [];
     const dayMs = 1000 * 60 * 60 * 24;
@@ -5737,11 +5752,17 @@
       const daysWork = minRate > 0 ? s.volume / minRate : Infinity;
       const daysCal = isFinite(daysWork) ? daysWork * 7 / 5 : Infinity;
       const finishDate = isFinite(daysCal) ? new Date(projektStart.getTime() + daysCal * dayMs) : null;
-      // G1.916: Krav-takt per period — vad MÅSTE levereras per månad/vecka för att hinna i tid?
+      // G1.928: Krav-takt = vad MÅSTE levereras per månad för att hinna FRAM TILL DEADLINE.
+      // Tidigare räknades mot TF:s eget beräknade klar-datum vilket gjorde att krav alltid
+      // blev = max-takten ± avrundning, och 'EJ MÖJLIGT' triggades alltid.
+      // Korrekt: krav = volym / (deadline - projektstart i månader).
+      const deadlineMs = (typeof deadline !== 'undefined' && deadline) ? deadline.getTime() : null;
+      const totalProjMonths = deadlineMs ? Math.max(0.001, (deadlineMs - projektStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : 0;
+      const totalProjWeeks = deadlineMs ? Math.max(0.001, (deadlineMs - projektStart.getTime()) / (1000 * 60 * 60 * 24 * 7)) : 0;
+      const requiredPerMonth = totalProjMonths > 0 ? s.volume / totalProjMonths : 0;
+      const requiredPerWeek = totalProjWeeks > 0 ? s.volume / totalProjWeeks : 0;
       const monthsToFinish = isFinite(daysCal) ? daysCal / 30.44 : Infinity;
       const weeksToFinish = isFinite(daysCal) ? daysCal / 7 : Infinity;
-      const requiredPerMonth = monthsToFinish > 0 ? s.volume / monthsToFinish : 0;
-      const requiredPerWeek = weeksToFinish > 0 ? s.volume / weeksToFinish : 0;
       return {
         tf: s.tf,
         name: s.name,
@@ -7861,10 +7882,20 @@
       }
       html += '</div>';
 
-      // Datum-mini-rad: starta + klar (inget mer)
-      html += '<div class="ho-dates-line">';
-      html += '<span>Starta: <strong>' + fmt(d.mastBorjaSenast) + '</strong></span>';
-      html += '<span>Klar: <strong>' + fmt(d.klarSenast) + '</strong></span>';
+      // G1.928 punkt 7: Tidslinje med konkreta milestones — start + 25/50/75 + slut, med antal
+      html += '<div class="ho-timeline">';
+      const totalVol = Math.round(d.roleVolume || d.effV || V);
+      const lineMs = d.klarSenast.getTime() - d.mastBorjaSenast.getTime();
+      const milestonesH = [
+        { label: 'Start', items: 0, date: d.mastBorjaSenast },
+        { label: '25 %', items: Math.round(totalVol * 0.25), date: new Date(d.mastBorjaSenast.getTime() + lineMs * 0.25) },
+        { label: '50 %', items: Math.round(totalVol * 0.50), date: new Date(d.mastBorjaSenast.getTime() + lineMs * 0.50) },
+        { label: '75 %', items: Math.round(totalVol * 0.75), date: new Date(d.mastBorjaSenast.getTime() + lineMs * 0.75) },
+        { label: 'Slut', items: totalVol, date: d.klarSenast },
+      ];
+      milestonesH.forEach((m, mi) => {
+        html += '<div class="ho-tl-step"><div class="ho-tl-label">' + m.label + '</div><div class="ho-tl-date">' + fmt(m.date) + '</div><div class="ho-tl-items">' + (m.items > 0 ? m.items + ' st' : '—') + '</div></div>';
+      });
       html += '</div>';
 
       html += '</div>';
@@ -8396,7 +8427,7 @@
       container.appendChild(summaryDiv);
 
       // G1.911: Per-TF leveransplan — visar konkret vilken volym som hinns till vilket datum
-      const tfPlan_inf = computeTfDeliveryPlan(active, sched.projektStart, true);
+      const tfPlan_inf = computeTfDeliveryPlan(active, sched.projektStart, true, sched.deadline);
       if (tfPlan_inf.length > 0) {
         const tfDiv = document.createElement('div');
         tfDiv.style.cssText = 'margin-top:8px;padding:12px 14px;background:#FCFAFD;border:0.5px solid #E5E2EA;border-radius:8px;font-size:12px;';
@@ -8437,7 +8468,7 @@
     container.appendChild(flow);
 
     // G1.911: Per-TF leveransplan — primär detaljerad vy
-    const tfPlan = computeTfDeliveryPlan(active, projStart0, true);
+    const tfPlan = computeTfDeliveryPlan(active, projStart0, true, deadline);
     if (tfPlan.length > 0) {
       const tfDiv = document.createElement('div');
       tfDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:linear-gradient(135deg,#FAFAFD 0%,#F8F5FB 100%);border:0.5px solid #E5E2EA;border-radius:10px;';
