@@ -467,12 +467,9 @@
   }
   .step-progress .sp-step.done .sp-num {
     background: #1d6e35;
+    color: #ffffff;
   }
-  .step-progress .sp-step.done .sp-num::before {
-    content: "✓";
-    font-size: 12px;
-  }
-  .step-progress .sp-step.done .sp-num span { display: none; }
+  /* G1.952: Checkmark borttagen — bara grön färg på 'done'-steg, siffran visas */
   .step-progress .sp-step.current {
     background: #5C0E92;
     border-color: #5C0E92;
@@ -3130,7 +3127,7 @@
 <div class="page" id="main-content">
 
   <h1>Leveransprojekt — Kapacitetsplanering</h1>
-  <p class="subtitle">Räkna fram bemanning från mål och deadline — verktyget guidar dig steg för steg. <span class="tt subtitle-help" tabindex="0" data-tip="Verktyget guidar dig genom 8 steg: 1) Mål, 2) Tid, 3) Förslag, 4) Bemanning, 5) Resultat, 6) Sammanfattning, 7) Scenarier, 8) Uppföljning. Längst ned finns Översikt med dashboard-vy och Analys med fördjupning. Alla värden sparas automatiskt. Genvägar: Ctrl+Enter applicerar förslaget, Ctrl+. togglar Avancerat-läget.">Hur funkar det?</span></p>
+  <p class="subtitle">Räkna fram bemanning från mål och deadline — verktyget guidar dig steg för steg. <span class="tt subtitle-help" tabindex="0" data-tip="Verktyget guidar dig genom 6 steg: 1) Mål, 2) Tid, 3) Bemanning, 4) Detaljerad planering, 5) Dashboard, 6) Scenarier. Alla värden sparas automatiskt. Genvägar: Ctrl+Enter applicerar förslaget, Ctrl+. togglar Avancerat-läget.">Hur funkar det?</span></p>
   <p class="required-legend">Fält märkta med <span class="required-mark" aria-hidden="true">*</span> påverkar resultatet — fyll i ditt projekts värden.</p>
 
   <div class="toolbar">
@@ -3154,12 +3151,10 @@
   <div class="step-progress" id="step-progress" role="navigation" aria-label="Steg-navigering">
     <div class="sp-step" data-step="1" onclick="scrollToStep(1)" tabindex="0" role="button" aria-label="Gå till steg 1: Mål" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(1);}"><span class="sp-num">1</span><span class="sp-label">Mål</span></div>
     <div class="sp-step" data-step="2" onclick="scrollToStep(2)" tabindex="0" role="button" aria-label="Gå till steg 2: Tid" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(2);}"><span class="sp-num">2</span><span class="sp-label">Tid</span></div>
-    
-    <div class="sp-step" data-step="4" onclick="scrollToStep(4)" tabindex="0" role="button" aria-label="Gå till steg 4: Bemanning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(4);}"><span class="sp-num">3</span><span class="sp-label">Bemanning</span></div>
-    <div class="sp-step" data-step="5" onclick="scrollToStep(5)" tabindex="0" role="button" aria-label="Gå till steg 5: Resultat" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(5);}"><span class="sp-num">5</span><span class="sp-label">Resultat</span></div>
-    <div class="sp-step" data-step="6" onclick="scrollToStep(6)" tabindex="0" role="button" aria-label="Gå till steg 6: Sammanfattning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(6);}"><span class="sp-num">6</span><span class="sp-label">Dashboard</span></div>
-    <div class="sp-step" data-step="7" onclick="scrollToStep(7)" tabindex="0" role="button" aria-label="Gå till steg 7: Scenarier" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(7);}"><span class="sp-num">7</span><span class="sp-label">Scenarier</span></div>
-    <div class="sp-step" data-step="8" onclick="scrollToStep(8)" tabindex="0" role="button" aria-label="Gå till steg 8: Uppföljning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(8);}"><span class="sp-num">8</span><span class="sp-label">Uppföljning</span></div>
+    <div class="sp-step" data-step="4" onclick="scrollToStep(4)" tabindex="0" role="button" aria-label="Gå till steg 3: Bemanning" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(4);}"><span class="sp-num">3</span><span class="sp-label">Bemanning</span></div>
+    <div class="sp-step" data-step="5" onclick="scrollToStep(5)" tabindex="0" role="button" aria-label="Gå till steg 4: Detaljerad planering" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(5);}"><span class="sp-num">4</span><span class="sp-label">Detaljerad planering</span></div>
+    <div class="sp-step" data-step="6" onclick="scrollToStep(6)" tabindex="0" role="button" aria-label="Gå till steg 5: Dashboard" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(6);}"><span class="sp-num">5</span><span class="sp-label">Dashboard</span></div>
+    <div class="sp-step" data-step="7" onclick="scrollToStep(7)" tabindex="0" role="button" aria-label="Gå till steg 6: Scenarier" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(7);}"><span class="sp-num">6</span><span class="sp-label">Scenarier</span></div>
   </div>
 
   <div class="plan-status-pill" id="plan-status-pill" role="status" aria-live="polite" tabindex="0" style="display:none" onclick="scrollToStep(6)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();scrollToStep(6);}"></div>
@@ -3493,28 +3488,11 @@
        Funktionerna updateUtfallDashboard och renderUtfallTable lämnas kvar — de
        early-return:ar säkert när elementen inte finns. -->
 
-<details id="section-analys" style="margin:24px 0 0">
-  <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:12px 0;border-top:0.5px solid #E5E2EA"><span style="font-size:13px;font-weight:600;color:#1A1A1F">Analys</span><span style="font-size:11px;color:#888590">— aktiviteter, begränsningar, anteckningar (klicka för att öppna)</span></summary>
+  <!-- G1.952: Analys-sektionen (Aktiviteter per roll, Kända begränsningar,
+       Anteckningar & beslut) borttagen. JS-funktionerna renderActivities,
+       renderConstraints, addConstraint, updateActivityLabels och notes-
+       lyssnare guardas mot saknade DOM-element. -->
 
-  <div class="analysis-block">
-    <h3>Aktiviteter per roll</h3>
-    <div class="desc">Vad varje roll gör i flödet — klicka på en roll för att se aktiviteter och föreslagen takt.</div>
-    <div id="activities-container"></div>
-  </div>
-
-  <div class="analysis-block">
-    <h3>Kända begränsningar</h3>
-    <div class="desc">Det som sätter taket i dag och behöver hanteras.</div>
-    <div class="checklist" id="constraints-checklist"></div>
-    <button class="add-checklist-item" onclick="addConstraint()" aria-label="Lägg till ny känd begränsning">+ Lägg till begränsning</button>
-  </div>
-
-  <div class="analysis-block">
-    <h3>Anteckningar &amp; beslut</h3>
-    <div class="desc">Frågor att ta ställning till, beslut, ägarskap, åtgärder.</div>
-    <textarea class="constraints-textarea" id="notes" aria-label="Anteckningar och åtgärder" placeholder="t.ex. NOC måste höjas till 8/dag — ägare X, klart Y. Entreprenör behöver utökas senast Z..."></textarea>
-  </div>
-</details>
 
 
 
@@ -4331,6 +4309,7 @@
 
   function renderConstraints() {
     const container = document.getElementById('constraints-checklist');
+    if (!container) return;
     container.innerHTML = '';
     state.constraints.forEach(c => {
       const item = document.createElement('div');
@@ -4616,6 +4595,7 @@
 
   function renderActivities() {
     const container = document.getElementById('activities-container');
+    if (!container) return;
     container.innerHTML = '';
     state.roles.forEach((role, idx) => {
       const row = document.createElement('div');
@@ -4813,9 +4793,12 @@
     document.getElementById('margin').addEventListener('input', (e) => {
       state.margin = +e.target.value; const v = document.getElementById('margin-v'); if (v) v.textContent = state.margin + '%'; saveState(); updateApplyCtaState(); recalc();
     });
-    document.getElementById('notes').addEventListener('input', (e) => {
-      state.notes = e.target.value; saveState();
-    });
+    const notesEl = document.getElementById('notes');
+    if (notesEl) {
+      notesEl.addEventListener('input', (e) => {
+        state.notes = e.target.value; saveState();
+      });
+    }
     ['tf1', 'tf2', 'tf3'].forEach(key => {
       const el = document.getElementById('mix-' + key);
       if (el) {
@@ -4876,7 +4859,8 @@
     }
     document.getElementById('onskad-volym').value = (state.onskadVolym !== undefined && state.onskadVolym !== null) ? state.onskadVolym : 0;
     document.getElementById('margin').value = state.margin !== undefined ? state.margin : 10;
-    document.getElementById('notes').value = state.notes || '';
+    const notesElLoad = document.getElementById('notes');
+    if (notesElLoad) notesElLoad.value = state.notes || '';
     // Säkerställ att mix-inputs reflekterar state.typfallMix
     if (state.typfallMix) {
       const m1 = document.getElementById('mix-tf1');
@@ -6809,18 +6793,17 @@
     const stepDone = {
       1: goalComplete,
       2: hasDeadline,
-      3: goalComplete && hasDeadline,
       4: hasMeaningfulRoles,
       5: goalComplete && hasDeadline && hasMeaningfulRoles,
       6: goalComplete && hasDeadline && hasMeaningfulRoles,
       7: goalComplete && hasDeadline && hasMeaningfulRoles,
-      8: hasUtfall,
     };
     let currentStep = null;
-    for (let i = 1; i <= 8; i++) {
+    // G1.952: Loop:ar bara över steg som faktiskt har badges (3 och 8 borttagna)
+    for (const i of [1, 2, 4, 5, 6, 7]) {
       if (!stepDone[i]) { currentStep = i; break; }
     }
-    if (currentStep === null) currentStep = 8; // allt klart — håll Utfall som "current" för uppföljning
+    if (currentStep === null) currentStep = 7; // allt klart — håll Scenarier som 'current'
 
     document.querySelectorAll('.step-progress .sp-step').forEach(el => {
       const step = +el.dataset.step;
@@ -8371,6 +8354,7 @@
 
   function updateActivityLabels() {
     const container = document.getElementById('activities-container');
+    if (!container) return;
     state.roles.forEach((role, idx) => {
       const ta = container.querySelector(`textarea[data-role-id="${role.id}"]`);
       if (!ta) return;
