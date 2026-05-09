@@ -8903,6 +8903,35 @@
     todayLbl.textContent = 'idag';
     svg.appendChild(todayLbl);
 
+    // === LABEL-PLACERING — PROJEKTSTART, 1:A KLAR, FULL TAKT på olika rader ===
+    // G1.936: Sortera labels på X-pos och stapla vertikalt om de kolliderar (< 80px)
+    // Måste deklareras före PROJEKTSTART-MARKÖR-blocket nedan, som använder psX och _labelY.
+    const psActive_g = startDelayMonths > 0;
+    const psX = psActive_g ? xScale(startDelayMonths) : null;
+    const rampActive = rampMonths && rampMonths > 0 && (startDelayMonths + rampMonths) < monthsLeft;
+    const ltActive = lt > 0 && (lt + startDelayMonths) < monthsLeft;
+    const rampX = rampActive ? xScale(startDelayMonths + rampMonths) : null;
+    const ltX = ltActive ? xScale(startDelayMonths + lt) : null;
+    // Bygg lista över aktiva labels med default-rad
+    const _allLbls = [];
+    if (psActive_g) _allLbls.push({ key: 'ps', x: psX });
+    if (ltActive) _allLbls.push({ key: 'lt', x: ltX });
+    if (rampActive) _allLbls.push({ key: 'ramp', x: rampX });
+    _allLbls.sort((a, b) => a.x - b.x);
+    // Tilldela rad: om föregående label är < 80px bort, gå till nästa rad
+    let _lastX = -Infinity, _curRow = 0;
+    const _rowOf = {};
+    _allLbls.forEach(lbl => {
+      if (lbl.x - _lastX < 80) _curRow++;
+      else _curRow = 0;
+      _rowOf[lbl.key] = _curRow;
+      _lastX = lbl.x;
+    });
+    const _labelY = (key) => M.top - 10 - (_rowOf[key] || 0) * 12;
+    const labelsCollide = rampActive && ltActive && Math.abs(rampX - ltX) < 80;
+    const labelY1 = _labelY('ramp');
+    const labelY2 = _labelY('lt');
+
     // === PROJEKTSTART-MARKÖR (om i framtiden) ===
     if (startDelayMonths > 0 && startDelayMonths < monthsLeft) {
       const psLine = document.createElementNS(ns, 'line');
@@ -9318,34 +9347,6 @@
       progLbl.textContent = 'PROGNOS';
       svg.appendChild(progLbl);
     }
-
-    // === LABEL-PLACERING — PROJEKTSTART, 1:A KLAR, FULL TAKT på olika rader ===
-    // G1.936: Sortera labels på X-pos och stapla vertikalt om de kolliderar (< 80px)
-    const psActive_g = startDelayMonths > 0;
-    const psX = psActive_g ? xScale(startDelayMonths) : null;
-    const rampActive = rampMonths && rampMonths > 0 && (startDelayMonths + rampMonths) < monthsLeft;
-    const ltActive = lt > 0 && (lt + startDelayMonths) < monthsLeft;
-    const rampX = rampActive ? xScale(startDelayMonths + rampMonths) : null;
-    const ltX = ltActive ? xScale(startDelayMonths + lt) : null;
-    // Bygg lista över aktiva labels med default-rad
-    const _allLbls = [];
-    if (psActive_g) _allLbls.push({ key: 'ps', x: psX });
-    if (ltActive) _allLbls.push({ key: 'lt', x: ltX });
-    if (rampActive) _allLbls.push({ key: 'ramp', x: rampX });
-    _allLbls.sort((a, b) => a.x - b.x);
-    // Tilldela rad: om föregående label är < 80px bort, gå till nästa rad
-    let _lastX = -Infinity, _curRow = 0;
-    const _rowOf = {};
-    _allLbls.forEach(lbl => {
-      if (lbl.x - _lastX < 80) _curRow++;
-      else _curRow = 0;
-      _rowOf[lbl.key] = _curRow;
-      _lastX = lbl.x;
-    });
-    const _labelY = (key) => M.top - 10 - (_rowOf[key] || 0) * 12;
-    const labelsCollide = rampActive && ltActive && Math.abs(rampX - ltX) < 80;
-    const labelY1 = _labelY('ramp');
-    const labelY2 = _labelY('lt');
 
     if (rampActive) {
       const rampLine = document.createElementNS(ns, 'line');
