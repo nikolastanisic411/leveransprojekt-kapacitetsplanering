@@ -7888,25 +7888,9 @@
       // borttagen — den blandade olika typer av meddelanden och blev rörig. Timeline-
       // rutorna nedan visar redan vad som ska levereras vid varje datum.
 
-      // G1.928 punkt 7: Tidslinje med konkreta milestones — start + 25/50/75 + slut, med antal
-      // G1.947: Tidslinjen följer faktiskt schema (actualStart → actualFinish), inte
-      // klar-senast — så att 'Slut'-datumet matchar 'klar'-datumet i status-raden.
-      html += '<div class="ho-timeline">';
-      const totalVol = Math.round(d.roleVolume || d.effV || V);
-      const tlStart = d.actualStart || d.mastBorjaSenast;
-      const tlEnd = d.actualFinish || d.klarSenast;
-      const lineMs = tlEnd.getTime() - tlStart.getTime();
-      const milestonesH = [
-        { label: 'Start', items: 0, date: tlStart },
-        { label: '25 %', items: Math.round(totalVol * 0.25), date: new Date(tlStart.getTime() + lineMs * 0.25) },
-        { label: '50 %', items: Math.round(totalVol * 0.50), date: new Date(tlStart.getTime() + lineMs * 0.50) },
-        { label: '75 %', items: Math.round(totalVol * 0.75), date: new Date(tlStart.getTime() + lineMs * 0.75) },
-        { label: 'Slut', items: totalVol, date: tlEnd },
-      ];
-      milestonesH.forEach((m, mi) => {
-        html += '<div class="ho-tl-step"><div class="ho-tl-label">' + m.label + '</div><div class="ho-tl-date">' + fmt(m.date) + '</div><div class="ho-tl-items">' + (m.items > 0 ? m.items + ' st' : '—') + '</div></div>';
-      });
-      html += '</div>';
+      // G1.955: Timeline-rutorna (Start / 25 / 50 / 75 / Slut) borttagna — Gantt-grafen
+      // i Detaljerad planering visar samma data men med pipeline-överlappet visuellt
+      // tydligt, så här blev de både redundanta och kontraintuitiva.
 
       html += '</div>';
     });
