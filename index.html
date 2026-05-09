@@ -3486,60 +3486,9 @@
 
   <div class="scenarios-grid" id="scenarios-grid"></div>
 
-    <div class="section" role="heading" aria-level="2" id="step-8"><span class="step-num">8</span>Uppföljning <span class="section-hint">— rapportera vad ni faktiskt levererat per period och jämför mot plan</span></div>
-
-  <!-- G1.925: Styrgrupps-dashboard — snabb visuell summary av progress -->
-  <div class="utfall-dashboard" id="utfall-dashboard" style="display:none">
-    <div class="ud-header">
-      <div class="ud-title">Status för styrgrupp</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div class="ud-status" id="ud-status">—</div>
-        <button onclick="printForBoard()" style="background:#5C0E92;color:#fff;border:0;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer" title="Skriv ut/exportera som PDF för styrgruppen">Skriv ut / PDF</button>
-      </div>
-    </div>
-    <div class="ud-grid">
-      <div class="ud-kpi">
-        <div class="ud-kpi-label">Registrerat</div>
-        <div class="ud-kpi-value" id="ud-registrerat">—</div>
-        <div class="ud-kpi-sub" id="ud-registrerat-sub">av plan</div>
-      </div>
-      <div class="ud-kpi">
-        <div class="ud-kpi-label">Levererat</div>
-        <div class="ud-kpi-value" id="ud-levererat">—</div>
-        <div class="ud-kpi-sub" id="ud-levererat-sub">av mål</div>
-      </div>
-      <div class="ud-kpi">
-        <div class="ud-kpi-label">Hitrate</div>
-        <div class="ud-kpi-value" id="ud-hitrate">—</div>
-        <div class="ud-kpi-sub" id="ud-hitrate-sub">trend</div>
-      </div>
-      <div class="ud-kpi">
-        <div class="ud-kpi-label">Prognos</div>
-        <div class="ud-kpi-value" id="ud-prognos">—</div>
-        <div class="ud-kpi-sub" id="ud-prognos-sub">mot deadline</div>
-      </div>
-    </div>
-    <div class="ud-trend">
-      <div class="ud-trend-title">Levererat över tid</div>
-      <svg id="ud-trend-svg" viewBox="0 0 800 120" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Trend över levererat per period"></svg>
-    </div>
-  </div>
-
-  <div class="utfall-card">
-    <div class="utfall-controls">
-      <div class="utfall-gran">
-        <span class="utfall-gran-label">Granularitet:</span>
-        <button id="utfall-gran-dag" class="utfall-gran-btn" onclick="setUtfallGranularity('dag')" aria-label="Visa utfall per dag" title="Rapportera dagliga utfall — bra för pilot/ramp-up">Per dag</button>
-        <button id="utfall-gran-vecka" class="utfall-gran-btn active" onclick="setUtfallGranularity('vecka')" aria-label="Visa utfall per vecka" title="Rapportera vecko-utfall — vanligast för stabil drift">Per vecka</button>
-        <button id="utfall-gran-månad" class="utfall-gran-btn" onclick="setUtfallGranularity('månad')" aria-label="Visa utfall per månad" title="Rapportera månads-utfall — bra för långsiktig styrning utan ruta-i-ruta">Per månad</button>
-      </div>
-    </div>
-    <div class="utfall-table-wrap" id="utfall-table-wrap"></div>
-    <div class="utfall-actions">
-      <button class="add-row" onclick="addUtfallEntry()" aria-label="Lägg till ny rapporteringsperiod för utfall">+ Rapportera ny period</button>
-    </div>
-    <div class="utfall-summary" id="utfall-summary"></div>
-  </div>
+  <!-- G1.950: Uppföljning-sektionen (Status för styrgrupp + utfall-tabell) borttagen.
+       Funktionerna updateUtfallDashboard och renderUtfallTable lämnas kvar — de
+       early-return:ar säkert när elementen inte finns. -->
 
 <details id="section-analys" style="margin:24px 0 0">
   <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:12px 0;border-top:0.5px solid #E5E2EA"><span style="font-size:13px;font-weight:600;color:#1A1A1F">Analys</span><span style="font-size:11px;color:#888590">— aktiviteter, begränsningar, anteckningar (klicka för att öppna)</span></summary>
