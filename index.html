@@ -7884,31 +7884,9 @@
       html += '<span class="ho-pill"><strong>' + compactVolume + '</strong> att leverera</span>';
       html += '</div>';
 
-      // Status-rad: en mening
-      html += '<div class="ho-status-line">';
-      if (d.klarSenast.getTime() <= projektStartDate.getTime()) {
-        html += '<span style="color:#FFD6F0">⚠ Klar-datum redan passerat — flytta deadline eller skala flaskhalsen.</span>';
-      } else if (d.additionalNeeded > 0 && isFinite(d.requiredHeadcount)) {
-        html += '<span style="color:#FFD6F0">⚠ Behöver <strong>' + d.requiredHeadcount + ' pers</strong> (+' + d.additionalNeeded + ')</span>';
-        html += ' <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + '</button>';
-      } else if (d.surplusHeadcount && d.surplusHeadcount >= 1 && !d.isBottleneck) {
-        html += '<span style="opacity:0.85">Kan frigöra <strong>' + d.surplusHeadcount + ' pers</strong> — flaskhalsen begränsar oavsett</span>';
-        html += ' <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + '</button>';
-      } else {
-        // G1.953: Visa klar-senast-datumet (olika per roll) istället för 'X dgr marginal'
-        // (som var samma för alla roller eftersom slacken är delad i pipelinen).
-        // Försening visas fortfarande som dagar — det är då en aktiv signal.
-        const finishStr = d.actualFinish ? fmt(d.actualFinish) : '—';
-        const klSeparate = d.klarSenast && d.actualFinish && Math.abs(d.klarSenast.getTime() - d.actualFinish.getTime()) > dayMs * 2;
-        let extraStr = '';
-        if (d.actualFinish && isFinite(d.bufferDays)) {
-          if (d.bufferDays < 0) extraStr = ' · ' + Math.abs(d.bufferDays) + ' dgr försening';
-          else if (d.bufferDays === 0) extraStr = ' · precis i tid';
-          else if (klSeparate) extraStr = ' · klar-senast ' + fmt(d.klarSenast);
-        }
-        html += '<span style="color:#A8E6C2">✓ OK</span> · klar ' + finishStr + extraStr;
-      }
-      html += '</div>';
+      // G1.954: Status-raden ('Kan frigöra X pers / ✓ OK · klar... / Behöver X pers')
+      // borttagen — den blandade olika typer av meddelanden och blev rörig. Timeline-
+      // rutorna nedan visar redan vad som ska levereras vid varje datum.
 
       // G1.928 punkt 7: Tidslinje med konkreta milestones — start + 25/50/75 + slut, med antal
       // G1.947: Tidslinjen följer faktiskt schema (actualStart → actualFinish), inte
