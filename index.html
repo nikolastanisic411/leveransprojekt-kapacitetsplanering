@@ -3189,7 +3189,10 @@
     </div>
   </div>
 
-  <div class="per-subset-row" id="per-subset-row" style="display:none"></div>
+  <!-- G1.951: per-subset-raden borttagen — den proportionella kapacitets-
+       allokeringen (TFx-volym/total × bottleneck) skapade en falsk konflikt
+       med 'Resultat 1800/1800'. updatePerSubsetRow lämnas kvar och early-
+       return:ar säkert när elementet inte finns. -->
   <div class="klart-per-roll" id="klart-per-roll" style="display:none"></div>
 
   <div class="section" role="heading" aria-level="2" id="step-1"><span class="step-num">1</span>Mål &amp; behov <span class="section-hint">— hur många leveranser och vilken typ?</span></div>
