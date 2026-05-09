@@ -7895,8 +7895,18 @@
         html += '<span style="opacity:0.85">Kan frigöra <strong>' + d.surplusHeadcount + ' pers</strong> — flaskhalsen begränsar oavsett</span>';
         html += ' <button class="ho-apply-btn" onclick="applyRoleRecommendation(\'' + d.role.id + '\', ' + d.requiredHeadcount + ')" type="button">Sätt ' + d.requiredHeadcount + '</button>';
       } else {
-        const bufStr = (d.actualFinish && isFinite(d.bufferDays)) ? (d.bufferDays > 0 ? d.bufferDays + ' dgr marginal' : d.bufferDays === 0 ? 'precis i tid' : Math.abs(d.bufferDays) + ' dgr försening') : '';
-        html += '<span style="color:#A8E6C2">✓ OK</span> · klar ' + (d.actualFinish ? fmt(d.actualFinish) : '—') + (bufStr ? ' · ' + bufStr : '');
+        // G1.953: Visa klar-senast-datumet (olika per roll) istället för 'X dgr marginal'
+        // (som var samma för alla roller eftersom slacken är delad i pipelinen).
+        // Försening visas fortfarande som dagar — det är då en aktiv signal.
+        const finishStr = d.actualFinish ? fmt(d.actualFinish) : '—';
+        const klSeparate = d.klarSenast && d.actualFinish && Math.abs(d.klarSenast.getTime() - d.actualFinish.getTime()) > dayMs * 2;
+        let extraStr = '';
+        if (d.actualFinish && isFinite(d.bufferDays)) {
+          if (d.bufferDays < 0) extraStr = ' · ' + Math.abs(d.bufferDays) + ' dgr försening';
+          else if (d.bufferDays === 0) extraStr = ' · precis i tid';
+          else if (klSeparate) extraStr = ' · klar-senast ' + fmt(d.klarSenast);
+        }
+        html += '<span style="color:#A8E6C2">✓ OK</span> · klar ' + finishStr + extraStr;
       }
       html += '</div>';
 
