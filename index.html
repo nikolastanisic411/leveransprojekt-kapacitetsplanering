@@ -3476,7 +3476,6 @@
         <div class="handover-subtitle">Tidslinje med konkreta datum och antal levererat per roll.</div>
       </div>
       <div class="handover-content" id="handover-content"></div>
-      <div class="handover-footer" id="handover-footer"></div>
     </div>
   </div>
 
@@ -7870,8 +7869,9 @@
   function updateHandoverPanel() {
     const card = document.getElementById('handover-card');
     const content = document.getElementById('handover-content');
+    // G1.949: handover-footer borttagen — info finns redan i plan-status-pillen
     const footer = document.getElementById('handover-footer');
-    if (!card || !content || !footer) return;
+    if (!card || !content) return;
 
     const active = activeRoles();
     const V = (state.onskadVolym && state.onskadVolym > 0) ? state.onskadVolym : 0;
@@ -7880,7 +7880,7 @@
     if (active.length === 0 || V <= 0 || !deadline || isNaN(deadline.getTime())) {
       card.classList.add('empty');
       content.innerHTML = 'Sätt mål, deadline och bemanning för att se översikten för resursägare.';
-      footer.innerHTML = '';
+      if (footer) footer.innerHTML = '';
       updatePlanStatusPill({ show: false });
       return;
     }
@@ -8387,7 +8387,7 @@
       footerHtml += '</div>';
       footerHtml += '</div>';
     }
-    footer.innerHTML = footerHtml;
+    if (footer) footer.innerHTML = footerHtml;
   }
 
   function updateKlartPerRoll() {
@@ -8554,8 +8554,8 @@
     flow.innerHTML = flowHtml; flow.setAttribute('aria-label', 'Pipeline-ordning av roller med flaskhals markerad');
     container.appendChild(flow);
 
-    // G1.948: Riktig Gantt-graf ersätter tidigare TF- och per-fas-tabeller.
-    // Horisontella staplar per roll (actualStart → actualFinish), 25/50/75-markörer,
+    // G1.948 / G1.949: Gantt-graf ersätter tidigare TF- och per-fas-tabeller.
+    // Horisontella staplar per roll (actualStart → actualFinish) med 25/50/75-belopp,
     // klar-senast-markör (streckad) och projektstart/deadline/idag-linjer.
     (function buildGantt() {
       if (data.length === 0) return;
@@ -8563,27 +8563,29 @@
       const today = new Date(); today.setHours(0,0,0,0);
       const dayMsG = 24 * 3600 * 1000;
 
+      // Tidsspann: bara de datum som ritas (actualStart/actualFinish + projstart + deadline).
+      // Idag och klarSenast/mastBorjaSenast utelämnas — annars sträcker sig axeln onödigt
+      // långt bakåt om idag är långt före projektstart.
       const allMs = [];
       data.forEach(d => {
         if (d.actualStart) allMs.push(d.actualStart.getTime());
         if (d.actualFinish) allMs.push(d.actualFinish.getTime());
-        if (d.mastBorjaSenast) allMs.push(d.mastBorjaSenast.getTime());
-        if (d.klarSenast) allMs.push(d.klarSenast.getTime());
       });
-      allMs.push(projStart0.getTime(), deadline.getTime(), today.getTime());
+      allMs.push(projStart0.getTime(), deadline.getTime());
       let tStart = Math.min.apply(null, allMs);
       let tEnd = Math.max.apply(null, allMs);
       const span = Math.max(1, tEnd - tStart);
-      tStart -= span * 0.02;
-      tEnd += span * 0.02;
+      tStart -= span * 0.03;
+      tEnd += span * 0.03;
 
       const W = 800;
-      const padT = 44, padB = 50, padL = 168, padR = 24;
-      const rowH = 54;
+      const padT = 44, padB = 56, padL = 156, padR = 24;
+      const rowH = 64;
       const H = padT + data.length * rowH + padB;
       const innerW = W - padL - padR;
       const xScale = ms => padL + ((ms - tStart) / (tEnd - tStart)) * innerW;
       const fmtShort = dt => dt.toLocaleDateString('sv-SE', { month: 'short', day: 'numeric' });
+      const fmtFull = dt => dt.toLocaleDateString('sv-SE');
 
       const wrap = document.createElement('div');
       wrap.style.cssText = 'margin:10px 0 14px;padding:14px 16px 10px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
@@ -8592,7 +8594,7 @@
       heading.textContent = 'Gantt — när varje roll arbetar';
       const sub = document.createElement('div');
       sub.style.cssText = 'font-size:11px;color:#6B5F75;margin-bottom:10px';
-      sub.textContent = 'Stapel = arbetsperiod (start → klar) · markörer för 25/50/75 % · streckad linje = klar senast (deadline-driven)';
+      sub.textContent = 'Stapel = arbetsperiod (start → klar) · siffrorna under visar antal levererade vid 25 / 50 / 75 % · streckad linje = klar senast (deadline-driven)';
       wrap.appendChild(heading); wrap.appendChild(sub);
 
       const svg = document.createElementNS(ns, 'svg');
@@ -8614,16 +8616,26 @@
       // Plot-area-bakgrund
       el(svg, 'rect', { x: padL, y: padT, width: innerW, height: H - padT - padB, fill: '#FCFAFD', rx: 4 });
 
-      // Månads-gridlines + axel-etiketter
-      const cursor = new Date(tStart); cursor.setDate(1); cursor.setHours(0,0,0,0);
+      // Smart månads-axel: glesa ut etiketter när det är många månader
+      const startMo = new Date(tStart); startMo.setDate(1); startMo.setHours(0,0,0,0);
+      const endMo = new Date(tEnd);
+      const monthsTotal = (endMo.getFullYear() - startMo.getFullYear()) * 12 + (endMo.getMonth() - startMo.getMonth()) + 1;
+      const labelStep = monthsTotal > 36 ? 6 : (monthsTotal > 18 ? 3 : (monthsTotal > 12 ? 2 : 1));
+      const cursor = new Date(startMo);
+      let mIdx = 0;
       while (cursor.getTime() <= tEnd) {
         const x = xScale(cursor.getTime());
         if (x >= padL - 0.5 && x <= padL + innerW + 0.5) {
+          // Gridline alltid
           el(svg, 'line', { x1: x, x2: x, y1: padT, y2: H - padB, stroke: '#F0EDF4', 'stroke-width': 0.5 });
-          const lbl = cursor.toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' });
-          el(svg, 'text', { x: x, y: H - padB + 16, 'text-anchor': 'middle', 'font-size': 10, fill: '#888590' }, lbl);
+          // Etikett bara var labelStep:e månad
+          if (mIdx % labelStep === 0) {
+            const lbl = cursor.toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' });
+            el(svg, 'text', { x: x, y: H - padB + 16, 'text-anchor': 'middle', 'font-size': 10, fill: '#888590' }, lbl);
+          }
         }
         cursor.setMonth(cursor.getMonth() + 1);
+        mIdx++;
       }
 
       // X-axel-linje
@@ -8643,7 +8655,7 @@
         el(svg, 'text', { x: dlXg, y: padT - 14, 'text-anchor': 'middle', 'font-size': 9, fill: '#9a2424', 'font-weight': 700, 'letter-spacing': '0.05em' }, 'DEADLINE');
       }
 
-      // Idag-linje
+      // Idag-linje (bara om idag är inom synligt spann)
       if (today.getTime() >= tStart && today.getTime() <= tEnd) {
         const tXg = xScale(today.getTime());
         el(svg, 'line', { x1: tXg, x2: tXg, y1: padT, y2: H - padB, stroke: '#1A1A1F', 'stroke-width': 1, opacity: 0.45 });
@@ -8654,24 +8666,24 @@
       data.forEach((d, i) => {
         const rowY = padT + i * rowH;
         const barH = 22;
-        const barY = rowY + (rowH - barH) / 2;
+        const barY = rowY + 22;
 
         if (i > 0) {
           el(svg, 'line', { x1: 8, x2: padL + innerW, y1: rowY, y2: rowY, stroke: '#F0EDF4', 'stroke-width': 0.5 });
         }
 
-        // Roll-etikett
-        el(svg, 'text', { x: 12, y: rowY + 16, 'font-size': 12, 'font-weight': 600, fill: '#1A1A1F' }, (i+1) + '. ' + d.role.name);
+        // Roll-etikett-kolumn (vänster)
+        el(svg, 'text', { x: 12, y: rowY + 18, 'font-size': 12, 'font-weight': 600, fill: '#1A1A1F' }, (i+1) + '. ' + d.role.name);
         const totalVolG = Math.round(d.roleVolume || d.effV || V);
         const ownRateTxt = d.ownRate.toFixed(1) + '/dag';
-        el(svg, 'text', { x: 12, y: rowY + 30, 'font-size': 10, fill: '#6B5F75' }, totalVolG + ' st · ' + ownRateTxt);
+        el(svg, 'text', { x: 12, y: rowY + 34, 'font-size': 10, fill: '#6B5F75' }, totalVolG + ' st · ' + ownRateTxt);
         const utilPctG = Math.round((d.capacityUtilization || 0) * 100);
         if (d.isBottleneck) {
-          el(svg, 'text', { x: 12, y: rowY + 44, 'font-size': 9, fill: '#5C0E92', 'font-weight': 700, 'letter-spacing': '0.04em' }, 'FLASKHALS');
+          el(svg, 'text', { x: 12, y: rowY + 50, 'font-size': 9, fill: '#5C0E92', 'font-weight': 700, 'letter-spacing': '0.04em' }, 'FLASKHALS');
         } else if (d.overshoots) {
-          el(svg, 'text', { x: 12, y: rowY + 44, 'font-size': 9, fill: '#9a2424', 'font-weight': 700 }, 'HINNER INTE');
+          el(svg, 'text', { x: 12, y: rowY + 50, 'font-size': 9, fill: '#9a2424', 'font-weight': 700 }, 'HINNER INTE');
         } else {
-          el(svg, 'text', { x: 12, y: rowY + 44, 'font-size': 9, fill: '#888590' }, utilPctG + ' % utnyttjat');
+          el(svg, 'text', { x: 12, y: rowY + 50, 'font-size': 9, fill: '#888590' }, utilPctG + ' % utnyttjat');
         }
 
         if (!d.actualStart || !d.actualFinish) return;
@@ -8684,38 +8696,57 @@
         const barStroke = d.isBottleneck ? '#5C0E92' : (d.overshoots ? '#9a2424' : '#990AE3');
         const barStrokeW = d.isBottleneck ? 1.5 : 1;
 
-        // Stapel + tooltip
+        // Datum vid start/slut — bara om stapeln är bred nog att rymma båda
+        if (barW > 80) {
+          el(svg, 'text', { x: x0, y: barY - 5, 'font-size': 9, fill: '#6B5F75' }, fmtShort(d.actualStart));
+          el(svg, 'text', { x: x1, y: barY - 5, 'text-anchor': 'end', 'font-size': 9, fill: '#6B5F75' }, fmtShort(d.actualFinish));
+        }
+
+        // Stapel med tooltip
         const barG = document.createElementNS(ns, 'g');
         const titleNode = document.createElementNS(ns, 'title');
-        const klarTxt = d.klarSenast ? ' · klar senast ' + d.klarSenast.toLocaleDateString('sv-SE') : '';
+        const klarTxt = d.klarSenast ? ' · klar senast ' + fmtFull(d.klarSenast) : '';
         const margTxt = isFinite(d.bufferDays)
           ? (d.bufferDays >= 0 ? ' · ' + d.bufferDays + ' dgr marginal' : ' · ' + Math.abs(d.bufferDays) + ' dgr försening')
           : '';
-        titleNode.textContent = d.role.name + ': ' + fmtShort(d.actualStart) + ' → ' + fmtShort(d.actualFinish) + klarTxt + margTxt;
+        titleNode.textContent = d.role.name + ': ' + fmtFull(d.actualStart) + ' → ' + fmtFull(d.actualFinish) + klarTxt + margTxt + ' · ' + totalVolG + ' st';
         barG.appendChild(titleNode);
         el(barG, 'rect', { x: x0, y: barY, width: barW, height: barH, fill: barFill, stroke: barStroke, 'stroke-width': barStrokeW, rx: 3 });
         svg.appendChild(barG);
 
-        // 25/50/75-markörer
+        // 25/50/75-markörer (alltid)
         [0.25, 0.5, 0.75].forEach(p => {
           const tx = x0 + barW * p;
-          el(svg, 'line', { x1: tx, x2: tx, y1: barY + 2, y2: barY + barH - 2, stroke: barStroke, 'stroke-width': 0.8, opacity: 0.45 });
+          el(svg, 'line', { x1: tx, x2: tx, y1: barY, y2: barY + barH, stroke: barStroke, 'stroke-width': 0.8, opacity: 0.5 });
         });
 
-        // Volym-etikett i stapeln
+        // Volym-etikett i mitten av stapeln
         if (barW > 50) {
           el(svg, 'text', { x: (x0 + x1) / 2, y: barY + barH/2 + 4, 'text-anchor': 'middle', 'font-size': 10, fill: '#1A1A1F', 'font-weight': 600 }, totalVolG + ' st');
         }
 
-        // Datum vid start/slut
-        el(svg, 'text', { x: x0, y: barY - 4, 'font-size': 9, fill: '#6B5F75' }, fmtShort(d.actualStart));
-        el(svg, 'text', { x: x1, y: barY - 4, 'text-anchor': 'end', 'font-size': 9, fill: '#6B5F75' }, fmtShort(d.actualFinish));
+        // Milstolpe-belopp UNDER stapeln vid 25/50/75 — bara om det får plats
+        if (barW > 180) {
+          [0.25, 0.5, 0.75].forEach(p => {
+            const tx = x0 + barW * p;
+            const itemsAt = Math.round(totalVolG * p);
+            el(svg, 'text', { x: tx, y: barY + barH + 12, 'text-anchor': 'middle', 'font-size': 9, fill: '#6B5F75', 'font-weight': 600 }, itemsAt + ' st');
+            el(svg, 'text', { x: tx, y: barY + barH + 22, 'text-anchor': 'middle', 'font-size': 8, fill: '#A8A5AD' }, Math.round(p * 100) + ' %');
+          });
+        }
 
-        // Klar-senast-markör om olika från actualFinish
-        if (d.klarSenast && Math.abs(d.klarSenast.getTime() - d.actualFinish.getTime()) > dayMsG * 2) {
+        // Klar-senast-markör — bara när datumet skiljer sig märkbart från BÅDE actualFinish OCH deadline
+        // (för sista rollen är klarSenast = deadline, så DEADLINE-markören redan visar det)
+        const klSeparateFromFinish = d.klarSenast && Math.abs(d.klarSenast.getTime() - d.actualFinish.getTime()) > dayMsG * 2;
+        const klSeparateFromDeadline = d.klarSenast && Math.abs(d.klarSenast.getTime() - deadline.getTime()) > dayMsG * 2;
+        if (klSeparateFromFinish && klSeparateFromDeadline) {
           const klX = xScale(d.klarSenast.getTime());
           el(svg, 'line', { x1: klX, x2: klX, y1: barY - 4, y2: barY + barH + 4, stroke: '#A8A5AD', 'stroke-width': 1, 'stroke-dasharray': '2 2' });
-          if (Math.abs(klX - x1) > 32) {
+          // Etiketten bara om det finns plats (40 px från stapelns slut OCH 40 px från DEADLINE)
+          const clearOfBar = Math.abs(klX - x1) > 40;
+          const clearOfDeadline = Math.abs(klX - dlXg) > 40;
+          if (clearOfBar && clearOfDeadline && barW <= 180) {
+            // Om stapeln är smal (ingen milstolpe-text under), placera 'klar senast' under
             el(svg, 'text', { x: klX, y: barY + barH + 14, 'text-anchor': 'middle', 'font-size': 8, fill: '#888590' }, 'klar senast');
           }
         }
