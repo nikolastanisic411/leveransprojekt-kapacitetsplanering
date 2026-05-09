@@ -8554,60 +8554,186 @@
     flow.innerHTML = flowHtml; flow.setAttribute('aria-label', 'Pipeline-ordning av roller med flaskhals markerad');
     container.appendChild(flow);
 
-    // G1.911: Per-TF leveransplan — primär detaljerad vy
-    const tfPlan = computeTfDeliveryPlan(active, projStart0, true, deadline);
-    if (tfPlan.length > 0) {
-      const tfDiv = document.createElement('div');
-      tfDiv.style.cssText = 'margin:10px 0 14px;padding:14px 16px;background:linear-gradient(135deg,#FAFAFD 0%,#F8F5FB 100%);border:0.5px solid #E5E2EA;border-radius:10px;';
-      let tfHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">Leveransplan per typfall — när hinns vad?</div>';
-      tfHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-      tfHtml += '<thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Typfall</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Krav-takt</th><th style="text-align:left;padding:4px 8px">Flaskhals</th><th style="text-align:left;padding:4px 8px">Klart senast</th></tr></thead><tbody>';
-      tfPlan.forEach(t => {
-        const dateStr = t.finishDate ? t.finishDate.toLocaleDateString('sv-SE') : '—';
-        const inTime = t.finishDate && t.finishDate <= deadline;
-        // G1.926: Jämför krav-takt mot rollens FAKTISKA kapacitet (rateThisFlow × 21)
-        const flowMaxPerMonth = t.rateThisFlow * 21;
-        const overCapacity = t.requiredPerMonth > flowMaxPerMonth + 0.5;
-        const dateColor = (inTime && !overCapacity) ? '#1d6e35' : '#9a2424';
-        const rateMonth = t.requiredPerMonth > 0 ? Math.round(t.requiredPerMonth) + '/mån' : '—';
-        const rateWeek = t.requiredPerWeek > 0 ? Math.round(t.requiredPerWeek) + '/vecka' : '—';
-        const rateColor = overCapacity ? '#9a2424' : '#1A1A1F';
-        const rateBadge = overCapacity ? ' <span style="display:inline-block;padding:1px 6px;background:#FFE5EE;color:#5A1530;border-radius:4px;font-size:10px;font-weight:700;margin-left:4px">EJ MÖJLIGT</span>' : '';
-        const rowBg = overCapacity ? ';background:#FFF5F8' : '';
-        tfHtml += '<tr style="border-top:0.5px solid #F0EDF4' + rowBg + '">';
-        tfHtml += '<td style="padding:6px 8px"><strong>' + escapeHtml(t.name) + '</strong><div style="font-size:10px;color:#6B5F75;font-weight:400">via ' + t.participants.join(' → ') + '</div></td>';
-        tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + t.volume + ' st</td>';
-        tfHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;color:' + rateColor + '"><strong>' + rateMonth + '</strong>' + rateBadge + '<div style="font-size:10px;color:#6B5F75">' + rateWeek + '</div></td>';
-        tfHtml += '<td style="padding:6px 8px;color:#6B5F75;font-size:11px">' + escapeHtml(t.bottleneck.name) + '<div style="font-size:10px">max ' + Math.round(flowMaxPerMonth) + '/mån</div></td>';
-        tfHtml += '<td style="padding:6px 8px;color:' + dateColor + ';font-weight:600">' + dateStr + '</td>';
-        tfHtml += '</tr>';
-      });
-      tfHtml += '</tbody></table>';
-      tfDiv.innerHTML = tfHtml;
-      container.appendChild(tfDiv);
-    }
+    // G1.948: Riktig Gantt-graf ersätter tidigare TF- och per-fas-tabeller.
+    // Horisontella staplar per roll (actualStart → actualFinish), 25/50/75-markörer,
+    // klar-senast-markör (streckad) och projektstart/deadline/idag-linjer.
+    (function buildGantt() {
+      if (data.length === 0) return;
+      const ns = 'http://www.w3.org/2000/svg';
+      const today = new Date(); today.setHours(0,0,0,0);
+      const dayMsG = 24 * 3600 * 1000;
 
-    // G1.918: Per-fas flow-cards med visuell utnyttjande-bar och pilar
-    const phases = computePhaseThroughput(active, projStart0, deadline, true);
-    if (phases.length > 0) {
-      const phDiv = document.createElement('div');
-      phDiv.style.cssText = 'margin:14px 0;padding:16px 18px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
-      let phHtml = '<div style="font-weight:600;font-size:13px;margin-bottom:8px;color:#1A1A1F">Aktivitet per fas <span style="font-weight:400;color:#888590;font-size:11px">— månadssnitt parallellt mot deadline</span></div>';
-      phHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#6B5F75;font-size:10px;text-transform:uppercase;letter-spacing:0.5px"><th style="text-align:left;padding:4px 8px">Fas</th><th style="text-align:right;padding:4px 8px">Volym</th><th style="text-align:right;padding:4px 8px">Snitt/mån</th><th style="text-align:right;padding:4px 8px">Utnyttjande</th></tr></thead><tbody>';
-      phases.forEach((p) => {
-        const utilPct = Math.round(p.utilization * 100);
-        const utilCol = utilPct >= 80 ? '#9a2424' : (utilPct >= 50 ? '#c2570d' : '#1d6e35');
-        phHtml += '<tr style="border-top:0.5px solid #F0EDF4">';
-        phHtml += '<td style="padding:6px 8px"><strong>' + (p.idx+1) + '. ' + escapeHtml(p.role.name) + '</strong></td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">' + p.roleVolume + ' st</td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">' + p.avgPerMonth.toFixed(0) + '/mån</td>';
-        phHtml += '<td style="padding:6px 8px;text-align:right;color:' + utilCol + '">' + utilPct + ' %</td>';
-        phHtml += '</tr>';
+      const allMs = [];
+      data.forEach(d => {
+        if (d.actualStart) allMs.push(d.actualStart.getTime());
+        if (d.actualFinish) allMs.push(d.actualFinish.getTime());
+        if (d.mastBorjaSenast) allMs.push(d.mastBorjaSenast.getTime());
+        if (d.klarSenast) allMs.push(d.klarSenast.getTime());
       });
-      phHtml += '</tbody></table>';
-      phDiv.innerHTML = phHtml;
-      container.appendChild(phDiv);
-    }
+      allMs.push(projStart0.getTime(), deadline.getTime(), today.getTime());
+      let tStart = Math.min.apply(null, allMs);
+      let tEnd = Math.max.apply(null, allMs);
+      const span = Math.max(1, tEnd - tStart);
+      tStart -= span * 0.02;
+      tEnd += span * 0.02;
+
+      const W = 800;
+      const padT = 44, padB = 50, padL = 168, padR = 24;
+      const rowH = 54;
+      const H = padT + data.length * rowH + padB;
+      const innerW = W - padL - padR;
+      const xScale = ms => padL + ((ms - tStart) / (tEnd - tStart)) * innerW;
+      const fmtShort = dt => dt.toLocaleDateString('sv-SE', { month: 'short', day: 'numeric' });
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'margin:10px 0 14px;padding:14px 16px 10px;background:#fff;border:0.5px solid #E5E2EA;border-radius:10px;';
+      const heading = document.createElement('div');
+      heading.style.cssText = 'font-weight:600;font-size:13px;margin-bottom:4px;color:#1A1A1F';
+      heading.textContent = 'Gantt — när varje roll arbetar';
+      const sub = document.createElement('div');
+      sub.style.cssText = 'font-size:11px;color:#6B5F75;margin-bottom:10px';
+      sub.textContent = 'Stapel = arbetsperiod (start → klar) · markörer för 25/50/75 % · streckad linje = klar senast (deadline-driven)';
+      wrap.appendChild(heading); wrap.appendChild(sub);
+
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', 'Gantt-tidslinje per roll');
+      svg.style.cssText = 'display:block;font-family:inherit;';
+
+      const el = (parent, tag, attrs, text) => {
+        const e = document.createElementNS(ns, tag);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        if (text != null) e.textContent = text;
+        parent.appendChild(e);
+        return e;
+      };
+
+      // Plot-area-bakgrund
+      el(svg, 'rect', { x: padL, y: padT, width: innerW, height: H - padT - padB, fill: '#FCFAFD', rx: 4 });
+
+      // Månads-gridlines + axel-etiketter
+      const cursor = new Date(tStart); cursor.setDate(1); cursor.setHours(0,0,0,0);
+      while (cursor.getTime() <= tEnd) {
+        const x = xScale(cursor.getTime());
+        if (x >= padL - 0.5 && x <= padL + innerW + 0.5) {
+          el(svg, 'line', { x1: x, x2: x, y1: padT, y2: H - padB, stroke: '#F0EDF4', 'stroke-width': 0.5 });
+          const lbl = cursor.toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' });
+          el(svg, 'text', { x: x, y: H - padB + 16, 'text-anchor': 'middle', 'font-size': 10, fill: '#888590' }, lbl);
+        }
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+
+      // X-axel-linje
+      el(svg, 'line', { x1: padL, x2: padL + innerW, y1: H - padB, y2: H - padB, stroke: '#D8D5DD', 'stroke-width': 1 });
+
+      // Projektstart-linje
+      const psXg = xScale(projStart0.getTime());
+      if (psXg >= padL && psXg <= padL + innerW) {
+        el(svg, 'line', { x1: psXg, x2: psXg, y1: padT - 8, y2: H - padB, stroke: '#5C0E92', 'stroke-width': 1.2, 'stroke-dasharray': '4 3', opacity: 0.7 });
+        el(svg, 'text', { x: psXg, y: padT - 14, 'text-anchor': 'middle', 'font-size': 9, fill: '#5C0E92', 'font-weight': 600, 'letter-spacing': '0.05em' }, 'PROJEKTSTART');
+      }
+
+      // Deadline-linje
+      const dlXg = xScale(deadline.getTime());
+      if (dlXg >= padL && dlXg <= padL + innerW) {
+        el(svg, 'line', { x1: dlXg, x2: dlXg, y1: padT - 8, y2: H - padB, stroke: '#9a2424', 'stroke-width': 1.2, 'stroke-dasharray': '3 4', opacity: 0.8 });
+        el(svg, 'text', { x: dlXg, y: padT - 14, 'text-anchor': 'middle', 'font-size': 9, fill: '#9a2424', 'font-weight': 700, 'letter-spacing': '0.05em' }, 'DEADLINE');
+      }
+
+      // Idag-linje
+      if (today.getTime() >= tStart && today.getTime() <= tEnd) {
+        const tXg = xScale(today.getTime());
+        el(svg, 'line', { x1: tXg, x2: tXg, y1: padT, y2: H - padB, stroke: '#1A1A1F', 'stroke-width': 1, opacity: 0.45 });
+        el(svg, 'text', { x: tXg, y: H - padB + 32, 'text-anchor': 'middle', 'font-size': 9, fill: '#1A1A1F' }, 'idag');
+      }
+
+      // Roll-rader
+      data.forEach((d, i) => {
+        const rowY = padT + i * rowH;
+        const barH = 22;
+        const barY = rowY + (rowH - barH) / 2;
+
+        if (i > 0) {
+          el(svg, 'line', { x1: 8, x2: padL + innerW, y1: rowY, y2: rowY, stroke: '#F0EDF4', 'stroke-width': 0.5 });
+        }
+
+        // Roll-etikett
+        el(svg, 'text', { x: 12, y: rowY + 16, 'font-size': 12, 'font-weight': 600, fill: '#1A1A1F' }, (i+1) + '. ' + d.role.name);
+        const totalVolG = Math.round(d.roleVolume || d.effV || V);
+        const ownRateTxt = d.ownRate.toFixed(1) + '/dag';
+        el(svg, 'text', { x: 12, y: rowY + 30, 'font-size': 10, fill: '#6B5F75' }, totalVolG + ' st · ' + ownRateTxt);
+        const utilPctG = Math.round((d.capacityUtilization || 0) * 100);
+        if (d.isBottleneck) {
+          el(svg, 'text', { x: 12, y: rowY + 44, 'font-size': 9, fill: '#5C0E92', 'font-weight': 700, 'letter-spacing': '0.04em' }, 'FLASKHALS');
+        } else if (d.overshoots) {
+          el(svg, 'text', { x: 12, y: rowY + 44, 'font-size': 9, fill: '#9a2424', 'font-weight': 700 }, 'HINNER INTE');
+        } else {
+          el(svg, 'text', { x: 12, y: rowY + 44, 'font-size': 9, fill: '#888590' }, utilPctG + ' % utnyttjat');
+        }
+
+        if (!d.actualStart || !d.actualFinish) return;
+
+        const x0 = xScale(d.actualStart.getTime());
+        const x1 = xScale(d.actualFinish.getTime());
+        const barW = Math.max(2, x1 - x0);
+
+        const barFill = d.isBottleneck ? '#E8DAF5' : (d.overshoots ? '#FFE5EB' : '#F4EAFB');
+        const barStroke = d.isBottleneck ? '#5C0E92' : (d.overshoots ? '#9a2424' : '#990AE3');
+        const barStrokeW = d.isBottleneck ? 1.5 : 1;
+
+        // Stapel + tooltip
+        const barG = document.createElementNS(ns, 'g');
+        const titleNode = document.createElementNS(ns, 'title');
+        const klarTxt = d.klarSenast ? ' · klar senast ' + d.klarSenast.toLocaleDateString('sv-SE') : '';
+        const margTxt = isFinite(d.bufferDays)
+          ? (d.bufferDays >= 0 ? ' · ' + d.bufferDays + ' dgr marginal' : ' · ' + Math.abs(d.bufferDays) + ' dgr försening')
+          : '';
+        titleNode.textContent = d.role.name + ': ' + fmtShort(d.actualStart) + ' → ' + fmtShort(d.actualFinish) + klarTxt + margTxt;
+        barG.appendChild(titleNode);
+        el(barG, 'rect', { x: x0, y: barY, width: barW, height: barH, fill: barFill, stroke: barStroke, 'stroke-width': barStrokeW, rx: 3 });
+        svg.appendChild(barG);
+
+        // 25/50/75-markörer
+        [0.25, 0.5, 0.75].forEach(p => {
+          const tx = x0 + barW * p;
+          el(svg, 'line', { x1: tx, x2: tx, y1: barY + 2, y2: barY + barH - 2, stroke: barStroke, 'stroke-width': 0.8, opacity: 0.45 });
+        });
+
+        // Volym-etikett i stapeln
+        if (barW > 50) {
+          el(svg, 'text', { x: (x0 + x1) / 2, y: barY + barH/2 + 4, 'text-anchor': 'middle', 'font-size': 10, fill: '#1A1A1F', 'font-weight': 600 }, totalVolG + ' st');
+        }
+
+        // Datum vid start/slut
+        el(svg, 'text', { x: x0, y: barY - 4, 'font-size': 9, fill: '#6B5F75' }, fmtShort(d.actualStart));
+        el(svg, 'text', { x: x1, y: barY - 4, 'text-anchor': 'end', 'font-size': 9, fill: '#6B5F75' }, fmtShort(d.actualFinish));
+
+        // Klar-senast-markör om olika från actualFinish
+        if (d.klarSenast && Math.abs(d.klarSenast.getTime() - d.actualFinish.getTime()) > dayMsG * 2) {
+          const klX = xScale(d.klarSenast.getTime());
+          el(svg, 'line', { x1: klX, x2: klX, y1: barY - 4, y2: barY + barH + 4, stroke: '#A8A5AD', 'stroke-width': 1, 'stroke-dasharray': '2 2' });
+          if (Math.abs(klX - x1) > 32) {
+            el(svg, 'text', { x: klX, y: barY + barH + 14, 'text-anchor': 'middle', 'font-size': 8, fill: '#888590' }, 'klar senast');
+          }
+        }
+      });
+
+      wrap.appendChild(svg);
+
+      const legend = document.createElement('div');
+      legend.style.cssText = 'display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:#6B5F75;margin-top:8px;padding:0 4px';
+      legend.innerHTML =
+        '<span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:14px;height:10px;background:#E8DAF5;border:1px solid #5C0E92;border-radius:2px"></span>flaskhals</span>' +
+        '<span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:14px;height:10px;background:#F4EAFB;border:1px solid #990AE3;border-radius:2px"></span>roll</span>' +
+        '<span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:14px;height:10px;background:#FFE5EB;border:1px solid #9a2424;border-radius:2px"></span>hinner inte</span>' +
+        '<span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:0;height:12px;border-left:1px dashed #A8A5AD"></span>klar senast (deadline-driven)</span>';
+      wrap.appendChild(legend);
+
+      container.appendChild(wrap);
+    })();
 
     // Sista-beställning per Nätarkitekt-subset (samma som tidigare logik)
     const archRole = data.find(x => /arkitekt/i.test(x.role.name));
