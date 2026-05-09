@@ -7943,13 +7943,10 @@
       // En enda kompakt info-rad: bemanning + takt + volym
       const compactRate = ownRateInUnit + ' ' + unitDisplay;
       const compactVolume = Math.round(d.roleVolume || d.effV || V) + ' st';
-      const utilPctC = Math.round((d.capacityUtilization || 0) * 100);
-      const utilColorC = utilPctC >= 80 ? '#A8E6C2' : (utilPctC >= 50 ? '#FFE6A0' : '#FFB8E0');
       html += '<div class="ho-stat-line">';
       html += '<span class="ho-pill"><strong>' + d.role.count + '</strong> pers</span>';
       html += '<span class="ho-pill"><strong>' + compactRate + '</strong></span>';
       html += '<span class="ho-pill"><strong>' + compactVolume + '</strong> att leverera</span>';
-      html += '<span class="ho-pill" style="color:' + utilColorC + '"><strong>' + utilPctC + '%</strong> kapacitet</span>';
       html += '</div>';
 
       // Status-rad: en mening
@@ -7969,15 +7966,19 @@
       html += '</div>';
 
       // G1.928 punkt 7: Tidslinje med konkreta milestones — start + 25/50/75 + slut, med antal
+      // G1.947: Tidslinjen följer faktiskt schema (actualStart → actualFinish), inte
+      // klar-senast — så att 'Slut'-datumet matchar 'klar'-datumet i status-raden.
       html += '<div class="ho-timeline">';
       const totalVol = Math.round(d.roleVolume || d.effV || V);
-      const lineMs = d.klarSenast.getTime() - d.mastBorjaSenast.getTime();
+      const tlStart = d.actualStart || d.mastBorjaSenast;
+      const tlEnd = d.actualFinish || d.klarSenast;
+      const lineMs = tlEnd.getTime() - tlStart.getTime();
       const milestonesH = [
-        { label: 'Start', items: 0, date: d.mastBorjaSenast },
-        { label: '25 %', items: Math.round(totalVol * 0.25), date: new Date(d.mastBorjaSenast.getTime() + lineMs * 0.25) },
-        { label: '50 %', items: Math.round(totalVol * 0.50), date: new Date(d.mastBorjaSenast.getTime() + lineMs * 0.50) },
-        { label: '75 %', items: Math.round(totalVol * 0.75), date: new Date(d.mastBorjaSenast.getTime() + lineMs * 0.75) },
-        { label: 'Slut', items: totalVol, date: d.klarSenast },
+        { label: 'Start', items: 0, date: tlStart },
+        { label: '25 %', items: Math.round(totalVol * 0.25), date: new Date(tlStart.getTime() + lineMs * 0.25) },
+        { label: '50 %', items: Math.round(totalVol * 0.50), date: new Date(tlStart.getTime() + lineMs * 0.50) },
+        { label: '75 %', items: Math.round(totalVol * 0.75), date: new Date(tlStart.getTime() + lineMs * 0.75) },
+        { label: 'Slut', items: totalVol, date: tlEnd },
       ];
       milestonesH.forEach((m, mi) => {
         html += '<div class="ho-tl-step"><div class="ho-tl-label">' + m.label + '</div><div class="ho-tl-date">' + fmt(m.date) + '</div><div class="ho-tl-items">' + (m.items > 0 ? m.items + ' st' : '—') + '</div></div>';
